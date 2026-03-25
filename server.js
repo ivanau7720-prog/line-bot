@@ -18,6 +18,7 @@ let gameOpen = false;
 let bets = {};
 let balance = {};
 let names = {};
+let history = []; // 记录每局结果
 
 // ===== 设置 =====
 const MIN_BET = 100;
@@ -51,25 +52,24 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
 
       const name = names[userId];
 
-      // ===== 初始化余额 =====
       if (!balance[userId]) balance[userId] = 0;
 
       // ================= 管理员 =================
       if (userId === ADMIN_ID) {
 
-        // ===== 开局 =====
+        // 开局
         if (text === "/START") {
           gameOpen = true;
           bets = {};
           startTimer(event);
-          return reply(event, "🟢 开局，60秒下注！");
+          return reply(event, "🟢 开局（60秒下注）");
         }
 
-        // ===== 关局 =====
+        // 关局
         if (text === "/STOP") {
           gameOpen = false;
           clearInterval(timer);
-          return reply(event, "🔴 已关局！");
+          return reply(event, "🔴 已关局");
         }
 
         // ===== 结算 =====
@@ -80,7 +80,9 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
             return reply(event, "❌ /result B / P / T");
           }
 
-          let msg = `📊 结果：${result}\n\n`;
+          history.push(result);
+
+          let msg = `📊 本局结果：${result}\n\n`;
 
           for (let user in bets) {
             const bet = bets[user];
@@ -94,25 +96,45 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
 
             balance[user] += win;
 
-            msg += `${bet.name} ${win > 0 ? "✅+" : "❌"}${win} 余额:${balance[user]}\n`;
+            msg += `${bet.name} ${win > 0 ? "✅+" : "❌"}${win} | 余额:${balance[user]}\n`;
           }
 
+          // ===== 排行榜 =====
+          let ranking = Object.entries(balance)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 5);
+
+          msg += "\n🏆 本局排行榜\n";
+          ranking.forEach((r, i) => {
+            msg += `${i + 1}. ${names[r[0]]} ${r[1]}\n`;
+          });
+
+          // ===== 历史 =====
+          msg += "\n📈 走势：\n" + history.slice(-10).join(" ");
+
           bets = {};
-          return reply(event, msg || "无人下注");
+
+          return broadcast(event, msg);
+        }
+
+        // ===== 查余额 =====
+        if (text.startsWith("/BALANCE")) {
+          const uid = text.split(" ")[1];
+          return reply(event, `余额：${balance[uid] || 0}`);
         }
 
         // ===== 加分 =====
         if (text.startsWith("/ADD")) {
           const [_, uid, amt] = text.split(" ");
           balance[uid] = (balance[uid] || 0) + parseInt(amt);
-          return reply(event, `已加分 ${uid} +${amt}`);
+          return reply(event, `+${amt}`);
         }
 
-        // ===== 减分 =====
+        // ===== 扣分 =====
         if (text.startsWith("/SUB")) {
           const [_, uid, amt] = text.split(" ");
           balance[uid] = (balance[uid] || 0) - parseInt(amt);
-          return reply(event, `已扣分 ${uid} -${amt}`);
+          return reply(event, `-${amt}`);
         }
 
         // ===== 排行榜 =====
@@ -121,7 +143,7 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
             .sort((a, b) => b[1] - a[1])
             .slice(0, 5);
 
-          let msg = "🏆 排行榜\n\n";
+          let msg = "🏆 总排行榜\n\n";
 
           ranking.forEach((r, i) => {
             msg += `${i + 1}. ${names[r[0]]} : ${r[1]}\n`;
@@ -132,11 +154,8 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
       }
 
       // ================= 玩家 =================
-      if (!gameOpen) {
-        return reply(event, "❌ 未开局");
-      }
+      if (!gameOpen) return;
 
-      // 防重复下注
       if (bets[userId]) {
         return reply(event, "❌ 已下注");
       }
@@ -148,7 +167,7 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
       const amount = parseInt(match[2]);
 
       if (amount < MIN_BET || amount > MAX_BET) {
-        return reply(event, `❌ 限制 ${MIN_BET}-${MAX_BET}`);
+        return reply(event, `❌ ${MIN_BET}-${MAX_BET}`);
       }
 
       if (balance[userId] < amount) {
@@ -157,7 +176,7 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
 
       bets[userId] = { side, amount, name };
 
-      return reply(event, `✅ ${name} 下注 ${side}${amount}`);
+      return reply(event, `✅ ${name} ${side}${amount}`);
     }
 
     res.status(200).end();
@@ -176,16 +195,12 @@ function startTimer(event) {
     countdown--;
 
     if (countdown % 10 === 0 && countdown > 0) {
-      client.pushMessage(event.source.groupId || event.source.userId, {
-        type: "text",
-        text: `⏳ 剩余 ${countdown} 秒`
-      });
+      broadcast(event, `⏳ 剩余 ${countdown} 秒`);
     }
 
     if (countdown <= 0) {
       clearInterval(timer);
       gameOpen = false;
-
       broadcastBets(event);
     }
   }, 1000);
@@ -200,9 +215,14 @@ function broadcastBets(event) {
     msg += `${b.name} ${b.side}${b.amount}\n`;
   }
 
-  client.pushMessage(event.source.groupId || event.source.userId, {
+  broadcast(event, msg || "无人下注");
+}
+
+// ===== 群广播 =====
+function broadcast(event, text) {
+  return client.pushMessage(event.source.groupId || event.source.userId, {
     type: "text",
-    text: msg || "无人下注"
+    text
   });
 }
 

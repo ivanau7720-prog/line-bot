@@ -12,10 +12,10 @@ const client = new line.Client(config);
 
 // ===== 游戏状态 =====
 let gameOpen = false;
-let bets = {};
+let bets = {}; // { userId: { side, amount } }
 
-// 👉 先随便写（等下会换）
-const ADMIN_ID = "test";
+// ===== 管理员ID =====
+const ADMIN_ID = "U8455884cfb22877f209092cc78ea9880";
 
 // ===== webhook =====
 app.post("/webhook", line.middleware(config), async (req, res) => {
@@ -24,15 +24,13 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
 
     for (const event of events) {
 
-      // ✅ 打印 userId（重点🔥）
-      console.log("USER ID:", event.source.userId);
-
+      // 只处理文字
       if (event.type !== "message" || event.message.type !== "text") continue;
 
       const text = event.message.text.trim().toUpperCase();
       const userId = event.source.userId;
 
-      // ===== 管理员功能 =====
+      // ===== 管理员指令 =====
       if (userId === ADMIN_ID) {
 
         if (text === "/START") {
@@ -50,7 +48,7 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
           const result = text.split(" ")[1];
 
           if (!result || !["B", "P", "T"].includes(result)) {
-            return reply(event, "❌ 请输入 /result B / P / T");
+            return reply(event, "❌ 请使用 /result B / P / T");
           }
 
           let msg = `📊 本局结果：${result}\n\n`;
@@ -62,28 +60,30 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
 
             if (bet.side === result) {
               if (result === "T") {
-                win = bet.amount * 8;
+                win = bet.amount * 8; // 和 8倍
               } else {
-                win = bet.amount;
+                win = bet.amount; // 庄闲 1:1
               }
             } else {
               win = -bet.amount;
             }
 
-            msg += `${user} : ${win > 0 ? "+" : ""}${win}\n`;
+            msg += `玩家:${user}\n${win > 0 ? "✅ 赢" : "❌ 输"} ${Math.abs(win)}\n\n`;
           }
 
           bets = {};
-          return reply(event, msg);
+          return reply(event, msg || "无人下注");
         }
       }
 
-      // ===== 玩家下注 =====
+      // ===== 未开局 =====
       if (!gameOpen) {
         return reply(event, "❌ 未开局，不能下注");
       }
 
+      // ===== 下注格式 =====
       const match = text.match(/^(B|P|T)\s?(\d+)/);
+
       if (!match) return;
 
       const side = match[1];
@@ -101,7 +101,7 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
     res.status(200).end();
 
   } catch (err) {
-    console.log(err);
+    console.log("ERROR:", err);
     res.status(500).end();
   }
 });
@@ -114,5 +114,6 @@ function reply(event, text) {
   });
 }
 
+// ===== 启动 =====
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log("RUNNING"));

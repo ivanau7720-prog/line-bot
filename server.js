@@ -11,10 +11,10 @@ const config = {
 
 const client = new line.Client(config);
 
-// ===== Supabase =====
+// ✅ Supabase（用你自己的）
 const supabase = createClient(
   "https://riqystgmpvxwsebyavuo.supabase.co",
-  "sb_publishable_xxxxx"
+  "sb_publishable_bWATEwsQd3fU_GKjcLdQzg_1pN6buQE"
 );
 
 // ===== 管理员 =====
@@ -24,15 +24,14 @@ const ADMIN_ID = "U8455884cfb22877f209092cc78ea9880";
 let gameOpen = false;
 let bets = {};
 let names = {};
-let history = [];
 
 // ===== 设置 =====
 const MIN_BET = 100;
 const MAX_BET = 10000;
 
-// ===== 安全获取玩家（修复 crash）=====
+// ===== 获取用户 =====
 async function getUser(userId, name) {
-  let { data, error } = await supabase
+  let { data } = await supabase
     .from("players")
     .select("*")
     .eq("user_id", userId);
@@ -48,7 +47,7 @@ async function getUser(userId, name) {
       }
     ]);
 
-    return { balance: 1000, total_win: 0, total_lose: 0 };
+    return { balance: 1000 };
   }
 
   return data[0];
@@ -76,7 +75,6 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
       }
 
       const name = names[userId];
-
       const userData = await getUser(userId, name);
 
       // ===== 管理员 =====
@@ -120,21 +118,18 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
 
             await supabase
               .from("players")
-              .update({
-                balance: newBalance
-              })
+              .update({ balance: newBalance })
               .eq("user_id", user);
 
             msg += `${bet.name} ${win > 0 ? "✅+" : "❌"}${win}\n`;
           }
 
           bets = {};
-
           return reply(event, msg || "无人下注");
         }
       }
 
-      // ===== 玩家 =====
+      // ===== 玩家下注 =====
       if (!gameOpen) return reply(event, "❌ 未开局");
 
       if (bets[userId]) {
@@ -161,6 +156,7 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
     }
 
     res.status(200).end();
+
   } catch (err) {
     console.log("🔥 ERROR:", err);
     res.status(500).end();

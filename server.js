@@ -1,5 +1,6 @@
 const express = require("express");
 const line = require("@line/bot-sdk");
+const { createClient } = require("@supabase/supabase-js");
 
 const app = express();
 
@@ -10,15 +11,20 @@ const config = {
 
 const client = new line.Client(config);
 
+// ===== Supabase =====
+const supabase = createClient(
+  "https://riqystgmpvxwsebyavuo.supabase.co",
+  "sb_publishable_bWATEwsQd3fU_GKjcLdQzg_1pN6buQE"
+);
+
 // ===== 管理员 =====
 const ADMIN_ID = "U8455884cfb22877f209092cc78ea9880";
 
 // ===== 游戏状态 =====
 let gameOpen = false;
 let bets = {};
-let balance = {};
 let names = {};
-let history = []; // 记录每局结果
+let history = [];
 
 // ===== 设置 =====
 const MIN_BET = 100;
@@ -28,13 +34,37 @@ const MAX_BET = 10000;
 let timer = null;
 let countdown = 60;
 
+// ===== 获取或创建玩家 =====
+async function getUser(userId, name) {
+  let { data } = await supabase
+    .from("players")
+    .select("*")
+    .eq("user_id", userId)
+    .single();
+
+  if (!data) {
+    await supabase.from("players").insert([
+      {
+        user_id: userId,
+        name: name,
+        balance: 1000,
+        total_win: 0,
+        total_lose: 0
+      }
+    ]);
+
+    return { balance: 1000, total_win: 0, total_lose: 0 };
+  }
+
+  return data;
+}
+
 // ===== webhook =====
 app.post("/webhook", line.middleware(config), async (req, res) => {
   try {
     const events = req.body.events;
 
     for (const event of events) {
-
       if (event.type !== "message" || event.message.type !== "text") continue;
 
       const text = event.message.text.trim().toUpperCase();
@@ -52,12 +82,12 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
 
       const name = names[userId];
 
-      if (!balance[userId]) balance[userId] = 0;
+      // ===== 获取数据库玩家 =====
+      const userData = await getUser(userId, name);
 
       // ================= 管理员 =================
       if (userId === ADMIN_ID) {
 
-        // 开局
         if (text === "/START") {
           gameOpen = true;
           bets = {};
@@ -65,7 +95,6 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
           return reply(event, "🟢 开局（60秒下注）");
         }
 
-        // 关局
         if (text === "/STOP") {
           gameOpen = false;
           clearInterval(timer);
@@ -86,6 +115,7 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
 
           for (let user in bets) {
             const bet = bets[user];
+
             let win = 0;
 
             if (bet.side === result) {
@@ -94,22 +124,41 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
               win = -bet.amount;
             }
 
-            balance[user] += win;
+            // ===== 读取旧数据 =====
+            let { data } = await supabase
+              .from("players")
+              .select("*")
+              .eq("user_id", user)
+              .single();
 
-            msg += `${bet.name} ${win > 0 ? "✅+" : "❌"}${win} | 余额:${balance[user]}\n`;
+            let newBalance = data.balance + win;
+
+            await supabase
+              .from("players")
+              .update({
+                balance: newBalance,
+                total_win: data.total_win + (win > 0 ? win : 0),
+                total_lose: data.total_lose + (win < 0 ? Math.abs(win) : 0)
+              })
+              .eq("user_id", user);
+
+            msg += `${bet.name} ${win > 0 ? "✅+" : "❌"}${win} | 余额:${newBalance}\n`;
           }
 
           // ===== 排行榜 =====
-          let ranking = Object.entries(balance)
-            .sort((a, b) => b[1] - a[1])
-            .slice(0, 5);
+          let { data: top } = await supabase
+            .from("players")
+            .select("*")
+            .order("balance", { ascending: false })
+            .limit(5);
 
-          msg += "\n🏆 本局排行榜\n";
-          ranking.forEach((r, i) => {
-            msg += `${i + 1}. ${names[r[0]]} ${r[1]}\n`;
+          msg += "\n🏆 排行榜\n";
+
+          top.forEach((p, i) => {
+            msg += `${i + 1}. ${p.name} ${p.balance}\n`;
           });
 
-          // ===== 历史 =====
+          // ===== 走势 =====
           msg += "\n📈 走势：\n" + history.slice(-10).join(" ");
 
           bets = {};
@@ -120,33 +169,68 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
         // ===== 查余额 =====
         if (text.startsWith("/BALANCE")) {
           const uid = text.split(" ")[1];
-          return reply(event, `余额：${balance[uid] || 0}`);
+
+          let { data } = await supabase
+            .from("players")
+            .select("*")
+            .eq("user_id", uid)
+            .single();
+
+          return reply(event, `余额：${data?.balance || 0}`);
         }
 
         // ===== 加分 =====
         if (text.startsWith("/ADD")) {
           const [_, uid, amt] = text.split(" ");
-          balance[uid] = (balance[uid] || 0) + parseInt(amt);
+
+          let { data } = await supabase
+            .from("players")
+            .select("*")
+            .eq("user_id", uid)
+            .single();
+
+          let newBalance = (data?.balance || 0) + parseInt(amt);
+
+          await supabase
+            .from("players")
+            .update({ balance: newBalance })
+            .eq("user_id", uid);
+
           return reply(event, `+${amt}`);
         }
 
         // ===== 扣分 =====
         if (text.startsWith("/SUB")) {
           const [_, uid, amt] = text.split(" ");
-          balance[uid] = (balance[uid] || 0) - parseInt(amt);
+
+          let { data } = await supabase
+            .from("players")
+            .select("*")
+            .eq("user_id", uid)
+            .single();
+
+          let newBalance = (data?.balance || 0) - parseInt(amt);
+
+          await supabase
+            .from("players")
+            .update({ balance: newBalance })
+            .eq("user_id", uid);
+
           return reply(event, `-${amt}`);
         }
 
         // ===== 排行榜 =====
         if (text === "/TOP") {
-          let ranking = Object.entries(balance)
-            .sort((a, b) => b[1] - a[1])
-            .slice(0, 5);
+          let { data } = await supabase
+            .from("players")
+            .select("*")
+            .order("balance", { ascending: false })
+            .limit(5);
 
           let msg = "🏆 总排行榜\n\n";
 
-          ranking.forEach((r, i) => {
-            msg += `${i + 1}. ${names[r[0]]} : ${r[1]}\n`;
+          data.forEach((p, i) => {
+            msg += `${i + 1}. ${p.name} : ${p.balance}\n`;
           });
 
           return reply(event, msg);
@@ -170,7 +254,7 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
         return reply(event, `❌ ${MIN_BET}-${MAX_BET}`);
       }
 
-      if (balance[userId] < amount) {
+      if (userData.balance < amount) {
         return reply(event, "❌ 余额不足");
       }
 
@@ -180,7 +264,6 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
     }
 
     res.status(200).end();
-
   } catch (err) {
     console.log(err);
     res.status(500).end();

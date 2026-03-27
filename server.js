@@ -24,12 +24,17 @@ const ADMIN_ID = "U8455884cfb22877f209092cc78ea9880";
 let gameOpen = false;
 let bets = {};
 let names = {};
+let timer = null;
+let countdown = 60;
+
+// ===== 走势 =====
+let history = [];
 
 // ===== 设置 =====
 const MIN_BET = 100;
 const MAX_BET = 10000;
 
-// ===== 获取用户（防崩溃版）=====
+// ===== 获取用户 =====
 async function getUser(userId, name) {
   try {
     let { data } = await supabase
@@ -38,24 +43,75 @@ async function getUser(userId, name) {
       .eq("user_id", userId);
 
     if (!data || data.length === 0) {
-      await supabase.from("players").insert([
-        {
-          user_id: userId,
-          name: name,
-          balance: 1000,
-          total_win: 0,
-          total_lose: 0
-        }
-      ]);
-
-      return { balance: 1000 };
+      await supabase.from("players").insert([{
+        user_id: userId,
+        name,
+        balance: 1000,
+        total_win: 0,
+        total_lose: 0
+      }]);
+      return { balance: 1000, total_win: 0, total_lose: 0 };
     }
 
     return data[0];
   } catch (err) {
     console.log("DB ERROR:", err);
-    return { balance: 1000 };
+    return { balance: 1000, total_win: 0, total_lose: 0 };
   }
+}
+
+// ===== 广播 =====
+async function broadcast(text) {
+  try {
+    await client.broadcast({ type: "text", text });
+  } catch (err) {
+    console.log("广播失败:", err);
+  }
+}
+
+// ===== emoji =====
+function getEmoji(r) {
+  if (r === "B") return "🔴";
+  if (r === "P") return "🔵";
+  if (r === "T") return "🟢";
+}
+
+// ===== 走势图 =====
+function buildBoard() {
+  let msg = "📊 开奖记录\n\n";
+  history.forEach((r, i) => {
+    msg += getEmoji(r) + " ";
+    if ((i + 1) % 10 === 0) msg += "\n";
+  });
+  return msg;
+}
+
+// ===== 倒计时 =====
+function startCountdown() {
+  countdown = 60;
+
+  timer = setInterval(() => {
+    countdown--;
+
+    if (countdown % 10 === 0 && countdown > 0) {
+      broadcast(`⏰ 剩余 ${countdown} 秒`);
+    }
+
+    if (countdown <= 0) {
+      clearInterval(timer);
+      gameOpen = false;
+
+      let msg = "🔴 已关局\n\n📊 下注列表：\n";
+
+      for (let u in bets) {
+        let b = bets[u];
+        msg += `${b.name} ${b.side}${b.amount}\n`;
+      }
+
+      broadcast(msg || "无人下注");
+    }
+
+  }, 1000);
 }
 
 // ===== webhook =====
@@ -88,12 +144,16 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
         if (text === "/START") {
           gameOpen = true;
           bets = {};
-          return reply(event, "🟢 开局");
+
+          reply(event, "🟢 开局！60秒下注");
+          startCountdown();
+          return;
         }
 
         if (text === "/STOP") {
           gameOpen = false;
-          return reply(event, "🔴 关局");
+          clearInterval(timer);
+          return reply(event, "🔴 已关局");
         }
 
         if (text.startsWith("/RESULT")) {
@@ -103,7 +163,12 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
             return reply(event, "❌ /result B/P/T");
           }
 
-          let msg = `📊 结果：${result}\n\n`;
+          history.push(result);
+          if (history.length > 30) history = [];
+
+          let msg = `📊 本局结果：${result} ${getEmoji(result)}\n\n`;
+
+          let ranking = [];
 
           for (let user in bets) {
             const bet = bets[user];
@@ -118,26 +183,44 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
               .eq("user_id", user);
 
             let player = data?.[0];
-
             if (!player) continue;
 
             let newBalance = player.balance + win;
 
             await supabase
               .from("players")
-              .update({ balance: newBalance })
+              .update({
+                balance: newBalance,
+                total_win: win > 0 ? player.total_win + win : player.total_win,
+                total_lose: win < 0 ? player.total_lose + Math.abs(win) : player.total_lose
+              })
               .eq("user_id", user);
 
-            msg += `${bet.name} ${win > 0 ? "✅+" : "❌"}${win}\n`;
+            ranking.push({
+              name: bet.name,
+              win
+            });
           }
 
+          // ===== 排行榜 =====
+          ranking.sort((a, b) => b.win - a.win);
+
+          msg += "🏆 排行榜\n";
+          ranking.forEach((p, i) => {
+            msg += `${i + 1}. ${p.name} ${p.win > 0 ? "✅+" : "❌"}${p.win}\n`;
+          });
+
           bets = {};
-          return reply(event, msg || "无人下注");
+
+          msg += "\n" + buildBoard();
+
+          broadcast(msg);
+          return reply(event, "✅ 已结算并广播");
         }
       }
 
       // ===== 玩家下注 =====
-      if (!gameOpen) return reply(event, "❌ 未开局");
+      if (!gameOpen) return reply(event, "❌ 已关局");
 
       if (bets[userId]) {
         return reply(event, "❌ 已下注");
@@ -158,6 +241,8 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
       }
 
       bets[userId] = { side, amount, name };
+
+      broadcast(`📥 ${name} 下注 ${side}${amount}`);
 
       return reply(event, `✅ ${name} ${side}${amount}`);
     }

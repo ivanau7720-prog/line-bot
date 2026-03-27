@@ -11,29 +11,22 @@ const config = {
 
 const client = new line.Client(config);
 
-// ✅ Supabase
 const supabase = createClient(
   "https://你的.supabase.co",
-  "key    sb_publishable_bWATEwsQd3fU_GKjcLdQzg_1pN6buQE"
+  "sb_publishable_bWATEwsQd3fU_GKjcLdQzg_1pN6buQE"
 );
 
-const ADMIN_ID = "U8455884cfb22877f209092cc78ea9880";
+const ADMIN_ID = "U8455884cfb22877f209092cc78ea9880
+";
 
 // ===== 状态 =====
 let gameOpen = false;
 let bets = {};
 let names = {};
 let currentGroupId = null;
+let timer = null;
 
-// ===== 清理名字（支持泰文）=====
-function cleanName(name) {
-  return name
-    .replace(/@/g, "")
-    .replace(/\s+/g, "")
-    .toLowerCase();
-}
-
-// ===== 获取用户 =====
+// ===== 获取用户（修复：默认0分）=====
 async function getUser(userId, name) {
   let { data } = await supabase
     .from("players")
@@ -44,14 +37,60 @@ async function getUser(userId, name) {
     await supabase.from("players").insert([{
       user_id: userId,
       name: name,
-      balance: 1000,
+      balance: 0, // ✅ 修复
       total_win: 0,
       total_lose: 0
     }]);
-    return { balance: 1000 };
+
+    return { balance: 0 };
   }
 
   return data[0];
+}
+
+// ===== 倒计时系统（核心修复）=====
+function startTimer() {
+  let time = 60;
+
+  timer = setInterval(async () => {
+    time -= 10;
+
+    if (time > 0) {
+      if (currentGroupId) {
+        await client.pushMessage(currentGroupId, {
+          type: "text",
+          text: `⏰ 剩余 ${time} 秒`
+        });
+      }
+    }
+
+    if (time <= 0) {
+      clearInterval(timer);
+      closeGame();
+    }
+
+  }, 10000);
+}
+
+// ===== 关局 =====
+async function closeGame() {
+  gameOpen = false;
+
+  let msg = "🔴 已关局\n\n📊 下注列表\n";
+
+  for (let u in bets) {
+    let b = bets[u];
+    msg += `${b.name} ${b.side}${b.amount}\n`;
+  }
+
+  msg += "\n⌛ 等待管理员输入 /result";
+
+  if (currentGroupId) {
+    await client.pushMessage(currentGroupId, {
+      type: "text",
+      text: msg
+    });
+  }
 }
 
 // ===== webhook =====
@@ -60,8 +99,7 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
     for (const event of req.body.events) {
       if (event.type !== "message" || event.message.type !== "text") continue;
 
-      const textRaw = event.message.text.trim();
-      const text = textRaw.toUpperCase();
+      const text = event.message.text.trim().toUpperCase();
       const userId = event.source.userId;
 
       if (event.source.type === "group") {
@@ -88,81 +126,64 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
         if (text === "/START") {
           gameOpen = true;
           bets = {};
-          setTimeout(closeGame, 60000);
+
+          startTimer(); // ✅ 修复
+
           return reply(event, "🟢 开局 60秒下注");
         }
 
-        // ===== ⭐ 充值系统（修复版）=====
-        if (textRaw.toLowerCase().startsWith("/add")) {
+        // ===== 结算 =====
+        if (text.startsWith("/RESULT")) {
+          const result = text.split(" ")[1];
 
-          try {
-            // 👉 去掉 /add
-            let input = textRaw.replace(/\/add/i, "").trim();
+          if (!["B", "P", "T"].includes(result)) {
+            return reply(event, "❌ /result B/P/T");
+          }
 
-            // 👉 提取金额
-            let amountMatch = input.match(/([+-]?\d+)/);
-            if (!amountMatch) {
-              return reply(event, "❌ 用法 /add 名字 +1000");
-            }
+          let msg = `📊 结果：${result}\n\n`;
 
-            let amount = parseInt(amountMatch[1]);
+          for (let user in bets) {
+            const bet = bets[user];
 
-            if (Math.abs(amount) < 1000 || Math.abs(amount) > 100000) {
-              return reply(event, "❌ 限制 1000 - 100000");
-            }
+            let win = bet.side === result
+              ? (result === "T" ? bet.amount * 8 : bet.amount)
+              : -bet.amount;
 
-            // 👉 提取名字
-            let namePart = input.replace(amountMatch[1], "").trim();
-            let targetName = cleanName(namePart);
+            let { data } = await supabase
+              .from("players")
+              .select("*")
+              .eq("user_id", user);
 
-            // 👉 读取全部玩家
-            let { data } = await supabase.from("players").select("*");
+            let player = data?.[0];
+            if (!player) continue;
 
-            if (!data || data.length === 0) {
-              return reply(event, "❌ 没有玩家数据");
-            }
-
-            // 👉 模糊匹配（关键修复）
-            let player = data.find(p =>
-              cleanName(p.name).includes(targetName)
-            );
-
-            if (!player) {
-              return reply(event, `❌ 找不到玩家: ${namePart}`);
-            }
-
-            let newBalance = player.balance + amount;
+            let newBalance = player.balance + win;
 
             await supabase
               .from("players")
               .update({ balance: newBalance })
-              .eq("user_id", player.user_id);
+              .eq("user_id", user);
 
-            // 👉 群广播
-            if (currentGroupId) {
-              await client.pushMessage(currentGroupId, {
-                type: "text",
-                text:
-                  `💰 充值成功\n` +
-                  `👤 ${player.name}\n` +
-                  `${amount > 0 ? "➕" : "➖"}${Math.abs(amount)}\n` +
-                  `💳 余额: ${newBalance}`
-              });
-            }
-
-            return reply(event, "✅ 已充值");
-
-          } catch (err) {
-            console.log(err);
-            return reply(event, "❌ 系统错误");
+            msg += `${bet.name} ${win > 0 ? "✅+" : "❌"}${win}（余额 ${newBalance}）\n`;
           }
+
+          bets = {};
+
+          if (currentGroupId) {
+            await client.pushMessage(currentGroupId, {
+              type: "text",
+              text: msg
+            });
+          }
+
+          return reply(event, "✅ 已结算");
         }
       }
 
       // ================= 玩家 =================
 
       if (text === "/BALANCE") {
-        return reply(event, `💳 余额: ${userData.balance}`);
+        return reply(event, `💰 余额：${userData.balance}`);
       }
 
       if (!gameOpen) return;
@@ -198,24 +219,6 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
     res.status(500).end();
   }
 });
-
-// ===== 自动关局 =====
-async function closeGame() {
-  gameOpen = false;
-
-  let list = "📊 下注列表\n";
-  for (let u in bets) {
-    let b = bets[u];
-    list += `${b.name} ${b.side}${b.amount}\n`;
-  }
-
-  if (currentGroupId) {
-    await client.pushMessage(currentGroupId, {
-      type: "text",
-      text: "🔴 已关局\n\n" + list
-    });
-  }
-}
 
 // ===== 回复 =====
 function reply(event, text) {

@@ -13,110 +13,46 @@ const client = new line.Client(config);
 
 // ===== Supabase =====
 const supabase = createClient(
-  "https://riqystgmpvxwsebyavuo.supabase.co",
+  "https://你的.supabase.co",
   "sb_publishable_bWATEwsQd3fU_GKjcLdQzg_1pN6buQE"
 );
 
 // ===== 管理员 =====
-const ADMIN_ID = "U8455884cfb22877f209092cc78ea9880";
+const ADMIN_ID = "你的管理员ID";
 
-// ===== 游戏状态 =====
+// ===== 状态 =====
 let gameOpen = false;
 let bets = {};
 let names = {};
-let timer = null;
-let countdown = 60;
-let currentGroupId = null;
-
-// ===== 走势 =====
 let history = [];
+let currentGroupId = null;
 
 // ===== 设置 =====
 const MIN_BET = 100;
 const MAX_BET = 10000;
 
-// ===== 只发群消息 =====
-async function sendToGroup(text) {
-  if (!currentGroupId) return;
-  try {
-    await client.pushMessage(currentGroupId, {
-      type: "text",
-      text
-    });
-  } catch (err) {
-    console.log("群发失败:", err);
-  }
-}
-
 // ===== 获取用户 =====
 async function getUser(userId, name) {
-  try {
-    let { data } = await supabase
-      .from("players")
-      .select("*")
-      .eq("user_id", userId);
+  let { data } = await supabase
+    .from("players")
+    .select("*")
+    .eq("user_id", userId);
 
-    if (!data || data.length === 0) {
-      await supabase.from("players").insert([{
+  if (!data || data.length === 0) {
+    await supabase.from("players").insert([
+      {
         user_id: userId,
-        name,
+        name: name,
         balance: 1000,
         total_win: 0,
         total_lose: 0
-      }]);
-      return { balance: 1000, total_win: 0, total_lose: 0 };
-    }
-
-    return data[0];
-  } catch (err) {
-    console.log("DB ERROR:", err);
-    return { balance: 1000, total_win: 0, total_lose: 0 };
-  }
-}
-
-// ===== emoji =====
-function getEmoji(r) {
-  if (r === "B") return "🔴";
-  if (r === "P") return "🔵";
-  if (r === "T") return "🟢";
-}
-
-// ===== 走势图 =====
-function buildBoard() {
-  let msg = "📊 开奖记录\n\n";
-  history.forEach((r, i) => {
-    msg += getEmoji(r) + " ";
-    if ((i + 1) % 10 === 0) msg += "\n";
-  });
-  return msg;
-}
-
-// ===== 倒计时 =====
-function startCountdown() {
-  countdown = 60;
-
-  timer = setInterval(() => {
-    countdown--;
-
-    if (countdown % 10 === 0 && countdown > 0) {
-      sendToGroup(`⏰ 剩余 ${countdown} 秒`);
-    }
-
-    if (countdown <= 0) {
-      clearInterval(timer);
-      gameOpen = false;
-
-      let msg = "🔴 已关局\n\n📊 下注列表：\n";
-
-      for (let u in bets) {
-        let b = bets[u];
-        msg += `${b.name} ${b.side}${b.amount}\n`;
       }
+    ]);
 
-      sendToGroup(msg || "无人下注");
-    }
+    return { balance: 1000 };
+  }
 
-  }, 1000);
+  return data[0];
 }
 
 // ===== webhook =====
@@ -127,15 +63,15 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
     for (const event of events) {
       if (event.type !== "message" || event.message.type !== "text") continue;
 
-      const text = event.message.text.trim().toUpperCase();
+      const textRaw = event.message.text.trim();
+      const text = textRaw.toUpperCase();
       const userId = event.source.userId;
 
-      // ✅ 记录群ID（关键）
-      if (event.source.type === "group" || event.source.type === "room") {
-        currentGroupId = event.source.groupId || event.source.roomId;
+      if (event.source.type === "group") {
+        currentGroupId = event.source.groupId;
       }
 
-      // ===== 获取名字 =====
+      // ===== 获取名字（支持泰文）=====
       if (!names[userId]) {
         try {
           const profile = await client.getProfile(userId);
@@ -148,24 +84,61 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
       const name = names[userId];
       const userData = await getUser(userId, name);
 
-      // ===== 管理员 =====
+      // ================== 管理员 ==================
       if (userId === ADMIN_ID) {
 
+        // ===== 开局 =====
         if (text === "/START") {
           gameOpen = true;
           bets = {};
 
-          reply(event, "🟢 开局！60秒下注");
-          startCountdown();
-          return;
+          setTimeout(() => closeGame(), 60000); // 60秒
+
+          return reply(event, "🟢 开局！60秒下注");
         }
 
-        if (text === "/STOP") {
-          gameOpen = false;
-          clearInterval(timer);
-          return reply(event, "🔴 已关局");
+        // ===== 充值（支持名字 + 泰文 + 加减）=====
+        if (text.startsWith("/ADD")) {
+          const parts = textRaw.split(" ");
+
+          if (parts.length < 3) {
+            return reply(event, "❌ 用法：/add 名字 +1000");
+          }
+
+          const targetName = parts[1];
+          let amount = parseInt(parts[2]);
+
+          if (isNaN(amount)) return reply(event, "❌ 金额错误");
+
+          // 查名字（支持泰文）
+          let { data } = await supabase
+            .from("players")
+            .select("*")
+            .ilike("name", targetName);
+
+          if (!data || data.length === 0) {
+            return reply(event, "❌ 找不到玩家");
+          }
+
+          let player = data[0];
+          let newBalance = player.balance + amount;
+
+          await supabase
+            .from("players")
+            .update({ balance: newBalance })
+            .eq("user_id", player.user_id);
+
+          if (currentGroupId) {
+            await client.pushMessage(currentGroupId, {
+              type: "text",
+              text: `💰 充值成功\n👤 ${player.name}\n${amount > 0 ? "➕" : "➖"}${Math.abs(amount)}\n💳 ${newBalance}`
+            });
+          }
+
+          return reply(event, "✅ 完成");
         }
 
+        // ===== 结算 =====
         if (text.startsWith("/RESULT")) {
           const result = text.split(" ")[1];
 
@@ -173,12 +146,9 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
             return reply(event, "❌ /result B/P/T");
           }
 
-          history.push(result);
-          if (history.length > 30) history = [];
+          let msg = `📊 本局结果：${result} ${result === "B" ? "🔴" : result === "P" ? "🔵" : "🟢"}\n\n`;
 
-          let msg = `📊 本局结果：${result} ${getEmoji(result)}\n\n`;
-
-          let ranking = [];
+          let leaderboard = [];
 
           for (let user in bets) {
             const bet = bets[user];
@@ -197,42 +167,58 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
 
             let newBalance = player.balance + win;
 
+            let totalWin = player.total_win || 0;
+            let totalLose = player.total_lose || 0;
+
+            if (win > 0) totalWin += win;
+            else totalLose += Math.abs(win);
+
             await supabase
               .from("players")
               .update({
                 balance: newBalance,
-                total_win: win > 0 ? player.total_win + win : player.total_win,
-                total_lose: win < 0 ? player.total_lose + Math.abs(win) : player.total_lose
+                total_win: totalWin,
+                total_lose: totalLose
               })
               .eq("user_id", user);
 
-            ranking.push({
+            leaderboard.push({
               name: bet.name,
               win
             });
+
+            msg += `${bet.name} ${win > 0 ? "✅+" : "❌"}${win}\n`;
           }
 
-          // ===== 排行榜 =====
-          ranking.sort((a, b) => b.win - a.win);
+          leaderboard.sort((a, b) => b.win - a.win);
 
-          msg += "🏆 排行榜\n";
-          ranking.forEach((p, i) => {
-            msg += `${i + 1}. ${p.name} ${p.win > 0 ? "✅+" : "❌"}${p.win}\n`;
+          let rankMsg = "\n🏆 排行榜\n";
+          leaderboard.forEach((p, i) => {
+            rankMsg += `${i + 1}. ${p.name} (${p.win > 0 ? "+" : ""}${p.win})\n`;
           });
 
+          history.push(result === "B" ? "🔴" : result === "P" ? "🔵" : "🟢");
+          if (history.length > 30) history = [];
+
+          let historyMsg = "\n📊 开奖记录\n" + history.join(" ");
+
           bets = {};
+          gameOpen = false;
 
-          msg += "\n" + buildBoard();
-
-          // ✅ 只发群
-          sendToGroup(msg);
+          if (currentGroupId) {
+            await client.pushMessage(currentGroupId, {
+              type: "text",
+              text: msg + rankMsg + historyMsg
+            });
+          }
 
           return reply(event, "✅ 已结算并广播");
         }
       }
 
-      // ===== 玩家下注 =====
-      if (!gameOpen) return reply(event, "❌ 已关局");
+      // ================== 玩家 ==================
+
+      if (!gameOpen) return;
 
       if (bets[userId]) {
         return reply(event, "❌ 已下注");
@@ -254,19 +240,40 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
 
       bets[userId] = { side, amount, name };
 
-      // ✅ 只群广播
-      sendToGroup(`📥 ${name} 下注 ${side}${amount}`);
+      if (currentGroupId) {
+        await client.pushMessage(currentGroupId, {
+          type: "text",
+          text: `📥 ${name} 下注 ${side}${amount}`
+        });
+      }
 
-      return reply(event, `✅ ${name} ${side}${amount}`);
     }
 
     res.status(200).end();
 
   } catch (err) {
-    console.log("🔥 ERROR:", err);
+    console.log("ERROR:", err);
     res.status(500).end();
   }
 });
+
+// ===== 自动关局 =====
+async function closeGame() {
+  gameOpen = false;
+
+  let list = "📊 下注列表\n";
+  for (let u in bets) {
+    let b = bets[u];
+    list += `${b.name} ${b.side}${b.amount}\n`;
+  }
+
+  if (currentGroupId) {
+    await client.pushMessage(currentGroupId, {
+      type: "text",
+      text: "🔴 已关局\n\n" + list
+    });
+  }
+}
 
 // ===== 回复 =====
 function reply(event, text) {

@@ -11,7 +11,7 @@ const config = {
 
 const client = new line.Client(config);
 
-// ✅ Supabase（用你自己的）
+// ===== Supabase =====
 const supabase = createClient(
   "https://riqystgmpvxwsebyavuo.supabase.co",
   "sb_publishable_bWATEwsQd3fU_GKjcLdQzg_1pN6buQE"
@@ -29,28 +29,33 @@ let names = {};
 const MIN_BET = 100;
 const MAX_BET = 10000;
 
-// ===== 获取用户 =====
+// ===== 获取用户（防崩溃版）=====
 async function getUser(userId, name) {
-  let { data } = await supabase
-    .from("players")
-    .select("*")
-    .eq("user_id", userId);
+  try {
+    let { data } = await supabase
+      .from("players")
+      .select("*")
+      .eq("user_id", userId);
 
-  if (!data || data.length === 0) {
-    await supabase.from("players").insert([
-      {
-        user_id: userId,
-        name: name,
-        balance: 1000,
-        total_win: 0,
-        total_lose: 0
-      }
-    ]);
+    if (!data || data.length === 0) {
+      await supabase.from("players").insert([
+        {
+          user_id: userId,
+          name: name,
+          balance: 1000,
+          total_win: 0,
+          total_lose: 0
+        }
+      ]);
 
+      return { balance: 1000 };
+    }
+
+    return data[0];
+  } catch (err) {
+    console.log("DB ERROR:", err);
     return { balance: 1000 };
   }
-
-  return data[0];
 }
 
 // ===== webhook =====
@@ -112,7 +117,9 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
               .select("*")
               .eq("user_id", user);
 
-            let player = data[0];
+            let player = data?.[0];
+
+            if (!player) continue;
 
             let newBalance = player.balance + win;
 

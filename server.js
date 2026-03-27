@@ -11,13 +11,12 @@ const config = {
 
 const client = new line.Client(config);
 
-// ✅ Supabase（修复版）
+// ✅ Supabase
 const supabase = createClient(
   "https://你的.supabase.co",
-  "sb_publishable_bWATEwsQd3fU_GKjcLdQzg_1pN6buQE"
+  "key    sb_publishable_bWATEwsQd3fU_GKjcLdQzg_1pN6buQE"
 );
 
-// ✅ 管理员（去掉空格）
 const ADMIN_ID = "U8455884cfb22877f209092cc78ea9880";
 
 // ===== 状态 =====
@@ -26,9 +25,12 @@ let bets = {};
 let names = {};
 let currentGroupId = null;
 
-// ===== 工具：清理名字（支持泰文）=====
+// ===== 清理名字（支持泰文）=====
 function cleanName(name) {
-  return name.replace(/@/g, "").replace(/\s+/g, "").toLowerCase();
+  return name
+    .replace(/@/g, "")
+    .replace(/\s+/g, "")
+    .toLowerCase();
 }
 
 // ===== 获取用户 =====
@@ -46,7 +48,6 @@ async function getUser(userId, name) {
       total_win: 0,
       total_lose: 0
     }]);
-
     return { balance: 1000 };
   }
 
@@ -80,10 +81,10 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
       const name = names[userId];
       const userData = await getUser(userId, name);
 
-      // ===== 管理员 =====
+      // ================= 管理员 =================
       if (userId === ADMIN_ID) {
 
-        // 开局
+        // ===== 开局 =====
         if (text === "/START") {
           gameOpen = true;
           bets = {};
@@ -91,52 +92,84 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
           return reply(event, "🟢 开局 60秒下注");
         }
 
-        // ⭐ 充值（修复）
-        if (text.startsWith("/ADD")) {
-          let input = textRaw.replace(/\/add/i, "").trim();
+        // ===== ⭐ 充值系统（修复版）=====
+        if (textRaw.toLowerCase().startsWith("/add")) {
 
-          let match = input.match(/(.+)\s([+-]?\d+)$/);
-          if (!match) return reply(event, "❌ 用法 /add 名字 +1000");
+          try {
+            // 👉 去掉 /add
+            let input = textRaw.replace(/\/add/i, "").trim();
 
-          let targetName = cleanName(match[1]);
-          let amount = parseInt(match[2]);
+            // 👉 提取金额
+            let amountMatch = input.match(/([+-]?\d+)/);
+            if (!amountMatch) {
+              return reply(event, "❌ 用法 /add 名字 +1000");
+            }
 
-          let { data } = await supabase.from("players").select("*");
+            let amount = parseInt(amountMatch[1]);
 
-          let player = data.find(p =>
-            cleanName(p.name).includes(targetName)
-          );
+            if (Math.abs(amount) < 1000 || Math.abs(amount) > 100000) {
+              return reply(event, "❌ 限制 1000 - 100000");
+            }
 
-          if (!player) {
-            return reply(event, "❌ 找不到玩家");
+            // 👉 提取名字
+            let namePart = input.replace(amountMatch[1], "").trim();
+            let targetName = cleanName(namePart);
+
+            // 👉 读取全部玩家
+            let { data } = await supabase.from("players").select("*");
+
+            if (!data || data.length === 0) {
+              return reply(event, "❌ 没有玩家数据");
+            }
+
+            // 👉 模糊匹配（关键修复）
+            let player = data.find(p =>
+              cleanName(p.name).includes(targetName)
+            );
+
+            if (!player) {
+              return reply(event, `❌ 找不到玩家: ${namePart}`);
+            }
+
+            let newBalance = player.balance + amount;
+
+            await supabase
+              .from("players")
+              .update({ balance: newBalance })
+              .eq("user_id", player.user_id);
+
+            // 👉 群广播
+            if (currentGroupId) {
+              await client.pushMessage(currentGroupId, {
+                type: "text",
+                text:
+                  `💰 充值成功\n` +
+                  `👤 ${player.name}\n` +
+                  `${amount > 0 ? "➕" : "➖"}${Math.abs(amount)}\n` +
+                  `💳 余额: ${newBalance}`
+              });
+            }
+
+            return reply(event, "✅ 已充值");
+
+          } catch (err) {
+            console.log(err);
+            return reply(event, "❌ 系统错误");
           }
-
-          let newBalance = player.balance + amount;
-
-          await supabase
-            .from("players")
-            .update({ balance: newBalance })
-            .eq("user_id", player.user_id);
-
-          if (currentGroupId) {
-            await client.pushMessage(currentGroupId, {
-              type: "text",
-              text: `💰 ${player.name} ${amount > 0 ? "+" : ""}${amount}\n余额 ${newBalance}`
-            });
-          }
-
-          return reply(event, "✅ 充值成功");
         }
       }
 
-      // ===== 玩家 =====
+      // ================= 玩家 =================
+
       if (text === "/BALANCE") {
-        return reply(event, `💰 ${userData.balance}`);
+        return reply(event, `💳 余额: ${userData.balance}`);
       }
 
       if (!gameOpen) return;
 
-      if (bets[userId]) return reply(event, "❌ 已下注");
+      if (bets[userId]) {
+        return reply(event, "❌ 已下注");
+      }
 
       const match = text.match(/^(B|P|T)(\d+)/);
       if (!match) return;
@@ -159,6 +192,7 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
     }
 
     res.status(200).end();
+
   } catch (err) {
     console.log(err);
     res.status(500).end();

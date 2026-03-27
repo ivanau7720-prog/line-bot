@@ -26,6 +26,7 @@ let bets = {};
 let names = {};
 let timer = null;
 let countdown = 60;
+let currentGroupId = null;
 
 // ===== 走势 =====
 let history = [];
@@ -33,6 +34,19 @@ let history = [];
 // ===== 设置 =====
 const MIN_BET = 100;
 const MAX_BET = 10000;
+
+// ===== 只发群消息 =====
+async function sendToGroup(text) {
+  if (!currentGroupId) return;
+  try {
+    await client.pushMessage(currentGroupId, {
+      type: "text",
+      text
+    });
+  } catch (err) {
+    console.log("群发失败:", err);
+  }
+}
 
 // ===== 获取用户 =====
 async function getUser(userId, name) {
@@ -57,15 +71,6 @@ async function getUser(userId, name) {
   } catch (err) {
     console.log("DB ERROR:", err);
     return { balance: 1000, total_win: 0, total_lose: 0 };
-  }
-}
-
-// ===== 广播 =====
-async function broadcast(text) {
-  try {
-    await client.broadcast({ type: "text", text });
-  } catch (err) {
-    console.log("广播失败:", err);
   }
 }
 
@@ -94,7 +99,7 @@ function startCountdown() {
     countdown--;
 
     if (countdown % 10 === 0 && countdown > 0) {
-      broadcast(`⏰ 剩余 ${countdown} 秒`);
+      sendToGroup(`⏰ 剩余 ${countdown} 秒`);
     }
 
     if (countdown <= 0) {
@@ -108,7 +113,7 @@ function startCountdown() {
         msg += `${b.name} ${b.side}${b.amount}\n`;
       }
 
-      broadcast(msg || "无人下注");
+      sendToGroup(msg || "无人下注");
     }
 
   }, 1000);
@@ -124,6 +129,11 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
 
       const text = event.message.text.trim().toUpperCase();
       const userId = event.source.userId;
+
+      // ✅ 记录群ID（关键）
+      if (event.source.type === "group" || event.source.type === "room") {
+        currentGroupId = event.source.groupId || event.source.roomId;
+      }
 
       // ===== 获取名字 =====
       if (!names[userId]) {
@@ -214,7 +224,9 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
 
           msg += "\n" + buildBoard();
 
-          broadcast(msg);
+          // ✅ 只发群
+          sendToGroup(msg);
+
           return reply(event, "✅ 已结算并广播");
         }
       }
@@ -242,7 +254,8 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
 
       bets[userId] = { side, amount, name };
 
-      broadcast(`📥 ${name} 下注 ${side}${amount}`);
+      // ✅ 只群广播
+      sendToGroup(`📥 ${name} 下注 ${side}${amount}`);
 
       return reply(event, `✅ ${name} ${side}${amount}`);
     }

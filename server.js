@@ -11,27 +11,25 @@ const config = {
 
 const client = new line.Client(config);
 
-// ===== Supabase =====
+// ✅ Supabase（修复版）
 const supabase = createClient(
   "https://你的.supabase.co",
-  "sb_publishable_bWATEwsQd3fU_GKjcLdQzg_1pN6buQE
-"
+  "sb_publishable_bWATEwsQd3fU_GKjcLdQzg_1pN6buQE"
 );
 
-// ===== 管理员 =====
-const ADMIN_ID = " U8455884cfb22877f209092cc78ea9880";
+// ✅ 管理员（去掉空格）
+const ADMIN_ID = "U8455884cfb22877f209092cc78ea9880";
 
 // ===== 状态 =====
 let gameOpen = false;
 let bets = {};
 let names = {};
-let history = [];
 let currentGroupId = null;
 
-// ===== 设置 =====
-const MIN_BET = 100;
-const MAX_BET = 100000;
-const COMMISSION = 0.05;
+// ===== 工具：清理名字（支持泰文）=====
+function cleanName(name) {
+  return name.replace(/@/g, "").replace(/\s+/g, "").toLowerCase();
+}
 
 // ===== 获取用户 =====
 async function getUser(userId, name) {
@@ -41,35 +39,24 @@ async function getUser(userId, name) {
     .eq("user_id", userId);
 
   if (!data || data.length === 0) {
-    await supabase.from("players").insert([
-      {
-        user_id: userId,
-        name: name,
-        balance: 1000,
-        total_win: 0,
-        total_lose: 0
-      }
-    ]);
+    await supabase.from("players").insert([{
+      user_id: userId,
+      name: name,
+      balance: 1000,
+      total_win: 0,
+      total_lose: 0
+    }]);
+
     return { balance: 1000 };
   }
 
   return data[0];
 }
 
-// ===== 清理名字（支持泰文/空格）=====
-function cleanName(name) {
-  return name
-    .replace(/@/g, "")
-    .replace(/\s+/g, "")
-    .toLowerCase();
-}
-
 // ===== webhook =====
 app.post("/webhook", line.middleware(config), async (req, res) => {
   try {
-    const events = req.body.events;
-
-    for (const event of events) {
+    for (const event of req.body.events) {
       if (event.type !== "message" || event.message.type !== "text") continue;
 
       const textRaw = event.message.text.trim();
@@ -93,10 +80,10 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
       const name = names[userId];
       const userData = await getUser(userId, name);
 
-      // ================= 管理员 =================
+      // ===== 管理员 =====
       if (userId === ADMIN_ID) {
 
-        // ===== 开局 =====
+        // 开局
         if (text === "/START") {
           gameOpen = true;
           bets = {};
@@ -104,127 +91,47 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
           return reply(event, "🟢 开局 60秒下注");
         }
 
-        // ===== ⭐ 充值系统（终极版）=====
+        // ⭐ 充值（修复）
         if (text.startsWith("/ADD")) {
-          try {
-            let input = textRaw.replace(/\/add/i, "").trim();
+          let input = textRaw.replace(/\/add/i, "").trim();
 
-            // 👉 匹配名字 + 金额
-            let match = input.match(/(.+)\s([+-]?\d+)$/);
-            if (!match) return reply(event, "❌ 用法: /add 名字 +1000");
+          let match = input.match(/(.+)\s([+-]?\d+)$/);
+          if (!match) return reply(event, "❌ 用法 /add 名字 +1000");
 
-            let targetName = cleanName(match[1]);
-            let amount = parseInt(match[2]);
+          let targetName = cleanName(match[1]);
+          let amount = parseInt(match[2]);
 
-            if (Math.abs(amount) < 1000 || Math.abs(amount) > 100000) {
-              return reply(event, "❌ 充值范围 1000 - 100000");
-            }
+          let { data } = await supabase.from("players").select("*");
 
-            let { data } = await supabase
-              .from("players")
-              .select("*");
+          let player = data.find(p =>
+            cleanName(p.name).includes(targetName)
+          );
 
-            // 👉 模糊匹配（支持泰文）
-            let player = data.find(p =>
-              cleanName(p.name).includes(targetName)
-            );
-
-            if (!player) {
-              return reply(event, "❌ 找不到玩家");
-            }
-
-            let newBalance = player.balance + amount;
-
-            await supabase
-              .from("players")
-              .update({ balance: newBalance })
-              .eq("user_id", player.user_id);
-
-            // ===== 记录充值 =====
-            await supabase.from("transactions").insert([{
-              user_id: player.user_id,
-              amount: amount,
-              type: "add"
-            }]);
-
-            // ===== 群广播 =====
-            if (currentGroupId) {
-              await client.pushMessage(currentGroupId, {
-                type: "text",
-                text: `💰 充值成功\n👤 ${player.name}\n${amount > 0 ? "➕" : "➖"}${Math.abs(amount)}\n💳 ${newBalance}`
-              });
-            }
-
-            return reply(event, "✅ 完成");
-
-          } catch (err) {
-            console.log(err);
-            return reply(event, "❌ 充值失败");
-          }
-        }
-
-        // ===== 结算 =====
-        if (text.startsWith("/RESULT")) {
-          const result = text.split(" ")[1];
-
-          let msg = `📊 本局结果：${result} ${result === "B" ? "🔴" : result === "P" ? "🔵" : "🟢"}\n\n`;
-          let leaderboard = [];
-
-          for (let user in bets) {
-            const bet = bets[user];
-
-            let win = bet.side === result
-              ? bet.amount * (1 - COMMISSION)
-              : -bet.amount;
-
-            let { data } = await supabase
-              .from("players")
-              .select("*")
-              .eq("user_id", user);
-
-            let player = data[0];
-            let newBalance = player.balance + win;
-
-            await supabase
-              .from("players")
-              .update({ balance: newBalance })
-              .eq("user_id", user);
-
-            leaderboard.push({ name: bet.name, win });
-
-            msg += `${bet.name} ${win > 0 ? "✅+" : "❌"}${Math.round(win)}\n`;
+          if (!player) {
+            return reply(event, "❌ 找不到玩家");
           }
 
-          leaderboard.sort((a, b) => b.win - a.win);
+          let newBalance = player.balance + amount;
 
-          let rank = "\n🏆 排行榜\n";
-          leaderboard.forEach((p, i) => {
-            rank += `${i + 1}. ${p.name} (${Math.round(p.win)})\n`;
-          });
-
-          history.push(result === "B" ? "🔴" : result === "P" ? "🔵" : "🟢");
-          if (history.length > 30) history = [];
-
-          let historyMsg = "\n📊 开奖记录\n" + history.join(" ");
-
-          bets = {};
-          gameOpen = false;
+          await supabase
+            .from("players")
+            .update({ balance: newBalance })
+            .eq("user_id", player.user_id);
 
           if (currentGroupId) {
             await client.pushMessage(currentGroupId, {
               type: "text",
-              text: msg + rank + historyMsg
+              text: `💰 ${player.name} ${amount > 0 ? "+" : ""}${amount}\n余额 ${newBalance}`
             });
           }
 
-          return reply(event, "✅ 已结算");
+          return reply(event, "✅ 充值成功");
         }
       }
 
-      // ================= 玩家 =================
-
+      // ===== 玩家 =====
       if (text === "/BALANCE") {
-        return reply(event, `💳 余额：${userData.balance}`);
+        return reply(event, `💰 ${userData.balance}`);
       }
 
       if (!gameOpen) return;
@@ -252,7 +159,6 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
     }
 
     res.status(200).end();
-
   } catch (err) {
     console.log(err);
     res.status(500).end();

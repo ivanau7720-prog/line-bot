@@ -12,7 +12,7 @@ const config = {
 const client = new line.Client(config);
 
 const supabase = createClient(
-  "https://riqystgmpvxwsebyavuo.supabase.co",
+  "https://你的.supabase.co",
   "sb_publishable_bWATEwsQd3fU_GKjcLdQzg_1pN6buQE"
 );
 
@@ -23,11 +23,7 @@ let bets = {};
 let names = {};
 let groupId = null;
 
-function normalize(name) {
-  return name.replace(/[@\s]/g, "").toLowerCase();
-}
-
-// ✅ 获取用户（初始余额=0）
+// ===== 获取用户（余额=0）=====
 async function getUser(userId, name) {
   let { data } = await supabase
     .from("players")
@@ -48,13 +44,13 @@ async function getUser(userId, name) {
   return data[0];
 }
 
-// ✅ 广播
+// ===== 广播 =====
 async function broadcast(text) {
   if (!groupId) return;
   await client.pushMessage(groupId, { type: "text", text });
 }
 
-// ✅ 倒计时
+// ===== 倒计时 =====
 function startTimer() {
   let time = 60;
 
@@ -77,16 +73,12 @@ function startTimer() {
 
       await broadcast("🔴 已关局\n\n" + list);
     }
-
   }, 10000);
 }
 
-// ✅ 结果颜色
-function getResultEmoji(r) {
-  if (r === "B") return "🔴";
-  if (r === "P") return "🔵";
-  if (r === "T") return "🟢";
-  return "";
+// ===== 结果颜色 =====
+function emoji(r) {
+  return r === "B" ? "🔴" : r === "P" ? "🔵" : "🟢";
 }
 
 app.post("/webhook", line.middleware(config), async (req, res) => {
@@ -95,7 +87,7 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
 
       if (event.type !== "message" || event.message.type !== "text") continue;
 
-      const textRaw = event.message.text || "";
+      const textRaw = event.message.text;
       const text = textRaw.trim().toUpperCase();
       const userId = event.source.userId;
 
@@ -103,7 +95,7 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
         groupId = event.source.groupId;
       }
 
-      // ✅ ⭐ 修复：群获取名字
+      // ===== 获取名字 =====
       if (!names[userId]) {
         try {
           let profile;
@@ -119,14 +111,14 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
 
           names[userId] = profile.displayName;
         } catch {
-          names[userId] = "玩家";
+          names[userId] = "玩家" + userId.slice(-4);
         }
       }
 
       const name = names[userId];
       const user = await getUser(userId, name);
 
-      // ✅ 查余额
+      // ===== 查询余额 =====
       if (text === "/BALANCE") {
         return reply(event, `💰 余额：${user.balance}`);
       }
@@ -134,6 +126,7 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
       // ================= 管理员 =================
       if (userId === ADMIN_ID) {
 
+        // ===== 开局 =====
         if (text === "/START") {
           gameOpen = true;
           bets = {};
@@ -142,52 +135,58 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
           return reply(event, "已开局");
         }
 
-        // ✅ 充值（稳定版）
+        // ===== ⭐ 真正@充值（最稳定）=====
         if (text.startsWith("/ADD")) {
 
-          let input = textRaw.replace(/\/add/i, "").trim();
-          let match = input.match(/(.+)\s([+-]?\d+)/);
+          const mention = event.message.mention;
 
-          if (!match) return reply(event, "❌ /add 名字 +1000");
-
-          let target = normalize(match[1]);
-          let amount = parseInt(match[2]);
-
-          let { data } = await supabase.from("players").select("*");
-
-          let player = data.find(p =>
-            normalize(p.name).includes(target) ||
-            target.includes(normalize(p.name))
-          );
-
-          if (!player) {
-            return reply(event, "❌ 找不到玩家（先让玩家发 /balance）");
+          if (!mention || !mention.mentionees) {
+            return reply(event, "❌ 请@玩家 /add @玩家 +1000");
           }
 
-          let newBalance = player.balance + amount;
+          let amountMatch = textRaw.match(/([+-]\d+)/);
+          if (!amountMatch) {
+            return reply(event, "❌ 金额错误 /add @玩家 +1000");
+          }
 
-          await supabase
-            .from("players")
-            .update({ balance: newBalance })
-            .eq("user_id", player.user_id);
+          let amount = parseInt(amountMatch[1]);
 
-          await broadcast(`💰 ${player.name} ${amount > 0 ? "+" : ""}${amount}\n余额 ${newBalance}`);
+          for (let m of mention.mentionees) {
+
+            let targetId = m.userId;
+
+            let { data } = await supabase
+              .from("players")
+              .select("*")
+              .eq("user_id", targetId);
+
+            if (!data || data.length === 0) continue;
+
+            let player = data[0];
+            let newBalance = player.balance + amount;
+
+            await supabase
+              .from("players")
+              .update({ balance: newBalance })
+              .eq("user_id", targetId);
+
+            await broadcast(
+              `💰 ${player.name} ${amount > 0 ? "+" : ""}${amount}\n余额 ${newBalance}`
+            );
+          }
 
           return reply(event, "✅ 充值成功");
         }
 
-        // ✅ 结算
+        // ===== 结算 =====
         if (text.startsWith("/RESULT")) {
 
           let result = text.split(" ")[1];
-
           if (!["B","P","T"].includes(result)) {
             return reply(event, "❌ /result B/P/T");
           }
 
-          let emoji = getResultEmoji(result);
-          let msg = `📊 本局结果：${result} ${emoji}\n\n`;
-
+          let msg = `📊 本局结果：${result} ${emoji(result)}\n\n`;
           let ranking = [];
 
           for (let u in bets) {
@@ -201,7 +200,6 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
               .eq("user_id", u);
 
             let player = data[0];
-
             let newBalance = player.balance + win;
 
             await supabase
@@ -222,8 +220,8 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
           });
 
           bets = {};
-
           await broadcast(msg);
+
           return reply(event, "✅ 已结算");
         }
       }

@@ -3,7 +3,10 @@ const line = require("@line/bot-sdk");
 const { createClient } = require("@supabase/supabase-js");
 
 const app = express();
+app.use(express.json());
+app.use(express.static(__dirname));
 
+// ===== LINE =====
 const config = {
   channelAccessToken: "MSoKv1nFk7+A5XOwlF/bg2FL9kfa8nT+gGP/DOLa6zY02XMfbgibLL2xQZ8Dp35UTKUQ0olq/jlDUcjwaApfs+2MCK4kAALknCC/GMwDC4MnUR9BGzPmVtbQLUbL5Gmu1tzmCBg7MhS3XD/VXCSfYwdB04t89/1O/w1cDnyilFU=",
   channelSecret: "945a0301583c7770ae2cbdf7fe3a4483"
@@ -11,22 +14,25 @@ const config = {
 
 const client = new line.Client(config);
 
+// ===== Supabase =====
 const supabase = createClient(
-  "https://你的.supabase.co",
+  "https://riqystgmpvxwsebyavuo.supabase.co",
   "sb_publishable_bWATEwsQd3fU_GKjcLdQzg_1pN6buQE"
 );
 
-const ADMIN_ID = "U8455884cfb22877f209092cc78ea9880
-";
+// ===== 管理员 =====
+const ADMIN_ID = "U8455884cfb22877f209092cc78ea9880";
+const ADMIN_PASSWORD = "123456";
 
 // ===== 状态 =====
+let adminLoggedIn = false;
 let gameOpen = false;
 let bets = {};
 let names = {};
 let currentGroupId = null;
 let timer = null;
 
-// ===== 获取用户（修复：默认0分）=====
+// ===== 获取用户（默认0分）=====
 async function getUser(userId, name) {
   let { data } = await supabase
     .from("players")
@@ -37,38 +43,34 @@ async function getUser(userId, name) {
     await supabase.from("players").insert([{
       user_id: userId,
       name: name,
-      balance: 0, // ✅ 修复
+      balance: 0,
       total_win: 0,
       total_lose: 0
     }]);
-
     return { balance: 0 };
   }
 
   return data[0];
 }
 
-// ===== 倒计时系统（核心修复）=====
+// ===== 倒计时 =====
 function startTimer() {
   let time = 60;
 
   timer = setInterval(async () => {
     time -= 10;
 
-    if (time > 0) {
-      if (currentGroupId) {
-        await client.pushMessage(currentGroupId, {
-          type: "text",
-          text: `⏰ 剩余 ${time} 秒`
-        });
-      }
+    if (time > 0 && currentGroupId) {
+      await client.pushMessage(currentGroupId, {
+        type: "text",
+        text: `⏰ 剩余 ${time} 秒`
+      });
     }
 
     if (time <= 0) {
       clearInterval(timer);
       closeGame();
     }
-
   }, 10000);
 }
 
@@ -92,6 +94,46 @@ async function closeGame() {
     });
   }
 }
+
+// ===== 管理员登录 =====
+app.post("/admin/login", (req, res) => {
+  const { password } = req.body;
+
+  if (password === ADMIN_PASSWORD) {
+    adminLoggedIn = true;
+    return res.json({ success: true });
+  }
+
+  res.json({ success: false });
+});
+
+// ===== 充值 API =====
+app.post("/admin/add", async (req, res) => {
+  if (!adminLoggedIn) {
+    return res.json({ error: "未登录" });
+  }
+
+  const { user_id, amount } = req.body;
+
+  let { data } = await supabase
+    .from("players")
+    .select("*")
+    .eq("user_id", user_id);
+
+  if (!data || data.length === 0) {
+    return res.json({ error: "找不到玩家" });
+  }
+
+  let player = data[0];
+  let newBalance = player.balance + amount;
+
+  await supabase
+    .from("players")
+    .update({ balance: newBalance })
+    .eq("user_id", user_id);
+
+  res.json({ success: true, newBalance });
+});
 
 // ===== webhook =====
 app.post("/webhook", line.middleware(config), async (req, res) => {
@@ -119,20 +161,27 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
       const name = names[userId];
       const userData = await getUser(userId, name);
 
-      // ================= 管理员 =================
+      // ===== 管理员 =====
       if (userId === ADMIN_ID) {
 
-        // ===== 开局 =====
         if (text === "/START") {
+
+          if (gameOpen) {
+            return reply(event, "❌ 已经开局中");
+          }
+
+          if (timer) {
+            clearInterval(timer);
+          }
+
           gameOpen = true;
           bets = {};
 
-          startTimer(); // ✅ 修复
+          startTimer();
 
           return reply(event, "🟢 开局 60秒下注");
         }
 
-        // ===== 结算 =====
         if (text.startsWith("/RESULT")) {
           const result = text.split(" ")[1];
 
@@ -180,8 +229,7 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
         }
       }
 
-      // ================= 玩家 =================
-
+      // ===== 玩家 =====
       if (text === "/BALANCE") {
         return reply(event, `💰 余额：${userData.balance}`);
       }
@@ -198,6 +246,11 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
       const side = match[1];
       const amount = parseInt(match[2]);
 
+      // 👉 限制下注
+      if (amount < 100 || amount > 10000) {
+        return reply(event, "❌ 限制100-10000");
+      }
+
       if (userData.balance < amount) {
         return reply(event, "❌ 余额不足");
       }
@@ -207,7 +260,7 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
       if (currentGroupId) {
         await client.pushMessage(currentGroupId, {
           type: "text",
-          text: `📥 ${name} ${side}${amount}`
+          text: `📥 ${name} 下注 ${side}${amount}`
         });
       }
     }
@@ -215,7 +268,7 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
     res.status(200).end();
 
   } catch (err) {
-    console.log(err);
+    console.log("ERROR:", err);
     res.status(500).end();
   }
 });

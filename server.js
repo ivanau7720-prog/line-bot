@@ -1,3 +1,4 @@
+// 🔥 已修复版（稳定）
 const express = require("express");
 const line = require("@line/bot-sdk");
 const { createClient } = require("@supabase/supabase-js");
@@ -11,27 +12,22 @@ const config = {
 
 const client = new line.Client(config);
 
-// ===== Supabase =====
 const supabase = createClient(
   "https://riqystgmpvxwsebyavuo.supabase.co",
   "sb_publishable_bWATEwsQd3fU_GKjcLdQzg_1pN6buQE"
 );
 
-// ===== 管理员 =====
 const ADMIN_ID = "U8455884cfb22877f209092cc78ea9880";
 
-// ===== 状态 =====
 let gameOpen = false;
 let bets = {};
 let names = {};
 let groupId = null;
 
-// ===== 名字处理（超强版）=====
 function normalize(name) {
   return name.replace(/[@\s]/g, "").toLowerCase();
 }
 
-// ===== 获取用户（默认0分）=====
 async function getUser(userId, name) {
   let { data } = await supabase
     .from("players")
@@ -52,13 +48,11 @@ async function getUser(userId, name) {
   return data[0];
 }
 
-// ===== 广播 =====
 async function broadcast(text) {
   if (!groupId) return;
   await client.pushMessage(groupId, { type: "text", text });
 }
 
-// ===== 倒计时 =====
 function startTimer() {
   let time = 60;
 
@@ -85,7 +79,6 @@ function startTimer() {
   }, 10000);
 }
 
-// ===== 结果图标 =====
 function getResultEmoji(r) {
   if (r === "B") return "🔴";
   if (r === "P") return "🔵";
@@ -93,11 +86,12 @@ function getResultEmoji(r) {
   return "";
 }
 
-// ===== webhook =====
 app.post("/webhook", line.middleware(config), async (req, res) => {
   try {
     for (const event of req.body.events) {
-      if (event.type !== "message") continue;
+
+      // ✅ 修复1
+      if (event.type !== "message" || event.message.type !== "text") continue;
 
       const textRaw = event.message.text || "";
       const text = textRaw.trim().toUpperCase();
@@ -107,7 +101,6 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
         groupId = event.source.groupId;
       }
 
-      // ===== 获取名字 =====
       if (!names[userId]) {
         try {
           const profile = await client.getProfile(userId);
@@ -120,15 +113,12 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
       const name = names[userId];
       const user = await getUser(userId, name);
 
-      // ===== 查询余额 =====
       if (text === "/BALANCE") {
         return reply(event, `💰 余额：${user.balance}`);
       }
 
-      // ===== 管理员 =====
       if (userId === ADMIN_ID) {
 
-        // 开局
         if (text === "/START") {
           gameOpen = true;
           bets = {};
@@ -137,25 +127,26 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
           return reply(event, "已开局");
         }
 
-        // ===== 充值（超级稳定版）=====
         if (text.startsWith("/ADD")) {
 
           let input = textRaw.replace(/\/add/i, "").trim();
-
           let match = input.match(/(.+)\s([+-]?\d+)/);
-          if (!match) return reply(event, "❌ 用法 /add 名字 +1000");
+
+          if (!match) return reply(event, "❌ /add 名字 +1000");
 
           let target = normalize(match[1]);
           let amount = parseInt(match[2]);
 
           let { data } = await supabase.from("players").select("*");
 
+          // ✅ 修复2（双向匹配）
           let player = data.find(p =>
-            normalize(p.name).includes(target)
+            normalize(p.name).includes(target) ||
+            target.includes(normalize(p.name))
           );
 
           if (!player) {
-            return reply(event, "❌ 找不到玩家（请先让玩家说话或查/balance）");
+            return reply(event, "❌ 找不到玩家（先让玩家发 /balance）");
           }
 
           let newBalance = player.balance + amount;
@@ -170,9 +161,14 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
           return reply(event, "✅ 充值成功");
         }
 
-        // ===== 结算 =====
         if (text.startsWith("/RESULT")) {
+
           let result = text.split(" ")[1];
+
+          // ✅ 修复3
+          if (!["B","P","T"].includes(result)) {
+            return reply(event, "❌ /result B/P/T");
+          }
 
           let emoji = getResultEmoji(result);
 
@@ -218,7 +214,6 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
         }
       }
 
-      // ===== 玩家下注 =====
       if (!gameOpen) return;
 
       if (bets[userId]) return reply(event, "❌ 已下注");
@@ -246,7 +241,6 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
   }
 });
 
-// ===== 回复 =====
 function reply(event, text) {
   return client.replyMessage(event.replyToken, {
     type: "text",

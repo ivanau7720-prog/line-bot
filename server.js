@@ -3,28 +3,34 @@ const line = require("@line/bot-sdk");
 const { createClient } = require("@supabase/supabase-js");
 
 const app = express();
-app.use(express.json());
 
+// ===== LINE =====
 const config = {
   channelAccessToken: "MSoKv1nFk7+A5XOwlF/bg2FL9kfa8nT+gGP/DOLa6zY02XMfbgibLL2xQZ8Dp35UTKUQ0olq/jlDUcjwaApfs+2MCK4kAALknCC/GMwDC4MnUR9BGzPmVtbQLUbL5Gmu1tzmCBg7MhS3XD/VXCSfYwdB04t89/1O/w1cDnyilFU=",
   channelSecret: "945a0301583c7770ae2cbdf7fe3a4483"
 };
-
 const client = new line.Client(config);
 
+// ===== Supabase =====
 const supabase = createClient(
-  "https://你的.supabase.co",
+  "https://你的项目ID.supabase.co",
   "sb_publishable_bWATEwsQd3fU_GKjcLdQzg_1pN6buQE"
 );
 
+// ===== 管理员 =====
 const ADMIN_ID = "U8455884cfb22877f209092cc78ea9880";
 
+// ===== 状态 =====
 let gameOpen = false;
 let bets = {};
 let names = {};
 let groupId = null;
+let history = [];
 
-// ===== 获取用户 =====
+// ===== 抽水 =====
+const FEE_RATE = 0.05;
+
+// ===== 用户 =====
 async function getUser(userId, name) {
   let { data } = await supabase
     .from("players")
@@ -48,7 +54,10 @@ async function getUser(userId, name) {
 // ===== 广播 =====
 async function broadcast(text) {
   if (!groupId) return;
-  await client.pushMessage(groupId, { type: "text", text });
+  await client.pushMessage(groupId, {
+    type: "text",
+    text
+  });
 }
 
 // ===== 倒计时 =====
@@ -77,12 +86,12 @@ function startTimer() {
   }, 10000);
 }
 
-// ===== 结果颜色 =====
+// ===== emoji =====
 function emoji(r) {
   return r === "B" ? "🔴" : r === "P" ? "🔵" : "🟢";
 }
 
-// ===== 主 webhook =====
+// ===== webhook =====
 app.post("/webhook", line.middleware(config), async (req, res) => {
   try {
     for (const event of req.body.events) {
@@ -97,7 +106,7 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
         groupId = event.source.groupId;
       }
 
-      // ===== 获取名字 =====
+      // ===== 获取名字（支持泰文）=====
       if (!names[userId]) {
         try {
           let profile;
@@ -113,7 +122,7 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
 
           names[userId] = profile.displayName;
         } catch {
-          names[userId] = "玩家" + userId.slice(-4);
+          names[userId] = "玩家";
         }
       }
 
@@ -137,13 +146,13 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
           return reply(event, "已开局");
         }
 
-        // ===== ⭐ @充值（稳定版）=====
+        // ===== @充值（100%稳定）=====
         if (text.startsWith("/ADD")) {
 
           const mention = event.message.mention;
 
           if (!mention || !mention.mentionees) {
-            return reply(event, "❌ 请@玩家 /add @玩家 +1000");
+            return reply(event, "❌ 请 @玩家 /add @玩家 +1000");
           }
 
           let amountMatch = textRaw.match(/([+-]\d+)/);
@@ -172,17 +181,16 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
               .update({ balance: newBalance })
               .eq("user_id", targetId);
 
-            // ⭐ 记录充值
+            // 写充值记录
             await supabase.from("transactions").insert([{
               user_id: targetId,
               name: player.name,
               amount: amount,
-              type: "deposit"
+              fee: 0,
+              type: "topup"
             }]);
 
-            await broadcast(
-              `💰 ${player.name} ${amount > 0 ? "+" : ""}${amount}\n余额 ${newBalance}`
-            );
+            await broadcast(`💰 ${player.name} ${amount > 0 ? "+" : ""}${amount}\n余额 ${newBalance}`);
           }
 
           return reply(event, "✅ 充值成功");
@@ -192,25 +200,32 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
         if (text.startsWith("/RESULT")) {
 
           let result = text.split(" ")[1];
-
           if (!["B","P","T"].includes(result)) {
             return reply(event, "❌ /result B/P/T");
           }
 
-          let msg = `📊 本局结果：${result} ${emoji(result)}\n\n`;
+          let msg = `📊 本局结果：${emoji(result)}\n\n🏆 排行榜\n`;
+
           let ranking = [];
 
           for (let u in bets) {
             let b = bets[u];
+            let player = await getUser(u, b.name);
 
-            let win = b.side === result ? b.amount : -b.amount;
+            let win = 0;
+            let fee = 0;
 
-            let { data } = await supabase
-              .from("players")
-              .select("*")
-              .eq("user_id", u);
+            if (b.side === result) {
+              if (result === "T") {
+                win = b.amount * 8;
+              } else {
+                fee = Math.floor(b.amount * FEE_RATE);
+                win = b.amount - fee;
+              }
+            } else {
+              win = -b.amount;
+            }
 
-            let player = data[0];
             let newBalance = player.balance + win;
 
             await supabase
@@ -218,27 +233,36 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
               .update({ balance: newBalance })
               .eq("user_id", u);
 
-            // ⭐ 记录输赢
+            // 写交易记录
             await supabase.from("transactions").insert([{
               user_id: u,
-              name: player.name,
+              name: b.name,
               amount: win,
+              fee: fee,
               type: "game"
             }]);
 
-            msg += `${b.name} ${win > 0 ? "✅+" : "❌"}${win}\n`;
+            msg += `${b.name} ${win >= 0 ? "✅+" : "❌"}${win}\n`;
 
             ranking.push({ name: b.name, score: newBalance });
           }
 
-          ranking.sort((a, b) => b.score - a.score);
+          // 排行榜
+          ranking.sort((a,b)=>b.score-a.score);
 
-          msg += "\n🏆 排行榜\n";
-          ranking.slice(0, 5).forEach((p, i) => {
-            msg += `${i + 1}. ${p.name} ${p.score}\n`;
+          msg += "\n";
+          ranking.slice(0,5).forEach((p,i)=>{
+            msg += `${i+1}. ${p.name} ${p.score}\n`;
           });
 
+          // 记录走势
+          history.push(emoji(result));
+          if (history.length > 30) history = [];
+
+          msg += `\n📊 开奖记录\n${history.join(" ")}`;
+
           bets = {};
+
           await broadcast(msg);
 
           return reply(event, "✅ 已结算");
@@ -273,38 +297,6 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
   }
 });
 
-// ===== 后台充值API =====
-app.post("/admin/topup", async (req, res) => {
-  const { userId, amount } = req.body;
-
-  let { data } = await supabase
-    .from("players")
-    .select("*")
-    .eq("user_id", userId);
-
-  if (!data || data.length === 0) {
-    return res.send("用户不存在");
-  }
-
-  let player = data[0];
-  let newBalance = player.balance + Number(amount);
-
-  await supabase
-    .from("players")
-    .update({ balance: newBalance })
-    .eq("user_id", userId);
-
-  await supabase.from("transactions").insert([{
-    user_id: userId,
-    name: player.name,
-    amount: amount,
-    type: "deposit"
-  }]);
-
-  res.send("OK");
-});
-
-// ===== 回复 =====
 function reply(event, text) {
   return client.replyMessage(event.replyToken, {
     type: "text",

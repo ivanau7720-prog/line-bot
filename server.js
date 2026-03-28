@@ -4,6 +4,10 @@ const { createClient } = require("@supabase/supabase-js");
 
 const app = express();
 
+// ✅ 必须加（后台用）
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
 // ===== LINE =====
 const config = {
   channelAccessToken: "MSoKv1nFk7+A5XOwlF/bg2FL9kfa8nT+gGP/DOLa6zY02XMfbgibLL2xQZ8Dp35UTKUQ0olq/jlDUcjwaApfs+2MCK4kAALknCC/GMwDC4MnUR9BGzPmVtbQLUbL5Gmu1tzmCBg7MhS3XD/VXCSfYwdB04t89/1O/w1cDnyilFU=",
@@ -11,9 +15,9 @@ const config = {
 };
 const client = new line.Client(config);
 
-// ===== Supabase =====
+// ===== Supabase（改成你的真实URL）=====
 const supabase = createClient(
-  "https://你的项目ID.supabase.co",
+  "https://riqystgmpvxwsebyavuo.supabase.co",
   "sb_publishable_bWATEwsQd3fU_GKjcLdQzg_1pN6buQE"
 );
 
@@ -30,7 +34,7 @@ let history = [];
 // ===== 抽水 =====
 const FEE_RATE = 0.05;
 
-// ===== 用户 =====
+// ===== 获取用户 =====
 async function getUser(userId, name) {
   let { data } = await supabase
     .from("players")
@@ -54,10 +58,7 @@ async function getUser(userId, name) {
 // ===== 广播 =====
 async function broadcast(text) {
   if (!groupId) return;
-  await client.pushMessage(groupId, {
-    type: "text",
-    text
-  });
+  await client.pushMessage(groupId, { type: "text", text });
 }
 
 // ===== 倒计时 =====
@@ -86,10 +87,82 @@ function startTimer() {
   }, 10000);
 }
 
-// ===== emoji =====
 function emoji(r) {
   return r === "B" ? "🔴" : r === "P" ? "🔵" : "🟢";
 }
+
+// ===== 🔥 后台网页 =====
+app.get("/admin", (req, res) => {
+  res.send(`
+    <h2>💰 后台系统</h2>
+
+    <form method="POST" action="/admin/topup">
+      用户ID:<br>
+      <input name="user_id"/><br><br>
+
+      金额:<br>
+      <input name="amount"/><br><br>
+
+      <button type="submit">充值</button>
+    </form>
+
+    <br><br>
+
+    <form method="GET" action="/admin/balance">
+      查询余额:<br>
+      <input name="user_id"/><br><br>
+      <button type="submit">查询</button>
+    </form>
+  `);
+});
+
+// ===== 后台充值 =====
+app.post("/admin/topup", async (req, res) => {
+  const { user_id, amount } = req.body;
+
+  let { data } = await supabase
+    .from("players")
+    .select("*")
+    .eq("user_id", user_id);
+
+  if (!data || data.length === 0) {
+    return res.send("❌ 找不到玩家");
+  }
+
+  let player = data[0];
+  let newBalance = player.balance + Number(amount);
+
+  await supabase
+    .from("players")
+    .update({ balance: newBalance })
+    .eq("user_id", user_id);
+
+  await supabase.from("transactions").insert([{
+    user_id,
+    name: player.name,
+    amount: Number(amount),
+    fee: 0,
+    type: "topup"
+  }]);
+
+  res.send(`✅ 成功<br>${player.name} 余额 ${newBalance}`);
+});
+
+// ===== 查余额 =====
+app.get("/admin/balance", async (req, res) => {
+  const { user_id } = req.query;
+
+  let { data } = await supabase
+    .from("players")
+    .select("*")
+    .eq("user_id", user_id);
+
+  if (!data || data.length === 0) {
+    return res.send("❌ 找不到玩家");
+  }
+
+  res.send(`💰 ${data[0].name} 余额：${data[0].balance}`);
+});
 
 // ===== webhook =====
 app.post("/webhook", line.middleware(config), async (req, res) => {
@@ -106,7 +179,6 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
         groupId = event.source.groupId;
       }
 
-      // ===== 获取名字（支持泰文）=====
       if (!names[userId]) {
         try {
           let profile;
@@ -129,15 +201,13 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
       const name = names[userId];
       const user = await getUser(userId, name);
 
-      // ===== 查余额 =====
       if (text === "/BALANCE") {
         return reply(event, `💰 余额：${user.balance}`);
       }
 
-      // ================= 管理员 =================
+      // ===== 管理员 =====
       if (userId === ADMIN_ID) {
 
-        // ===== 开局 =====
         if (text === "/START") {
           gameOpen = true;
           bets = {};
@@ -146,57 +216,6 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
           return reply(event, "已开局");
         }
 
-        // ===== @充值（100%稳定）=====
-        if (text.startsWith("/ADD")) {
-
-          const mention = event.message.mention;
-
-          if (!mention || !mention.mentionees) {
-            return reply(event, "❌ 请 @玩家 /add @玩家 +1000");
-          }
-
-          let amountMatch = textRaw.match(/([+-]\d+)/);
-          if (!amountMatch) {
-            return reply(event, "❌ 金额错误");
-          }
-
-          let amount = parseInt(amountMatch[1]);
-
-          for (let m of mention.mentionees) {
-
-            let targetId = m.userId;
-
-            let { data } = await supabase
-              .from("players")
-              .select("*")
-              .eq("user_id", targetId);
-
-            if (!data || data.length === 0) continue;
-
-            let player = data[0];
-            let newBalance = player.balance + amount;
-
-            await supabase
-              .from("players")
-              .update({ balance: newBalance })
-              .eq("user_id", targetId);
-
-            // 写充值记录
-            await supabase.from("transactions").insert([{
-              user_id: targetId,
-              name: player.name,
-              amount: amount,
-              fee: 0,
-              type: "topup"
-            }]);
-
-            await broadcast(`💰 ${player.name} ${amount > 0 ? "+" : ""}${amount}\n余额 ${newBalance}`);
-          }
-
-          return reply(event, "✅ 充值成功");
-        }
-
-        // ===== 结算 =====
         if (text.startsWith("/RESULT")) {
 
           let result = text.split(" ")[1];
@@ -233,7 +252,6 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
               .update({ balance: newBalance })
               .eq("user_id", u);
 
-            // 写交易记录
             await supabase.from("transactions").insert([{
               user_id: u,
               name: b.name,
@@ -247,7 +265,6 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
             ranking.push({ name: b.name, score: newBalance });
           }
 
-          // 排行榜
           ranking.sort((a,b)=>b.score-a.score);
 
           msg += "\n";
@@ -255,21 +272,19 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
             msg += `${i+1}. ${p.name} ${p.score}\n`;
           });
 
-          // 记录走势
           history.push(emoji(result));
           if (history.length > 30) history = [];
 
           msg += `\n📊 开奖记录\n${history.join(" ")}`;
 
           bets = {};
-
           await broadcast(msg);
 
           return reply(event, "✅ 已结算");
         }
       }
 
-      // ================= 玩家下注 =================
+      // ===== 玩家下注 =====
       if (!gameOpen) return;
 
       if (bets[userId]) return reply(event, "❌ 已下注");

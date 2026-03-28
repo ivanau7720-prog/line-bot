@@ -32,7 +32,10 @@ let names = {};
 let currentGroupId = null;
 let timer = null;
 
-// ===== 获取用户（默认0分）=====
+// ===== DEBUG（解决没反应问题）=====
+console.log("BOT 已启动");
+
+// ===== 获取用户 =====
 async function getUser(userId, name) {
   let { data } = await supabase
     .from("players")
@@ -59,6 +62,8 @@ function startTimer() {
 
   timer = setInterval(async () => {
     time -= 10;
+
+    console.log("倒计时:", time);
 
     if (time > 0 && currentGroupId) {
       await client.pushMessage(currentGroupId, {
@@ -95,7 +100,7 @@ async function closeGame() {
   }
 }
 
-// ===== 管理员登录 =====
+// ===== 后台登录 =====
 app.post("/admin/login", (req, res) => {
   const { password } = req.body;
 
@@ -107,7 +112,7 @@ app.post("/admin/login", (req, res) => {
   res.json({ success: false });
 });
 
-// ===== 充值 API =====
+// ===== 充值 =====
 app.post("/admin/add", async (req, res) => {
   if (!adminLoggedIn) {
     return res.json({ error: "未登录" });
@@ -138,11 +143,17 @@ app.post("/admin/add", async (req, res) => {
 // ===== webhook =====
 app.post("/webhook", line.middleware(config), async (req, res) => {
   try {
+
+    console.log("收到事件:", JSON.stringify(req.body));
+
     for (const event of req.body.events) {
+
       if (event.type !== "message" || event.message.type !== "text") continue;
 
       const text = event.message.text.trim().toUpperCase();
       const userId = event.source.userId;
+
+      console.log("用户:", userId, "内容:", text);
 
       if (event.source.type === "group") {
         currentGroupId = event.source.groupId;
@@ -246,7 +257,6 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
       const side = match[1];
       const amount = parseInt(match[2]);
 
-      // 👉 限制下注
       if (amount < 100 || amount > 10000) {
         return reply(event, "❌ 限制100-10000");
       }
@@ -268,7 +278,7 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
     res.status(200).end();
 
   } catch (err) {
-    console.log("ERROR:", err);
+    console.log("🔥 ERROR:", err);
     res.status(500).end();
   }
 });
@@ -282,5 +292,5 @@ function reply(event, text) {
 }
 
 app.listen(process.env.PORT || 3000, () => {
-  console.log("RUNNING");
+  console.log("🚀 BOT RUNNING");
 });

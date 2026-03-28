@@ -1,4 +1,3 @@
-// 🔥 已修复版（稳定）
 const express = require("express");
 const line = require("@line/bot-sdk");
 const { createClient } = require("@supabase/supabase-js");
@@ -28,6 +27,7 @@ function normalize(name) {
   return name.replace(/[@\s]/g, "").toLowerCase();
 }
 
+// ✅ 获取用户（初始余额=0）
 async function getUser(userId, name) {
   let { data } = await supabase
     .from("players")
@@ -48,11 +48,13 @@ async function getUser(userId, name) {
   return data[0];
 }
 
+// ✅ 广播
 async function broadcast(text) {
   if (!groupId) return;
   await client.pushMessage(groupId, { type: "text", text });
 }
 
+// ✅ 倒计时
 function startTimer() {
   let time = 60;
 
@@ -79,6 +81,7 @@ function startTimer() {
   }, 10000);
 }
 
+// ✅ 结果颜色
 function getResultEmoji(r) {
   if (r === "B") return "🔴";
   if (r === "P") return "🔵";
@@ -90,7 +93,6 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
   try {
     for (const event of req.body.events) {
 
-      // ✅ 修复1
       if (event.type !== "message" || event.message.type !== "text") continue;
 
       const textRaw = event.message.text || "";
@@ -101,9 +103,20 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
         groupId = event.source.groupId;
       }
 
+      // ✅ ⭐ 修复：群获取名字
       if (!names[userId]) {
         try {
-          const profile = await client.getProfile(userId);
+          let profile;
+
+          if (event.source.type === "group") {
+            profile = await client.getGroupMemberProfile(
+              event.source.groupId,
+              userId
+            );
+          } else {
+            profile = await client.getProfile(userId);
+          }
+
           names[userId] = profile.displayName;
         } catch {
           names[userId] = "玩家";
@@ -113,10 +126,12 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
       const name = names[userId];
       const user = await getUser(userId, name);
 
+      // ✅ 查余额
       if (text === "/BALANCE") {
         return reply(event, `💰 余额：${user.balance}`);
       }
 
+      // ================= 管理员 =================
       if (userId === ADMIN_ID) {
 
         if (text === "/START") {
@@ -127,6 +142,7 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
           return reply(event, "已开局");
         }
 
+        // ✅ 充值（稳定版）
         if (text.startsWith("/ADD")) {
 
           let input = textRaw.replace(/\/add/i, "").trim();
@@ -139,7 +155,6 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
 
           let { data } = await supabase.from("players").select("*");
 
-          // ✅ 修复2（双向匹配）
           let player = data.find(p =>
             normalize(p.name).includes(target) ||
             target.includes(normalize(p.name))
@@ -161,17 +176,16 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
           return reply(event, "✅ 充值成功");
         }
 
+        // ✅ 结算
         if (text.startsWith("/RESULT")) {
 
           let result = text.split(" ")[1];
 
-          // ✅ 修复3
           if (!["B","P","T"].includes(result)) {
             return reply(event, "❌ /result B/P/T");
           }
 
           let emoji = getResultEmoji(result);
-
           let msg = `📊 本局结果：${result} ${emoji}\n\n`;
 
           let ranking = [];
@@ -214,6 +228,7 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
         }
       }
 
+      // ================= 玩家下注 =================
       if (!gameOpen) return;
 
       if (bets[userId]) return reply(event, "❌ 已下注");

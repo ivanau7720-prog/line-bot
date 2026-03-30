@@ -19,7 +19,7 @@ const client = new line.Client(config);
 // ===== Supabase（✅ 修正URL）=====
 const supabase = createClient(
   "https://riqystgmpvxwsebyavuo.supabase.co",
-  "sb_publishable_bWATEwsQd3fU_GKjcLdQzg_1pN6buQE"
+  process.env.SUPABASE_KEY
 );
 
 // ===== 管理员 =====

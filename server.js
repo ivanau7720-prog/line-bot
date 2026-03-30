@@ -10,15 +10,15 @@ app.use("/admin", express.json());
 
 // ===== LINE =====
 const config = {
-  channelAccessToken: "你的token",
-  channelSecret: "你的secret"
+  channelAccessToken: "MSoKv1nFk7+A5XOwlF/bg2FL9kfa8nT+gGP/DOLa6zY02XMfbgibLL2xQZ8Dp35UTKUQ0olq/jlDUcjwaApfs+2MCK4kAALknCC/GMwDC4MnUR9BGzPmVtbQLUbL5Gmu1tzmCBg7MhS3XD/VXCSfYwdB04t89/1O/w1cDnyilFU=",
+  channelSecret: "945a0301583c7770ae2cbdf7fe3a4483"
 };
 const client = new line.Client(config);
 
 // ===== Supabase =====
 const supabase = createClient(
   "https://riqystgmpvxwsebyavuo.supabase.co",
-  "你的key"
+  "U8455884cfb22877f209092cc78ea9880"
 );
 
 // ===== 管理员 =====

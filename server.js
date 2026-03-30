@@ -4,7 +4,7 @@ const { createClient } = require("@supabase/supabase-js");
 
 const app = express();
 
-// ✅ 后台 ONLY（绝对不会影响 webhook）
+// ===== 后台专用 =====
 const adminApp = express();
 adminApp.use(express.urlencoded({ extended: true }));
 adminApp.use(express.json());
@@ -16,9 +16,9 @@ const config = {
 };
 const client = new line.Client(config);
 
-// ===== Supabase =====
+// ===== Supabase（✅ 修正URL）=====
 const supabase = createClient(
-  "https://riqystgmpvxwsebvayuo.supabase.co",
+  "https://riqystgmpvxwsebyavuo.supabase.co",
   "sb_publishable_bWATEwsQd3fU_GKjcLdQzg_1pN6buQE"
 );
 
@@ -48,7 +48,7 @@ async function getUser(userId, name) {
       balance: 0,
       total_win: 0,
       total_lose: 0
-    });
+    }]);
 
     console.log("✅ 新用户:", userId);
     return { balance: 0 };
@@ -89,10 +89,6 @@ function startTimer() {
   }, 10000);
 }
 
-function emoji(r) {
-  return r === "B" ? "🔴" : r === "P" ? "🔵" : "🟢";
-}
-
 // ===== 后台 =====
 adminApp.get("/", (req, res) => {
   res.send(`
@@ -118,6 +114,7 @@ adminApp.get("/", (req, res) => {
   `);
 });
 
+// ===== 充值 =====
 adminApp.post("/topup", async (req, res) => {
   const { user_id, amount } = req.body;
 
@@ -141,6 +138,7 @@ adminApp.post("/topup", async (req, res) => {
   res.send(`✅ ${player.name} 余额 ${newBalance}`);
 });
 
+// ===== 查询余额 =====
 adminApp.get("/balance", async (req, res) => {
   const { user_id } = req.query;
 
@@ -156,10 +154,9 @@ adminApp.get("/balance", async (req, res) => {
   res.send(`💰 ${data[0].name} 余额：${data[0].balance}`);
 });
 
-// 挂载后台
 app.use("/admin", adminApp);
 
-// ===== 🔥 webhook（绝对稳定）=====
+// ===== webhook =====
 app.post(
   "/webhook",
   express.raw({ type: "*/*" }),
@@ -175,6 +172,10 @@ app.post(
 
         console.log("📩:", userId, text);
 
+        if (event.source.type === "group") {
+          groupId = event.source.groupId;
+        }
+
         if (!names[userId]) {
           try {
             let profile = await client.getProfile(userId);
@@ -187,15 +188,48 @@ app.post(
         const name = names[userId];
         const user = await getUser(userId, name);
 
+        // 查余额
         if (text === "/BALANCE") {
           return client.replyMessage(event.replyToken, {
             type: "text",
             text: `💰 余额：${user.balance}`
           });
         }
+
+        // 开局
+        if (userId === ADMIN_ID && text === "/START") {
+          gameOpen = true;
+          bets = {};
+          await broadcast("🟢 开局 60秒下注");
+          startTimer();
+          return;
+        }
+
+        // 下注
+        if (!gameOpen) continue;
+
+        if (bets[userId]) continue;
+
+        let match = text.match(/^(B|P|T)(\d+)/);
+        if (!match) continue;
+
+        let side = match[1];
+        let amount = parseInt(match[2]);
+
+        if (user.balance < amount) {
+          return client.replyMessage(event.replyToken, {
+            type: "text",
+            text: "❌ 余额不足"
+          });
+        }
+
+        bets[userId] = { side, amount, name };
+
+        await broadcast(`📥 ${name} ${side}${amount}`);
       }
 
       res.sendStatus(200);
+
     } catch (err) {
       console.log("❌ ERROR:", err);
       res.sendStatus(500);

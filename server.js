@@ -22,8 +22,19 @@ let GAME = {
   isBetting: false,
   bets: {},
   history: [],
-  groupId: null
+  groupId: null,
+  roundId: Date.now()
 };
+
+// ===== 获取LINE名字 =====
+async function getProfileName(userId) {
+  try {
+    const profile = await client.getProfile(userId);
+    return profile.displayName;
+  } catch {
+    return "玩家";
+  }
+}
 
 // ===== 获取用户 =====
 async function getUser(userId) {
@@ -34,10 +45,18 @@ async function getUser(userId) {
     .single();
 
   if (!data) {
-    const newUser = { user_id: userId, balance: 0, name: "玩家" };
+    const name = await getProfileName(userId);
+
+    const newUser = {
+      user_id: userId,
+      balance: 0,
+      name: name
+    };
+
     await supabase.from("players").insert([newUser]);
     return newUser;
   }
+
   return data;
 }
 
@@ -54,7 +73,7 @@ async function changeBalance(userId, amount) {
   return newBalance;
 }
 
-// ===== 路单UI =====
+// ===== 路单 =====
 function generateRoad() {
   let rows = [];
   let row = [];
@@ -64,16 +83,16 @@ function generateRoad() {
     row.push(icon);
 
     if ((i + 1) % 6 === 0) {
-      rows.push(row.join(""));
+      rows.push(row.join(" "));
       row = [];
     }
   });
 
-  if (row.length) rows.push(row.join(""));
+  if (row.length) rows.push(row.join(" "));
   return rows.join("\n");
 }
 
-// ===== 广播（只群）=====
+// ===== 广播 =====
 async function broadcast(text) {
   if (!GAME.groupId) return;
   await client.pushMessage(GAME.groupId, {
@@ -103,7 +122,7 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
       if (text === "/BALANCE") {
         return client.replyMessage(event.replyToken, {
           type: "text",
-          text: `余额 ${user.balance}`
+          text: `💰 余额 ${user.balance}`
         });
       }
 
@@ -113,11 +132,12 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
           .from("players")
           .select("*")
           .order("balance", { ascending: false })
-          .limit(5);
+          .limit(10);
 
-        let msg = "🏆 排行榜\n";
+        let msg = "🏆 排行榜\n\n";
+
         data.forEach((p, i) => {
-          msg += `${i + 1}. ${p.name || p.user_id} 💰${p.balance}\n`;
+          msg += `${i + 1}. 👤 ${p.name} 💰${p.balance}\n`;
         });
 
         return client.replyMessage(event.replyToken, {
@@ -130,6 +150,7 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
       if (text === "/START" && userId === process.env.ADMIN_ID) {
         GAME.isBetting = true;
         GAME.bets = {};
+        GAME.roundId = Date.now();
 
         await broadcast("🟢 开局！请下注（60秒）");
 
@@ -150,7 +171,7 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
         continue;
       }
 
-      // ===== 下注（升级版）=====
+      // ===== 下注 =====
       if (/^[BPT]\d+$/i.test(text)) {
         if (!GAME.isBetting) {
           return client.replyMessage(event.replyToken, {
@@ -182,11 +203,11 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
 
         return client.replyMessage(event.replyToken, {
           type: "text",
-          text: `✅ 下注成功\n🎯 ${side}\n💰 ${amount}`
+          text: `✅ 下注成功\n👤 ${user.name}\n🎯 ${side}\n💰 ${amount}`
         });
       }
 
-      // ===== 开奖（升级版）=====
+      // ===== 开奖 =====
       if (text.startsWith("/RESULT") && userId === process.env.ADMIN_ID) {
         const result = text.split(" ")[1];
         if (!["B", "P", "T"].includes(result)) return;
@@ -212,15 +233,21 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
             await changeBalance(uid, bet.amount + win);
           }
 
-          report += `${userData.name || uid} ${change > 0 ? "+" : ""}${Math.floor(change)}\n`;
+          report += `👤 ${userData.name} ${change > 0 ? "赢" : "输"} ${Math.abs(Math.floor(change))}\n`;
+
+          // 👉 存下注记录
+          await supabase.from("transactions").insert([
+            {
+              user_id: uid,
+              bet: bet.side,
+              amount: bet.amount,
+              result: result,
+              win: change
+            }
+          ]);
         }
 
         const road = generateRoad();
-
-        // 👉 存开奖记录
-        await supabase.from("transactions").insert([
-          { result: result }
-        ]);
 
         await broadcast(report + "\n📊 路单\n" + road);
 
@@ -228,7 +255,6 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
         return;
       }
 
-      // ===== 默认 =====
       await client.replyMessage(event.replyToken, {
         type: "text",
         text: "OK"
@@ -253,13 +279,30 @@ app.get("/admin", async (req, res) => {
   data.forEach(p => {
     html += `
       <div>
-        ${p.user_id} | 余额:${p.balance}
+        👤 ${p.name} | 🆔 ${p.user_id} | 💰${p.balance}
         <form method="POST" action="/admin/topup">
           <input type="hidden" name="user_id" value="${p.user_id}" />
           <input name="amount" placeholder="金额" />
           <button type="submit">充值/扣分</button>
         </form>
         <hr/>
+      </div>
+    `;
+  });
+
+  // 👉 新增：查看开奖记录
+  const { data: logs } = await supabase
+    .from("transactions")
+    .select("*")
+    .order("id", { ascending: false })
+    .limit(20);
+
+  html += `<h2>最近游戏记录</h2>`;
+
+  logs.forEach(l => {
+    html += `
+      <div>
+        👤 ${l.user_id} | 🎯 ${l.bet} | 💰${l.amount} | 结果:${l.result} | 输赢:${l.win}
       </div>
     `;
   });

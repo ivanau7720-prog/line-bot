@@ -20,13 +20,14 @@ const supabase = createClient(
 
 // ===== 获取或自动注册用户 =====
 async function getUser(userId) {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("players")
     .select("*")
     .eq("user_id", userId)
     .single();
 
-  if (!data) {
+  // 没有用户 → 自动注册
+  if (error || !data) {
     const newUser = {
       user_id: userId,
       balance: 0
@@ -39,7 +40,7 @@ async function getUser(userId) {
   return data;
 }
 
-// ===== LINE webhook（❗不能用 express.json）=====
+// ===== LINE webhook（⚠️ 不能用 express.json）=====
 app.post("/webhook", line.middleware(config), async (req, res) => {
   try {
     const events = req.body.events;
@@ -49,20 +50,22 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
       if (event.message.type !== "text") continue;
 
       const userId = event.source.userId;
-      const text = event.message.text;
+      const text = event.message.text.trim();
 
       const user = await getUser(userId);
 
       // ===== 指令 =====
+
+      // 查询余额
       if (text === "/balance") {
         await client.replyMessage(event.replyToken, {
           type: "text",
-          text: "余额: " + user.balance
+          text: `余额${user.balance}`
         });
         continue;
       }
 
-      // 默认回复
+      // ===== 默认回复 =====
       await client.replyMessage(event.replyToken, {
         type: "text",
         text: "OK " + text
@@ -81,27 +84,36 @@ app.use("/admin", express.json());
 
 // 查询余额
 app.get("/admin/balance", async (req, res) => {
-  const user = await getUser(req.query.user_id);
-  if (!user) return res.send("找不到玩家");
+  try {
+    const user = await getUser(req.query.user_id);
 
-  res.send("余额: " + user.balance);
+    if (!user) return res.send("找不到玩家");
+
+    res.send("余额: " + user.balance);
+  } catch (err) {
+    res.send("错误");
+  }
 });
 
 // 充值
 app.post("/admin/topup", async (req, res) => {
-  const { user_id, amount } = req.body;
+  try {
+    const { user_id, amount } = req.body;
 
-  const user = await getUser(user_id);
-  if (!user) return res.send("找不到玩家");
+    const user = await getUser(user_id);
+    if (!user) return res.send("找不到玩家");
 
-  const newBalance = Number(user.balance) + Number(amount);
+    const newBalance = Number(user.balance) + Number(amount);
 
-  await supabase
-    .from("players")
-    .update({ balance: newBalance })
-    .eq("user_id", user_id);
+    await supabase
+      .from("players")
+      .update({ balance: newBalance })
+      .eq("user_id", user_id);
 
-  res.send("充值成功: " + newBalance);
+    res.send("充值成功: " + newBalance);
+  } catch (err) {
+    res.send("充值失败");
+  }
 });
 
 // ===== 首页 =====

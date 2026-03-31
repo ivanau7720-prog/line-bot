@@ -31,46 +31,50 @@ let bets = {};
 let names = {};
 let groupId = null;
 
-const FEE_RATE = 0.05;
-
-// ===== 获取用户（🔥稳定版）=====
-async function getUser(userId, name) {
+// ===== ✅ 自动获取或创建用户（超级稳定版）=====
+async function getUser(userId) {
   try {
-    const { data, error } = await supabase
+    let { data, error } = await supabase
       .from("players")
       .select("*")
       .eq("user_id", userId);
 
     if (error) {
       console.log("❌ 查询失败:", error);
-      return { balance: 0 };
+      return null;
     }
 
+    // 👉 如果不存在 → 自动创建
     if (!data || data.length === 0) {
-      const { error: insertError } = await supabase
-        .from("players")
-        .insert([{
-          user_id: userId,
-          name,
-          balance: 0,
-          total_win: 0,
-          total_lose: 0
-        }]);
+      let name = "玩家";
 
-      if (insertError) {
-        console.log("❌ 插入失败:", insertError);
-      } else {
-        console.log("✅ 新用户:", userId);
-      }
+      try {
+        const profile = await client.getProfile(userId);
+        name = profile.displayName;
+      } catch {}
 
-      return { balance: 0 };
+      await supabase.from("players").insert([{
+        user_id: userId,
+        name,
+        balance: 0,
+        total_win: 0,
+        total_lose: 0
+      }]);
+
+      console.log("✅ 自动注册:", userId);
+
+      return {
+        user_id: userId,
+        name,
+        balance: 0
+      };
     }
 
     return data[0];
 
   } catch (err) {
     console.log("❌ getUser异常:", err);
-    return { balance: 0 };
+    return null;
   }
 }
 
@@ -131,49 +135,42 @@ adminApp.get("/", (req, res) => {
   `);
 });
 
-// ===== 充值 =====
+// ===== ✅ 充值（自动注册版）=====
 adminApp.post("/topup", async (req, res) => {
   const { user_id, amount } = req.body;
 
-  const { data, error } = await supabase
-    .from("players")
-    .select("*")
-    .eq("user_id", user_id);
+  const user = await getUser(user_id);
 
-  if (error || !data || data.length === 0) {
-    return res.send("❌ 找不到玩家");
+  if (!user) {
+    return res.send("❌ 系统错误");
   }
 
-  let player = data[0];
-  let newBalance = Number(player.balance) + Number(amount);
+  const newBalance = Number(user.balance) + Number(amount);
 
   await supabase
     .from("players")
     .update({ balance: newBalance })
     .eq("user_id", user_id);
 
-  res.send(`✅ ${player.name} 余额 ${newBalance}`);
+  res.send(`✅ ${user.name} 余额 ${newBalance}`);
 });
 
-// ===== 查询余额 =====
+// ===== ✅ 查询余额（自动注册版）=====
 adminApp.get("/balance", async (req, res) => {
   const { user_id } = req.query;
 
-  const { data, error } = await supabase
-    .from("players")
-    .select("*")
-    .eq("user_id", user_id);
+  const user = await getUser(user_id);
 
-  if (error || !data || data.length === 0) {
-    return res.send("❌ 找不到玩家");
+  if (!user) {
+    return res.send("❌ 系统错误");
   }
 
-  res.send(`💰 ${data[0].name} 余额：${data[0].balance}`);
+  res.send(`💰 ${user.name} 余额：${user.balance}`);
 });
 
 app.use("/admin", adminApp);
 
-// ===== webhook（🔥关键稳定）=====
+// ===== webhook =====
 app.post("/webhook", line.middleware(config), async (req, res) => {
   try {
     const events = req.body.events;
@@ -191,19 +188,11 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
         groupId = event.source.groupId;
       }
 
-      if (!names[userId]) {
-        try {
-          let profile = await client.getProfile(userId);
-          names[userId] = profile.displayName;
-        } catch {
-          names[userId] = "玩家";
-        }
-      }
+      const user = await getUser(userId);
 
-      const name = names[userId];
-      const user = await getUser(userId, name);
+      if (!user) continue;
 
-      // 查余额
+      // ===== 查询余额 =====
       if (text === "/BALANCE") {
         return client.replyMessage(event.replyToken, {
           type: "text",
@@ -211,7 +200,7 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
         });
       }
 
-      // 开局
+      // ===== 开局 =====
       if (userId === ADMIN_ID && text === "/START") {
         gameOpen = true;
         bets = {};
@@ -220,7 +209,7 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
         return;
       }
 
-      // 下注
+      // ===== 下注 =====
       if (!gameOpen) continue;
       if (bets[userId]) continue;
 
@@ -237,9 +226,9 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
         });
       }
 
-      bets[userId] = { side, amount, name };
+      bets[userId] = { side, amount, name: user.name };
 
-      await broadcast(`📥 ${name} ${side}${amount}`);
+      await broadcast(`📥 ${user.name} ${side}${amount}`);
     }
 
     res.sendStatus(200);

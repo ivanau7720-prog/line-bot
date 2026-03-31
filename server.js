@@ -34,7 +34,7 @@ async function getUser(userId) {
     .single();
 
   if (!data) {
-    const newUser = { user_id: userId, balance: 0 };
+    const newUser = { user_id: userId, balance: 0, name: "玩家" };
     await supabase.from("players").insert([newUser]);
     return newUser;
   }
@@ -52,6 +52,25 @@ async function changeBalance(userId, amount) {
     .eq("user_id", userId);
 
   return newBalance;
+}
+
+// ===== 路单UI =====
+function generateRoad() {
+  let rows = [];
+  let row = [];
+
+  GAME.history.forEach((r, i) => {
+    const icon = r === "B" ? "🔴" : r === "P" ? "🔵" : "🟢";
+    row.push(icon);
+
+    if ((i + 1) % 6 === 0) {
+      rows.push(row.join(""));
+      row = [];
+    }
+  });
+
+  if (row.length) rows.push(row.join(""));
+  return rows.join("\n");
 }
 
 // ===== 广播（只群）=====
@@ -84,33 +103,26 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
       if (text === "/BALANCE") {
         return client.replyMessage(event.replyToken, {
           type: "text",
-          text: `余额${user.balance}`
+          text: `余额 ${user.balance}`
         });
       }
 
-      // ===== 管理员充值（限制）=====
-      if (text.startsWith("/TOPUP")) {
-        if (userId !== process.env.ADMIN_ID) {
-          return client.replyMessage(event.replyToken, {
-            type: "text",
-            text: "❌ 只有管理员可以充值"
-          });
-        }
+      // ===== 排行榜 =====
+      if (text === "/RANK") {
+        const { data } = await supabase
+          .from("players")
+          .select("*")
+          .order("balance", { ascending: false })
+          .limit(5);
 
-        const amount = Number(text.split(" ")[1]);
-
-        if (amount < 100 || amount > 999999) {
-          return client.replyMessage(event.replyToken, {
-            type: "text",
-            text: "充值范围100-999999"
-          });
-        }
-
-        const newBalance = await changeBalance(userId, amount);
+        let msg = "🏆 排行榜\n";
+        data.forEach((p, i) => {
+          msg += `${i + 1}. ${p.name || p.user_id} 💰${p.balance}\n`;
+        });
 
         return client.replyMessage(event.replyToken, {
           type: "text",
-          text: `充值成功 余额${newBalance}`
+          text: msg
         });
       }
 
@@ -138,8 +150,8 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
         continue;
       }
 
-      // ===== 下注 =====
-      if (text.startsWith("/BET")) {
+      // ===== 下注（升级版）=====
+      if (/^[BPT]\d+$/i.test(text)) {
         if (!GAME.isBetting) {
           return client.replyMessage(event.replyToken, {
             type: "text",
@@ -147,15 +159,8 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
           });
         }
 
-        const [_, side, amountRaw] = text.split(" ");
-        const amount = Number(amountRaw);
-
-        if (!["B", "P", "T"].includes(side)) {
-          return client.replyMessage(event.replyToken, {
-            type: "text",
-            text: "格式 /bet B 100"
-          });
-        }
+        const side = text[0];
+        const amount = Number(text.slice(1));
 
         if (amount < 100 || amount > 10000) {
           return client.replyMessage(event.replyToken, {
@@ -177,20 +182,24 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
 
         return client.replyMessage(event.replyToken, {
           type: "text",
-          text: `下注成功 ${side} ${amount}`
+          text: `✅ 下注成功\n🎯 ${side}\n💰 ${amount}`
         });
       }
 
-      // ===== 开奖 =====
+      // ===== 开奖（升级版）=====
       if (text.startsWith("/RESULT") && userId === process.env.ADMIN_ID) {
         const result = text.split(" ")[1];
-
         if (!["B", "P", "T"].includes(result)) return;
 
         GAME.history.push(result);
 
+        let report = `🎯 开奖结果：${result}\n\n👤 玩家结算：\n`;
+
         for (const uid in GAME.bets) {
           const bet = GAME.bets[uid];
+          const userData = await getUser(uid);
+
+          let change = -bet.amount;
 
           if (bet.side === result) {
             let win = bet.amount;
@@ -199,20 +208,27 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
               win = bet.amount * 0.95;
             }
 
+            change = win;
             await changeBalance(uid, bet.amount + win);
           }
+
+          report += `${userData.name || uid} ${change > 0 ? "+" : ""}${Math.floor(change)}\n`;
         }
 
-        const road = GAME.history
-          .map(r => (r === "B" ? "🔴" : r === "P" ? "🔵" : "🟢"))
-          .join(" ");
+        const road = generateRoad();
 
-        await broadcast(`🎯 开奖 ${result}\n${road}`);
+        // 👉 存开奖记录
+        await supabase.from("transactions").insert([
+          { result: result }
+        ]);
+
+        await broadcast(report + "\n📊 路单\n" + road);
 
         GAME.bets = {};
         return;
       }
 
+      // ===== 默认 =====
       await client.replyMessage(event.replyToken, {
         type: "text",
         text: "OK"
@@ -226,10 +242,9 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
   }
 });
 
-// ===== 后台网页（🔥新增）=====
+// ===== 后台网页 =====
 app.use(express.urlencoded({ extended: true }));
 
-// 玩家列表
 app.get("/admin", async (req, res) => {
   const { data } = await supabase.from("players").select("*");
 
@@ -252,7 +267,6 @@ app.get("/admin", async (req, res) => {
   res.send(html);
 });
 
-// 加减分（网页）
 app.post("/admin/topup", async (req, res) => {
   const user_id = req.body.user_id;
   const amount = Number(req.body.amount);

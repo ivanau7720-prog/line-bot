@@ -17,26 +17,38 @@ const supabase = createClient(
   process.env.SUPABASE_KEY
 );
 
-// ===== 🎭 演员 =====
+// ===== 🎭 演员系统 =====
 let FAKE_CONFIG = {
   enabled: true,
   count: 5,
   names: ["小明", "VIP玩家", "老板"]
 };
 
-// ===== 游戏 =====
+// ===== 🎯 游戏 =====
 let GAME = {
   isBetting: false,
   bets: {},
   groupId: null
 };
 
+// ===== 📊 路单 =====
+let ROAD = [];
+
+// ===== 🎨 球颜色 =====
+function getBall(result) {
+  if (result === "B") return "🔴";
+  if (result === "P") return "🔵";
+  return "🟢";
+}
+
+// ===== 路单显示 =====
+function renderRoad() {
+  return ROAD.map(r => getBall(r)).join(" ");
+}
+
 // ===== 随机金额 =====
 function getRandomAmount() {
-  const r = Math.random();
-  if (r < 0.6) return Math.floor(Math.random() * 900) + 100;
-  if (r < 0.9) return Math.floor(Math.random() * 4000) + 1000;
-  return Math.floor(Math.random() * 9000) + 1000;
+  return Math.floor(Math.random() * 9900) + 100;
 }
 
 // ===== 🎭 演员生成 =====
@@ -56,16 +68,16 @@ function generateFakeBots() {
   return bots;
 }
 
-// ===== 获取LINE名字 =====
+// ===== 获取LINE名字（支持中英泰）=====
 async function getProfileName(userId, groupId) {
   try {
+    let profile;
     if (groupId) {
-      const p = await client.getGroupMemberProfile(groupId, userId);
-      return p.displayName;
+      profile = await client.getGroupMemberProfile(groupId, userId);
     } else {
-      const p = await client.getProfile(userId);
-      return p.displayName;
+      profile = await client.getProfile(userId);
     }
+    return profile.displayName;
   } catch {
     return "玩家";
   }
@@ -113,7 +125,10 @@ async function changeBalance(userId, amount) {
 // ===== 广播 =====
 async function broadcast(text) {
   if (!GAME.groupId) return;
-  await client.pushMessage(GAME.groupId, { type: "text", text });
+  await client.pushMessage(GAME.groupId, {
+    type: "text",
+    text
+  });
 }
 
 // ===== webhook =====
@@ -141,7 +156,10 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
           msg += `${i + 1}. 👤 ${p.name} 💰${p.balance}\n`;
         });
 
-        return client.replyMessage(event.replyToken, { type: "text", text: msg });
+        return client.replyMessage(event.replyToken, {
+          type: "text",
+          text: msg
+        });
       }
 
       // ===== 开局 =====
@@ -186,9 +204,11 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
       if (text.startsWith("/RESULT") && userId === process.env.ADMIN_ID) {
         const result = text.split(" ")[1];
 
-        let report = `🎯 开奖结果：${result}\n\n`;
+        ROAD.push(result);
+        if (ROAD.length > 30) ROAD = [];
 
-        // 玩家
+        let report = `🎯 开奖结果：${getBall(result)} ${result}\n\n`;
+
         for (const uid in GAME.bets) {
           const bet = GAME.bets[uid];
           const u = await getUser(uid, groupId);
@@ -211,7 +231,6 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
           report += `👤 ${u.name} ${change > 0 ? "+" : ""}${change}\n`;
         }
 
-        // 🎭 演员混入
         const fakeBots = generateFakeBots();
         fakeBots.forEach(bot => {
           let change = bot.side === result ? bot.amount : -bot.amount;
@@ -219,6 +238,8 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
         });
 
         await broadcast(report);
+
+        await broadcast(`📊 路单\n${renderRoad()}`);
 
         GAME.bets = {};
         return;
@@ -253,13 +274,13 @@ app.get("/admin", async (req, res) => {
   <head>
   <style>
   body {
-    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+    background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
     color: white;
     font-family: Arial;
     padding: 20px;
   }
   .box {
-    background: rgba(0,0,0,0.6);
+    background: rgba(0,0,0,0.75);
     padding: 15px;
     margin-bottom: 20px;
     border-radius: 10px;
@@ -269,6 +290,20 @@ app.get("/admin", async (req, res) => {
   <body>
 
   <h2>👑 后台系统</h2>
+
+  <div class="box">
+  <h3>🎭 演员系统</h3>
+  <form method="POST" action="/admin/fake">
+  数量: <input name="count" value="${FAKE_CONFIG.count}" />
+  名字: <input name="names" value="${FAKE_CONFIG.names.join(",")}" />
+  状态:
+  <select name="enabled">
+  <option value="true">开启</option>
+  <option value="false">关闭</option>
+  </select>
+  <button>保存</button>
+  </form>
+  </div>
 
   <div class="box">
   <h3>👤 玩家管理</h3>
@@ -303,6 +338,13 @@ app.get("/admin", async (req, res) => {
 app.post("/admin/topup", async (req, res) => {
   const { user_id, amount } = req.body;
   await changeBalance(user_id, Number(amount));
+  res.redirect("/admin");
+});
+
+app.post("/admin/fake", (req, res) => {
+  FAKE_CONFIG.count = Number(req.body.count);
+  FAKE_CONFIG.names = req.body.names.split(",");
+  FAKE_CONFIG.enabled = req.body.enabled === "true";
   res.redirect("/admin");
 });
 

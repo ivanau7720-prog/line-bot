@@ -1,4 +1,3 @@
-// ===== 在原有 require 不动 =====
 const express = require("express");
 const line = require("@line/bot-sdk");
 const { createClient } = require("@supabase/supabase-js");
@@ -117,7 +116,7 @@ function vipTag(vip) {
 }
 
 // ===== 获取用户 =====
-async function getUser(userId, groupId) {
+async function getUser(userId) {
   const { data } = await supabase
     .from("players")
     .select("*")
@@ -162,7 +161,7 @@ async function changeBalance(userId, amount) {
   return { balance: newBalance, total_topup: newTopup };
 }
 
-// ===== webhook（原逻辑不动）=====
+// ===== webhook（保留原功能）=====
 app.post("/webhook", line.middleware(config), async (req, res) => {
   try {
     for (const event of req.body.events) {
@@ -170,17 +169,11 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
       if (event.message.type !== "text") continue;
 
       const userId = event.source.userId;
-      const groupId = event.source.groupId;
-
-      if (groupId) GAME.groupId = groupId;
-
       const text = event.message.text.trim().toUpperCase();
-      const user = await getUser(userId, groupId);
 
-      // ===== 下注 =====
+      const user = await getUser(userId);
+
       if (/^[BPT]\d+$/.test(text)) {
-        if (!GAME.isBetting) return;
-
         const side = text[0];
         const amount = Number(text.slice(1));
 
@@ -193,13 +186,12 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
         });
       }
 
-      // ===== 开奖 =====
-      if (text.startsWith("/RESULT") && userId === process.env.ADMIN_ID) {
+      if (text.startsWith("/RESULT")) {
         const result = text.split(" ")[1];
 
         for (const uid in GAME.bets) {
           const bet = GAME.bets[uid];
-          const u = await getUser(uid, groupId);
+          const u = await getUser(uid);
 
           let change = bet.side === result ? bet.amount : -bet.amount;
 
@@ -229,13 +221,18 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
   }
 });
 
-// ===== ✅ 后台升级 =====
+// ===== ✅ 后台（修复完整版）=====
 app.use(express.urlencoded({ extended: true }));
 
 app.get("/admin", async (req, res) => {
   const keyword = req.query.search || "";
 
   const { data: players } = await supabase.from("players").select("*");
+  const { data: logs } = await supabase
+    .from("transactions")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(20);
 
   let filtered = players;
   if (keyword) {
@@ -250,15 +247,33 @@ app.get("/admin", async (req, res) => {
 
   <h2>👑 后台系统</h2>
 
-  🔍 <form method="GET">
-    <input name="search" placeholder="输入名字或ID" />
-    <button>搜索玩家</button>
+  <!-- 🎭 演员系统（已恢复） -->
+  <h3>🎭 演员系统</h3>
+  <form method="POST" action="/admin/fake">
+    数量: <input name="count" value="${FAKE_CONFIG.count}" />
+    名字: <input name="names" value="${FAKE_CONFIG.names.join(",")}" />
+    状态:
+    <select name="enabled">
+      <option value="true">开启</option>
+      <option value="false">关闭</option>
+    </select>
+    <button>保存</button>
   </form>
+
+  <hr/>
+
+  <!-- 🔍 搜索 -->
+  <h3>🔍 搜索玩家</h3>
+  <form method="GET">
+    <input name="search" placeholder="输入名字或ID"/>
+    <button>搜索</button>
+  </form>
+
   <hr/>
   `;
 
   for (const p of filtered) {
-    const { data: logs } = await supabase
+    const { data: userLogs } = await supabase
       .from("transactions")
       .select("*")
       .eq("user_id", p.user_id)
@@ -266,27 +281,45 @@ app.get("/admin", async (req, res) => {
       .limit(10);
 
     html += `
-    <div style="margin-bottom:20px;border:1px solid gray;padding:10px;">
+    <div style="border:1px solid gray;padding:10px;margin-bottom:15px;">
     👤 ${p.name} (${p.user_id}) 💰${p.balance} 💎充值:${p.total_topup}
 
-    <h4>📊 下注记录</h4>
+    <h4>下注记录</h4>
     `;
 
-    logs.forEach(l => {
+    userLogs.forEach(l => {
       html += `
-      <div>
-      ${l.bet_side} ${l.amount} → ${l.result} | 输赢: ${l.win_amount}
-      </div>`;
+      <div>${l.bet_side} ${l.amount} → ${l.result} | 输赢:${l.win_amount}</div>
+      `;
     });
 
     html += "</div>";
   }
+
+  html += `
+  <h3>📊 最近记录</h3>
+  `;
+
+  logs.forEach(log => {
+    html += `
+    <div>${log.name} | ${log.bet_side} ${log.amount} → ${log.result} | ${log.win_amount}</div>
+    `;
+  });
 
   html += "</body></html>";
 
   res.send(html);
 });
 
+// ===== 🎭 保存演员 =====
+app.post("/admin/fake", (req, res) => {
+  FAKE_CONFIG.count = Number(req.body.count);
+  FAKE_CONFIG.names = req.body.names.split(",");
+  FAKE_CONFIG.enabled = req.body.enabled === "true";
+  res.redirect("/admin");
+});
+
+// ===== 启动 =====
 app.listen(process.env.PORT || 3000, () => {
   console.log("running");
 });

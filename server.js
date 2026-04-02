@@ -4,6 +4,17 @@ const { createClient } = require("@supabase/supabase-js");
 
 const app = express();
 
+// ===== 🌏 泰语系统 =====
+const LANG = {
+  START: "🟢 เปิดรอบ! กรุณาวางเดิมพัน (60 วินาที)",
+  TIME: (t) => `⏳ เหลือ ${t} วินาที`,
+  STOP: "⛔ ปิดรับเดิมพัน รอผล",
+  RESULT: (r) => `🎯 ผลออก: ${r}`,
+  ROAD: "📊 ประวัติ",
+  BET_OK: (name, side, amount) => `✅ ${name} เดิมพัน ${side} ${amount}`,
+  RANK: "🏆 อันดับผู้เล่น"
+};
+
 // ===== LINE =====
 const config = {
   channelAccessToken: process.env.LINE_TOKEN,
@@ -21,7 +32,7 @@ const supabase = createClient(
 let FAKE_CONFIG = {
   enabled: true,
   count: 5,
-  names: ["小明", "VIP玩家", "老板"]
+  names: ["VIP玩家", "老板", "高手"]
 };
 
 // ===== 🎯 游戏 =====
@@ -34,24 +45,24 @@ let GAME = {
 // ===== 📊 路单 =====
 let ROAD = [];
 
-// ===== 🎨 球颜色 =====
+// ===== 🎨 球 =====
 function getBall(result) {
   if (result === "B") return "🔴";
   if (result === "P") return "🔵";
   return "🟢";
 }
 
-// ===== 路单显示 =====
+// ===== 路单 =====
 function renderRoad() {
   return ROAD.map(r => getBall(r)).join(" ");
 }
 
-// ===== 随机金额 =====
+// ===== 🎭 随机金额 =====
 function getRandomAmount() {
   return Math.floor(Math.random() * 9900) + 100;
 }
 
-// ===== 🎭 演员生成 =====
+// ===== 🎭 生成演员 =====
 function generateFakeBots() {
   if (!FAKE_CONFIG.enabled) return [];
 
@@ -151,7 +162,7 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
         const { data } = await supabase.from("players").select("*");
         data.sort((a, b) => b.balance - a.balance);
 
-        let msg = "🏆 排行榜\n\n";
+        let msg = LANG.RANK + "\n\n";
         data.slice(0, 10).forEach((p, i) => {
           msg += `${i + 1}. 👤 ${p.name} 💰${p.balance}\n`;
         });
@@ -167,7 +178,7 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
         GAME.isBetting = true;
         GAME.bets = {};
 
-        await broadcast("🟢 开局！请下注（60秒）");
+        await broadcast(LANG.START);
 
         let time = 60;
         const timer = setInterval(async () => {
@@ -175,9 +186,9 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
           if (time <= 0) {
             clearInterval(timer);
             GAME.isBetting = false;
-            await broadcast("⛔ 停止下注，等待开奖");
+            await broadcast(LANG.STOP);
           } else {
-            await broadcast(`⏳ 剩余 ${time} 秒`);
+            await broadcast(LANG.TIME(time));
           }
         }, 10000);
 
@@ -196,7 +207,7 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
 
         return client.replyMessage(event.replyToken, {
           type: "text",
-          text: `✅ ${user.name} 下注 ${side} ${amount}`
+          text: LANG.BET_OK(user.name, side, amount)
         });
       }
 
@@ -207,8 +218,9 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
         ROAD.push(result);
         if (ROAD.length > 30) ROAD = [];
 
-        let report = `🎯 开奖结果：${getBall(result)} ${result}\n\n`;
+        let report = `${LANG.RESULT(getBall(result) + " " + result)}\n\n`;
 
+        // ===== 真玩家 =====
         for (const uid in GAME.bets) {
           const bet = GAME.bets[uid];
           const u = await getUser(uid, groupId);
@@ -231,6 +243,7 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
           report += `👤 ${u.name} ${change > 0 ? "+" : ""}${change}\n`;
         }
 
+        // ===== 演员 =====
         const fakeBots = generateFakeBots();
         fakeBots.forEach(bot => {
           let change = bot.side === result ? bot.amount : -bot.amount;
@@ -239,7 +252,7 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
 
         await broadcast(report);
 
-        await broadcast(`📊 路单\n${renderRoad()}`);
+        await broadcast(`${LANG.ROAD}\n${renderRoad()}`);
 
         GAME.bets = {};
         return;
@@ -274,13 +287,13 @@ app.get("/admin", async (req, res) => {
   <head>
   <style>
   body {
-    background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+    background: linear-gradient(135deg,#0f2027,#203a43,#2c5364);
     color: white;
     font-family: Arial;
     padding: 20px;
   }
   .box {
-    background: rgba(0,0,0,0.75);
+    background: rgba(0,0,0,0.7);
     padding: 15px;
     margin-bottom: 20px;
     border-radius: 10px;

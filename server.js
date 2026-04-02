@@ -10,9 +10,9 @@ const LANG = {
   TIME: (t) => `⏳ เหลือ ${t} วินาที`,
   STOP: "⛔ ปิดรับเดิมพัน รอผล",
   RESULT: (r) => `🎯 ผลออก: ${r}`,
-  ROAD: "📊 ประวัติ",
+  ROAD: "📊 珠盘路",
   BET_OK: (name, side, amount) => `✅ ${name} เดิมพัน ${side} ${amount}`,
-  RANK: "🏆 อันดับผู้เล่น"
+  RANK: "🏆 排行榜"
 };
 
 // ===== LINE =====
@@ -28,7 +28,7 @@ const supabase = createClient(
   process.env.SUPABASE_KEY
 );
 
-// ===== 🎭 演员系统 =====
+// ===== 🎭 演员 =====
 let FAKE_CONFIG = {
   enabled: true,
   count: 5,
@@ -52,9 +52,17 @@ function getBall(result) {
   return "🟢";
 }
 
-// ===== 路单 =====
-function renderRoad() {
-  return ROAD.map(r => getBall(r)).join(" ");
+// ===== 珠盘路（6行）=====
+function renderBeadRoad() {
+  let rows = [[], [], [], [], [], []];
+
+  ROAD.forEach((r, i) => {
+    let col = Math.floor(i / 6);
+    let row = i % 6;
+    rows[row][col] = getBall(r);
+  });
+
+  return rows.map(r => r.join(" ")).join("\n");
 }
 
 // ===== 🎭 随机金额 =====
@@ -79,7 +87,22 @@ function generateFakeBots() {
   return bots;
 }
 
-// ===== 获取LINE名字（支持中英泰）=====
+// ===== VIP（累计充值）=====
+function getVIP(total) {
+  if (total >= 5120000) return "🟣VIP10";
+  if (total >= 2560000) return "🟣VIP9";
+  if (total >= 1280000) return "🟣VIP8";
+  if (total >= 640000) return "🔵VIP7";
+  if (total >= 320000) return "🔵VIP6";
+  if (total >= 160000) return "🔵VIP5";
+  if (total >= 80000) return "🟢VIP4";
+  if (total >= 40000) return "🟢VIP3";
+  if (total >= 20000) return "🟡VIP2";
+  if (total >= 10000) return "🟡VIP1";
+  return "";
+}
+
+// ===== 获取LINE名字 =====
 async function getProfileName(userId, groupId) {
   try {
     let profile;
@@ -105,7 +128,12 @@ async function getUser(userId, groupId) {
   const name = await getProfileName(userId, groupId);
 
   if (!data) {
-    const newUser = { user_id: userId, balance: 0, name };
+    const newUser = {
+      user_id: userId,
+      balance: 0,
+      total_topup: 0,
+      name
+    };
     await supabase.from("players").insert([newUser]);
     return newUser;
   }
@@ -115,7 +143,7 @@ async function getUser(userId, groupId) {
   return { ...data, name };
 }
 
-// ===== 改余额 =====
+// ===== 改余额 + 累计充值 =====
 async function changeBalance(userId, amount) {
   const { data } = await supabase
     .from("players")
@@ -123,11 +151,17 @@ async function changeBalance(userId, amount) {
     .eq("user_id", userId)
     .single();
 
-  const newBalance = Number(data.balance) + Number(amount);
+  let newBalance = Number(data.balance) + Number(amount);
+  let newTopup = data.total_topup || 0;
+
+  if (amount > 0) newTopup += Number(amount);
 
   await supabase
     .from("players")
-    .update({ balance: newBalance })
+    .update({
+      balance: newBalance,
+      total_topup: newTopup
+    })
     .eq("user_id", userId);
 
   return newBalance;
@@ -156,22 +190,6 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
 
       const text = event.message.text.trim().toUpperCase();
       const user = await getUser(userId, groupId);
-
-      // ===== 排行榜 =====
-      if (text === "/RANK") {
-        const { data } = await supabase.from("players").select("*");
-        data.sort((a, b) => b.balance - a.balance);
-
-        let msg = LANG.RANK + "\n\n";
-        data.slice(0, 10).forEach((p, i) => {
-          msg += `${i + 1}. 👤 ${p.name} 💰${p.balance}\n`;
-        });
-
-        return client.replyMessage(event.replyToken, {
-          type: "text",
-          text: msg
-        });
-      }
 
       // ===== 开局 =====
       if (text === "/START" && userId === process.env.ADMIN_ID) {
@@ -220,7 +238,6 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
 
         let report = `${LANG.RESULT(getBall(result) + " " + result)}\n\n`;
 
-        // ===== 真玩家 =====
         for (const uid in GAME.bets) {
           const bet = GAME.bets[uid];
           const u = await getUser(uid, groupId);
@@ -231,28 +248,29 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
             await changeBalance(uid, bet.amount * 2);
           }
 
+          const vip = getVIP(u.total_topup || 0);
+
           await supabase.from("transactions").insert([{
             user_id: uid,
             name: u.name,
             amount: bet.amount,
             bet_side: bet.side,
-            result: result,
+            result,
             win_amount: change
           }]);
 
-          report += `👤 ${u.name} ${change > 0 ? "+" : ""}${change}\n`;
+          report += `👤 ${u.name} ${vip} ${change > 0 ? "+" : ""}${change}\n`;
         }
 
-        // ===== 演员 =====
         const fakeBots = generateFakeBots();
         fakeBots.forEach(bot => {
           let change = bot.side === result ? bot.amount : -bot.amount;
-          report += `👤 ${bot.name} [VIP] ${change > 0 ? "+" : ""}${change}\n`;
+          let vip = "🔥VIP" + (Math.floor(Math.random() * 5) + 1);
+          report += `👤 ${bot.name} ${vip} ${change > 0 ? "+" : ""}${change}\n`;
         });
 
         await broadcast(report);
-
-        await broadcast(`${LANG.ROAD}\n${renderRoad()}`);
+        await broadcast(`📊 珠盘路\n${renderBeadRoad()}`);
 
         GAME.bets = {};
         return;
@@ -276,81 +294,28 @@ app.use(express.urlencoded({ extended: true }));
 
 app.get("/admin", async (req, res) => {
   const { data } = await supabase.from("players").select("*");
-  const { data: logs } = await supabase
-    .from("transactions")
-    .select("*")
-    .order("created_at", { ascending: false })
-    .limit(20);
 
-  let html = `
-  <html>
-  <head>
-  <style>
-  body {
-    background: linear-gradient(135deg,#0f2027,#203a43,#2c5364);
-    color: white;
-    font-family: Arial;
-    padding: 20px;
-  }
-  .box {
-    background: rgba(0,0,0,0.7);
-    padding: 15px;
-    margin-bottom: 20px;
-    border-radius: 10px;
-  }
-  </style>
-  </head>
-  <body>
-
-  <h2>👑 后台系统</h2>
-
-  <div class="box">
-  <h3>🎭 演员系统</h3>
-  <form method="POST" action="/admin/fake">
-  数量: <input name="count" value="${FAKE_CONFIG.count}" />
-  名字: <input name="names" value="${FAKE_CONFIG.names.join(",")}" />
-  状态:
-  <select name="enabled">
-  <option value="true">开启</option>
-  <option value="false">关闭</option>
-  </select>
-  <button>保存</button>
-  </form>
-  </div>
-
-  <div class="box">
-  <h3>👤 玩家管理</h3>
-  `;
+  let html = `<html><body style="background:#111;color:#fff;padding:20px;">
+  <h2>后台</h2>`;
 
   data.forEach(p => {
     html += `
     <div>
-      👤 ${p.name} (${p.user_id}) 💰${p.balance}
-      <form method="POST" action="/admin/topup" style="display:inline;">
-        <input name="user_id" value="${p.user_id}" hidden />
-        <input name="amount" placeholder="+100 / -100" />
-        <button>确认</button>
-      </form>
+    👤 ${p.name} (${p.user_id}) 💰${p.balance} ${getVIP(p.total_topup || 0)}
+    <form method="POST" action="/admin/topup">
+    <input name="user_id" value="${p.user_id}" hidden />
+    <input name="amount" placeholder="+100/-100"/>
+    <button>确认</button>
+    </form>
     </div>`;
   });
 
-  html += `</div><div class="box"><h3>📊 最近记录</h3>`;
-
-  logs.forEach(log => {
-    html += `
-    <div>
-      ${log.name} | ${log.bet_side} ${log.amount} → ${log.result} | ${log.win_amount}
-    </div>`;
-  });
-
-  html += `</div></body></html>`;
-
+  html += "</body></html>";
   res.send(html);
 });
 
 app.post("/admin/topup", async (req, res) => {
-  const { user_id, amount } = req.body;
-  await changeBalance(user_id, Number(amount));
+  await changeBalance(req.body.user_id, Number(req.body.amount));
   res.redirect("/admin");
 });
 

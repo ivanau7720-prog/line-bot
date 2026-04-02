@@ -321,7 +321,7 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
   }
 });
 
-// ===== 后台（已升级）=====
+// ===== 后台 =====
 app.use(express.urlencoded({ extended: true }));
 
 app.get("/admin", async (req, res) => {
@@ -371,6 +371,8 @@ app.get("/admin", async (req, res) => {
   `;
 
   for (const p of filtered) {
+    const vip = getVIP(p.total_topup);
+
     const { data: userLogs } = await supabase
       .from("transactions")
       .select("*")
@@ -380,7 +382,16 @@ app.get("/admin", async (req, res) => {
 
     html += `
     <div style="border:1px solid gray;padding:10px;margin-bottom:15px;">
-    👤 ${p.name} (${p.user_id}) 💰${p.balance} 💎充值:${p.total_topup}
+    
+    👤 ${p.name} ${vipTag(vip)} (${p.user_id}) 
+    💰${p.balance} 
+    💎充值:${p.total_topup}
+
+    <form method="POST" action="/admin/topup">
+      <input name="user_id" value="${p.user_id}" hidden />
+      <input name="amount" placeholder="+100 / -100" />
+      <button>充值 / 扣除</button>
+    </form>
 
     <h4>下注记录</h4>
     `;

@@ -57,7 +57,7 @@ function renderRoadTable() {
   let grid = "";
   let col = 0;
 
-  ROAD.forEach((r, i) => {
+  ROAD.forEach((r) => {
     grid += getBall(r) + " ";
     col++;
     if (col >= 6) {
@@ -92,11 +92,22 @@ function generateFakeBots() {
   return bots;
 }
 
-// ===== 🧠 VIP计算（累计充值）=====
+// ===== 🔥 VIP规则（已按你要求修改）=====
 function getVIP(total) {
   if (!total) return 0;
-  let level = Math.floor(Math.log2(total / 10000)) + 1;
-  return Math.min(Math.max(level, 0), 10);
+
+  if (total >= 5120000) return 1;
+  if (total >= 2560000) return 2;
+  if (total >= 1280000) return 3;
+  if (total >= 640000) return 4;
+  if (total >= 320000) return 5;
+  if (total >= 160000) return 6;
+  if (total >= 80000) return 7;
+  if (total >= 40000) return 8;
+  if (total >= 20000) return 9;
+  if (total >= 10000) return 10;
+
+  return 0;
 }
 
 // ===== 🎨 VIP显示 =====
@@ -263,7 +274,6 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
 
         let report = `${LANG.RESULT(getBall(result) + " " + result)}\n\n`;
 
-        // ===== 玩家 =====
         for (const uid in GAME.bets) {
           const bet = GAME.bets[uid];
           const u = await getUser(uid, groupId);
@@ -288,7 +298,6 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
           report += `👤 ${u.name} ${vipTag(vip)} ${change > 0 ? "+" : ""}${change}\n`;
         }
 
-        // ===== 演员 =====
         const fakeBots = generateFakeBots();
         fakeBots.forEach(bot => {
           let change = bot.side === result ? bot.amount : -bot.amount;
@@ -296,7 +305,6 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
         });
 
         await broadcast(report);
-
         await broadcast(`${LANG.ROAD}\n${renderRoadTable()}`);
 
         GAME.bets = {};

@@ -7,11 +7,11 @@ const app = express();
 // ===== 🌏 泰语系统 =====
 const LANG = {
   START: "🟢 เปิดรอบ! กรุณาวางเดิมพัน (60 วินาที)",
-  TIME: (t) => ⏳ เหลือ ${t} วินาที,
+  TIME: (t) => `⏳ เหลือ ${t} วินาที`,
   STOP: "⛔ ปิดรับเดิมพัน รอผล",
-  RESULT: (r) => 🎯 ผลออก: ${r},
+  RESULT: (r) => `🎯 ผลออก: ${r}`,
   ROAD: "📊 ประวัติ (30 เกมล่าสุด)",
-  BET_OK: (name, side, amount) => ✅ ${name} เดิมพัน ${side} ${amount},
+  BET_OK: (name, side, amount) => `✅ ${name} เดิมพัน ${side} ${amount}`,
   RANK: "🏆 อันดับผู้เล่น"
 };
 
@@ -215,7 +215,7 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
 
         data.slice(0, 10).forEach((p, i) => {
           const vip = getVIP(p.total_topup);
-          msg += ${i + 1}. 👤 ${p.name} ${vipTag(vip)} 💰${p.balance}\n;
+          msg += `${i + 1}. 👤 ${p.name} ${vipTag(vip)} 💰${p.balance}\n`;
         });
 
         return client.replyMessage(event.replyToken, {
@@ -269,7 +269,7 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
         ROAD.push(result);
         if (ROAD.length > 30) ROAD = [];
 
-        let report = ${LANG.RESULT(getBall(result) + " " + result)}\n\n;
+        let report = `${LANG.RESULT(getBall(result) + " " + result)}\n\n`;
 
         for (const uid in GAME.bets) {
           const bet = GAME.bets[uid];
@@ -292,17 +292,17 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
             win_amount: change
           }]);
 
-          report += 👤 ${u.name} ${vipTag(vip)} ${change > 0 ? "+" : ""}${change}\n;
+          report += `👤 ${u.name} ${vipTag(vip)} ${change > 0 ? "+" : ""}${change}\n`;
         }
 
         const fakeBots = generateFakeBots();
         fakeBots.forEach(bot => {
           let change = bot.side === result ? bot.amount : -bot.amount;
-          report += 👤 ${bot.name} ⭐VIP ${change > 0 ? "+" : ""}${change}\n;
+          report += `👤 ${bot.name} ⭐VIP ${change > 0 ? "+" : ""}${change}\n`;
         });
 
         await broadcast(report);
-        await broadcast(${LANG.ROAD}\n${renderRoadTable()});
+        await broadcast(`${LANG.ROAD}\n${renderRoadTable()}`);
 
         GAME.bets = {};
         return;
@@ -397,7 +397,7 @@ app.get("/admin", async (req, res) => {
     `;
 
     userLogs.forEach(l => {
-      html += <div>${l.bet_side} ${l.amount} → ${l.result} | 输赢:${l.win_amount}</div>;
+      html += `<div>${l.bet_side} ${l.amount} → ${l.result} | 输赢:${l.win_amount}</div>`;
     });
 
     html += "</div>";
@@ -408,7 +408,7 @@ app.get("/admin", async (req, res) => {
   `;
 
   logs.forEach(log => {
-    html += <div>${log.name} | ${log.bet_side} ${log.amount} → ${log.result} | ${log.win_amount}</div>;
+    html += `<div>${log.name} | ${log.bet_side} ${log.amount} → ${log.result} | ${log.win_amount}</div>`;
   });
 
   html += "</body></html>";

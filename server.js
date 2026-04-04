@@ -7,11 +7,11 @@ const app = express();
 // ===== 🌏 泰语系统 =====
 const LANG = {
   START: "🟢 เปิดรอบ! กรุณาวางเดิมพัน (60 วินาที)",
-  TIME: (t) => "⏳ เหลือ " + t + " วินาที",
+  TIME: (t) => ⏳ เหลือ ${t} วินาที,
   STOP: "⛔ ปิดรับเดิมพัน รอผล",
-  RESULT: (r) => "🎯 ผลออก: " + r,
+  RESULT: (r) => 🎯 ผลออก: ${r},
   ROAD: "📊 ประวัติ (30 เกมล่าสุด)",
-  BET_OK: (name, side, amount) => "✅ " + name + " เดิมพัน " + side + " " + amount,
+  BET_OK: (name, side, amount) => ✅ ${name} เดิมพัน ${side} ${amount},
   RANK: "🏆 อันดับผู้เล่น"
 };
 
@@ -203,9 +203,7 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
 
       if (groupId) GAME.groupId = groupId;
 
-      const rawText = event.message.text.trim();
-      const text = rawText.toUpperCase();
-
+      const text = event.message.text.trim().toUpperCase();
       const user = await getUser(userId, groupId);
 
       // ===== 排行榜 =====
@@ -217,7 +215,7 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
 
         data.slice(0, 10).forEach((p, i) => {
           const vip = getVIP(p.total_topup);
-          msg += (i + 1) + ". 👤 " + p.name + " " + vipTag(vip) + " 💰" + p.balance + "\n";
+          msg += ${i + 1}. 👤 ${p.name} ${vipTag(vip)} 💰${p.balance}\n;
         });
 
         return client.replyMessage(event.replyToken, {
@@ -269,9 +267,9 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
         const result = text.split(" ")[1];
 
         ROAD.push(result);
-        if (ROAD.length > 30) ROAD.shift();
+        if (ROAD.length > 30) ROAD = [];
 
-        let report = LANG.RESULT(getBall(result) + " " + result) + "\n\n";
+        let report = ${LANG.RESULT(getBall(result) + " " + result)}\n\n;
 
         for (const uid in GAME.bets) {
           const bet = GAME.bets[uid];
@@ -294,17 +292,17 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
             win_amount: change
           }]);
 
-          report += "👤 " + u.name + " " + vipTag(vip) + " " + (change > 0 ? "+" : "") + change + "\n";
+          report += 👤 ${u.name} ${vipTag(vip)} ${change > 0 ? "+" : ""}${change}\n;
         }
 
         const fakeBots = generateFakeBots();
         fakeBots.forEach(bot => {
           let change = bot.side === result ? bot.amount : -bot.amount;
-          report += "👤 " + bot.name + " ⭐VIP " + (change > 0 ? "+" : "") + change + "\n";
+          report += 👤 ${bot.name} ⭐VIP ${change > 0 ? "+" : ""}${change}\n;
         });
 
         await broadcast(report);
-        await broadcast(LANG.ROAD + "\n" + renderRoadTable());
+        await broadcast(${LANG.ROAD}\n${renderRoadTable()});
 
         GAME.bets = {};
         return;
@@ -327,7 +325,108 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
 app.use(express.urlencoded({ extended: true }));
 
 app.get("/admin", async (req, res) => {
-  res.send("ADMIN RUNNING");
+  const keyword = req.query.search || "";
+
+  const { data: players } = await supabase.from("players").select("*");
+  const { data: logs } = await supabase
+    .from("transactions")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(20);
+
+  let filtered = players;
+  if (keyword) {
+    filtered = players.filter(p =>
+      p.name.includes(keyword) || p.user_id.includes(keyword)
+    );
+  }
+
+  let html = `
+  <html>
+  <body style="background:black;color:white;padding:20px;">
+
+  <h2>👑 后台系统</h2>
+
+  <h3>🎭 演员系统</h3>
+  <form method="POST" action="/admin/fake">
+    数量: <input name="count" value="${FAKE_CONFIG.count}" />
+    名字: <input name="names" value="${FAKE_CONFIG.names.join(",")}" />
+    状态:
+    <select name="enabled">
+      <option value="true">开启</option>
+      <option value="false">关闭</option>
+    </select>
+    <button>保存</button>
+  </form>
+
+  <hr/>
+
+  <h3>🔍 搜索玩家</h3>
+  <form method="GET">
+    <input name="search" placeholder="输入名字或ID"/>
+    <button>搜索</button>
+  </form>
+
+  <hr/>
+  `;
+
+  for (const p of filtered) {
+    const vip = getVIP(p.total_topup);
+
+    const { data: userLogs } = await supabase
+      .from("transactions")
+      .select("*")
+      .eq("user_id", p.user_id)
+      .order("created_at", { ascending: false })
+      .limit(10);
+
+    html += `
+    <div style="border:1px solid gray;padding:10px;margin-bottom:15px;">
+    
+    👤 ${p.name} ${vipTag(vip)} (${p.user_id}) 
+    💰${p.balance} 
+    💎充值:${p.total_topup}
+
+    <form method="POST" action="/admin/topup">
+      <input name="user_id" value="${p.user_id}" hidden />
+      <input name="amount" placeholder="+100 / -100" />
+      <button>充值 / 扣除</button>
+    </form>
+
+    <h4>下注记录</h4>
+    `;
+
+    userLogs.forEach(l => {
+      html += <div>${l.bet_side} ${l.amount} → ${l.result} | 输赢:${l.win_amount}</div>;
+    });
+
+    html += "</div>";
+  }
+
+  html += `
+  <h3>📊 最近记录</h3>
+  `;
+
+  logs.forEach(log => {
+    html += <div>${log.name} | ${log.bet_side} ${log.amount} → ${log.result} | ${log.win_amount}</div>;
+  });
+
+  html += "</body></html>";
+
+  res.send(html);
+});
+
+app.post("/admin/topup", async (req, res) => {
+  const { user_id, amount } = req.body;
+  await changeBalance(user_id, Number(amount));
+  res.redirect("/admin");
+});
+
+app.post("/admin/fake", (req, res) => {
+  FAKE_CONFIG.count = Number(req.body.count);
+  FAKE_CONFIG.names = req.body.names.split(",");
+  FAKE_CONFIG.enabled = req.body.enabled === "true";
+  res.redirect("/admin");
 });
 
 app.get("/", (req, res) => {

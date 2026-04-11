@@ -42,7 +42,7 @@ let GAME = {
   groupId: null
 };
 
-// ===== 🟢 MONITOR SYSTEM（新增）=====
+// ===== 🟢 MONITOR（新增）=====
 let MONITOR = {
   time: 0,
   totals: { B: 0, P: 0, T: 0 }
@@ -210,6 +210,7 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
         // MONITOR RESET
         MONITOR.time = 60;
         MONITOR.totals = { B: 0, P: 0, T: 0 };
+
         const monitorTimer = setInterval(() => {
           MONITOR.time--;
           if (MONITOR.time <= 0) clearInterval(monitorTimer);
@@ -312,7 +313,7 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
   }
 });
 
-// ===== MONITOR PAGE =====
+// ===== 🟢 MONITOR PAGE（新增）=====
 app.get("/monitor", (req, res) => {
   res.send(`
   <html>
@@ -346,17 +347,4 @@ app.get("/monitor/data", (req, res) => {
     P: MONITOR.totals.P,
     T: MONITOR.totals.T
   });
-});
-
-// ===== 后台（完全保留）=====
-app.use(express.urlencoded({ extended: true }));
-
-// （你的admin全部代码保持不变）
-
-app.get("/", (req, res) => {
-  res.send("BOT RUNNING");
-});
-
-app.listen(process.env.PORT || 3000, () => {
-  console.log("running");
 });

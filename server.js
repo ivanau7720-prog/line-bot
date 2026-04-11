@@ -39,7 +39,8 @@ let FAKE_CONFIG = {
 let GAME = {
   isBetting: false,
   bets: {},
-  groupId: null
+  groupId: null,
+  endTime: 0 // ✅ 新增
 };
 
 // ===== 📊 路单 =====
@@ -206,28 +207,10 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
       const text = event.message.text.trim().toUpperCase();
       const user = await getUser(userId, groupId);
 
-      // ===== 排行榜 =====
-      if (text === "/RANK") {
-        const { data } = await supabase.from("players").select("*");
-        data.sort((a, b) => b.balance - a.balance);
-
-        let msg = LANG.RANK + "\n\n";
-
-        data.slice(0, 10).forEach((p, i) => {
-          const vip = getVIP(p.total_topup);
-          msg += `${i + 1}. 👤 ${p.name} ${vipTag(vip)} 💰${p.balance}\n`;
-        });
-
-        return client.replyMessage(event.replyToken, {
-          type: "text",
-          text: msg
-        });
-      }
-
-      // ===== 开局 =====
       if (text === "/START" && userId === process.env.ADMIN_ID) {
         GAME.isBetting = true;
         GAME.bets = {};
+        GAME.endTime = Date.now() + 60000;
 
         await broadcast(LANG.START);
 
@@ -246,7 +229,6 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
         continue;
       }
 
-      // ===== 下注 =====
       if (/^[BPT]\d+$/.test(text)) {
         if (!GAME.isBetting) return;
 
@@ -262,7 +244,6 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
         });
       }
 
-      // ===== 开奖 =====
       if (text.startsWith("/RESULT") && userId === process.env.ADMIN_ID) {
         const result = text.split(" ")[1];
 
@@ -304,6 +285,8 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
         await broadcast(report);
         await broadcast(`${LANG.ROAD}\n${renderRoadTable()}`);
 
+        GAME.isBetting = false;
+        GAME.endTime = 0;
         GAME.bets = {};
         return;
       }
@@ -321,112 +304,61 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
   }
 });
 
+// ===== MONITOR（新增功能）=====
+app.get("/api/monitor", (req, res) => {
+  let B = 0, P = 0, T = 0;
+
+  for (const uid in GAME.bets) {
+    const bet = GAME.bets[uid];
+    if (bet.side === "B") B += bet.amount;
+    if (bet.side === "P") P += bet.amount;
+    if (bet.side === "T") T += bet.amount;
+  }
+
+  const total = B + P + T;
+  const remaining = Math.max(0, Math.floor((GAME.endTime - Date.now()) / 1000));
+
+  res.json({ B, P, T, total, remaining, active: GAME.isBetting });
+});
+
+app.get("/monitor", (req, res) => {
+  res.send(`
+  <html>
+  <body style="background:black;color:white;text-align:center;font-size:60px;">
+  <h1>📊 LIVE BETTING</h1>
+  <div id="box">Waiting...</div>
+  <script>
+    async function load(){
+      const r = await fetch('/api/monitor');
+      const d = await r.json();
+
+      if(!d.active){
+        document.getElementById("box").innerHTML = "⛔ WAIT /START";
+        return;
+      }
+
+      document.getElementById("box").innerHTML = \`
+        🔴 B: \${d.B}<br>
+        🔵 P: \${d.P}<br>
+        🟢 T: \${d.T}<br><br>
+        💰 TOTAL: \${d.total}<br><br>
+        ⏳ \${d.remaining}s
+      \`;
+    }
+
+    setInterval(load,1000);
+    load();
+  </script>
+  </body>
+  </html>
+  `);
+});
+
 // ===== 后台 =====
 app.use(express.urlencoded({ extended: true }));
 
 app.get("/admin", async (req, res) => {
-  const keyword = req.query.search || "";
-
-  const { data: players } = await supabase.from("players").select("*");
-  const { data: logs } = await supabase
-    .from("transactions")
-    .select("*")
-    .order("created_at", { ascending: false })
-    .limit(20);
-
-  let filtered = players;
-  if (keyword) {
-    filtered = players.filter(p =>
-      p.name.includes(keyword) || p.user_id.includes(keyword)
-    );
-  }
-
-  let html = `
-  <html>
-  <body style="background:black;color:white;padding:20px;">
-
-  <h2>👑 后台系统</h2>
-
-  <h3>🎭 演员系统</h3>
-  <form method="POST" action="/admin/fake">
-    数量: <input name="count" value="${FAKE_CONFIG.count}" />
-    名字: <input name="names" value="${FAKE_CONFIG.names.join(",")}" />
-    状态:
-    <select name="enabled">
-      <option value="true">开启</option>
-      <option value="false">关闭</option>
-    </select>
-    <button>保存</button>
-  </form>
-
-  <hr/>
-
-  <h3>🔍 搜索玩家</h3>
-  <form method="GET">
-    <input name="search" placeholder="输入名字或ID"/>
-    <button>搜索</button>
-  </form>
-
-  <hr/>
-  `;
-
-  for (const p of filtered) {
-    const vip = getVIP(p.total_topup);
-
-    const { data: userLogs } = await supabase
-      .from("transactions")
-      .select("*")
-      .eq("user_id", p.user_id)
-      .order("created_at", { ascending: false })
-      .limit(10);
-
-    html += `
-    <div style="border:1px solid gray;padding:10px;margin-bottom:15px;">
-    
-    👤 ${p.name} ${vipTag(vip)} (${p.user_id}) 
-    💰${p.balance} 
-    💎充值:${p.total_topup}
-
-    <form method="POST" action="/admin/topup">
-      <input name="user_id" value="${p.user_id}" hidden />
-      <input name="amount" placeholder="+100 / -100" />
-      <button>充值 / 扣除</button>
-    </form>
-
-    <h4>下注记录</h4>
-    `;
-
-    userLogs.forEach(l => {
-      html += `<div>${l.bet_side} ${l.amount} → ${l.result} | 输赢:${l.win_amount}</div>`;
-    });
-
-    html += "</div>";
-  }
-
-  html += `
-  <h3>📊 最近记录</h3>
-  `;
-
-  logs.forEach(log => {
-    html += `<div>${log.name} | ${log.bet_side} ${log.amount} → ${log.result} | ${log.win_amount}</div>`;
-  });
-
-  html += "</body></html>";
-
-  res.send(html);
-});
-
-app.post("/admin/topup", async (req, res) => {
-  const { user_id, amount } = req.body;
-  await changeBalance(user_id, Number(amount));
-  res.redirect("/admin");
-});
-
-app.post("/admin/fake", (req, res) => {
-  FAKE_CONFIG.count = Number(req.body.count);
-  FAKE_CONFIG.names = req.body.names.split(",");
-  FAKE_CONFIG.enabled = req.body.enabled === "true";
-  res.redirect("/admin");
+  res.send("ADMIN RUNNING");
 });
 
 app.get("/", (req, res) => {

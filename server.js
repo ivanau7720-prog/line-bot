@@ -361,30 +361,10 @@ app.get("/admin", async (req, res) => {
     );
   }
 
-  const total = MONITOR.B + MONITOR.P + MONITOR.T;
-const percent = (v) => total ? ((v / total) * 100).toFixed(1) : 0;
   let html = `
   <html>
-  <body style="background:black;color:white;text-align:center;padding-top:80px;font-family:sans-serif;max-width:900px;margin:auto;">
+  <body style="background:black;color:white;padding:20px;">
 
-  <h1 style="font-size:60px;">📊 实时下注监控</h1>
-
-  <h2 style="color:red;font-size:50px;">
-    B 🔴：${MONITOR.B}（${COUNT.B} 人） ${percent(MONITOR.B)}%
-  </h2>
-
-  <h2 style="color:blue;font-size:50px;">
-    P 🔵：${MONITOR.P}（${COUNT.P} 人） ${percent(MONITOR.P)}%
-  </h2>
-
-  <h2 style="color:green;font-size:50px;">
-    T 🟢：${MONITOR.T}（${COUNT.T} 人） ${percent(MONITOR.T)}%
-  </h2>
-
-  <hr style="margin:40px;">
-
-  <h2 style="font-size:45px;">💰 总下注：${total}</h2>
-  
   <h2>👑 后台系统</h2>
 
   <h3>🎭 演员系统</h3>

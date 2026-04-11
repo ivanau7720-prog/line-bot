@@ -4,6 +4,12 @@ const { createClient } = require("@supabase/supabase-js");
 
 const app = express();
 
+// ===== 🟢 MONITOR（新增）=====
+let MONITOR = {
+  B: 0,
+  P: 0,
+  T: 0
+};
 // ===== 🌏 泰语系统 =====
 const LANG = {
   START: "🟢 เปิดรอบ! กรุณาวางเดิมพัน (60 วินาที)",
@@ -229,6 +235,9 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
         GAME.isBetting = true;
         GAME.bets = {};
 
+        // MONITOR重置
+MONITOR = { B: 0, P: 0, T: 0 };
+        
         await broadcast(LANG.START);
 
         let time = 60;
@@ -256,6 +265,10 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
         await changeBalance(userId, -amount);
         GAME.bets[userId] = { side, amount };
 
+        // ===== 🟢 MONITOR统计（新增）=====
+if (MONITOR[side] !== undefined) {
+  MONITOR[side] += amount;
+}
         return client.replyMessage(event.replyToken, {
           type: "text",
           text: LANG.BET_OK(user.name, side, amount)
@@ -267,7 +280,7 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
         const result = text.split(" ")[1];
 
         ROAD.push(result);
-        if (ROAD.length > 30) ROAD = [];
+        if (ROAD.length > 30) ROAD.shift();
 
         let report = `${LANG.RESULT(getBall(result) + " " + result)}\n\n`;
 
@@ -427,6 +440,26 @@ app.post("/admin/fake", (req, res) => {
   FAKE_CONFIG.names = req.body.names.split(",");
   FAKE_CONFIG.enabled = req.body.enabled === "true";
   res.redirect("/admin");
+});
+
+// ===== 🟢 MONITOR页面 =====
+app.get("/monitor", (req, res) => {
+  res.send(`
+    <html>
+    <head>
+      <meta http-equiv="refresh" content="1">
+    </head>
+    <body style="background:black;color:white;text-align:center;padding-top:100px;">
+      
+      <h1>📊 实时下注监控</h1>
+
+      <h2 style="color:red;">B 🔴：${MONITOR.B}</h2>
+      <h2 style="color:blue;">P 🔵：${MONITOR.P}</h2>
+      <h2 style="color:green;">T 🟢：${MONITOR.T}</h2>
+
+    </body>
+    </html>
+  `);
 });
 
 app.get("/", (req, res) => {

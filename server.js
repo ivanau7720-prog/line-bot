@@ -248,7 +248,7 @@ COUNT = { B: 0, P: 0, T: 0 };
 
         let time = 60;
         const timer = setInterval(async () => {
-          time -= 10;
+          time -= 20;
           if (time <= 0) {
             clearInterval(timer);
             GAME.isBetting = false;
@@ -256,7 +256,7 @@ COUNT = { B: 0, P: 0, T: 0 };
           } else {
             await broadcast(LANG.TIME(time));
           }
-        }, 10000);
+        }, 20000);
 
        return;
       }

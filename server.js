@@ -229,6 +229,10 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
           msg += `${i + 1}. 👤 ${p.name} ${vipTag(vip)} 💰${p.balance}\n`;
         });
 
+        return client.replyMessage(event.replyToken, {
+          type: "text",
+          text: msg
+        });
       }
 
       // ===== 开局 =====
@@ -254,7 +258,7 @@ COUNT = { B: 0, P: 0, T: 0 };
           }
         }, 10000);
 
-        return;
+        continue;
       }
 
       // ===== 下注 =====
@@ -479,46 +483,6 @@ app.get("/monitor", (req, res) => {
 
     </body>
     </html>
-  `);
-});
-
-// ===== 🟢 LIVE页面（超安全版）=====
-app.get("/live", (req, res) => {
-  res.send(`
-  <html>
-  <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-  </head>
-
-  <body style="background:black;color:white;text-align:center;font-family:sans-serif;">
-
-    <h1>🎥 LIVE</h1>
-
-    <!-- 🎥 视频 -->
-    <iframe 
-      src="https://你的直播iframe"
-      style="width:100%;height:300px;border:none;"
-      allow="autoplay">
-    </iframe>
-
-    <br/><br/>
-
-    <!-- 🔘 返回LINE -->
-    <a href="https://lin.ee/U1TUCWO"
-      style="
-        display:inline-block;
-        background:#00c300;
-        color:white;
-        padding:15px 25px;
-        border-radius:10px;
-        text-decoration:none;
-        font-size:18px;
-      ">
-      👉 กลับไปแทงใน LINE
-    </a>
-
-  </body>
-  </html>
   `);
 });
 

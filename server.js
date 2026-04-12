@@ -1,7 +1,7 @@
 const express = require("express");
+const axios = require("axios");
 const line = require("@line/bot-sdk");
 const { createClient } = require("@supabase/supabase-js");
-const axios = require("axios");
 
 const app = express();
 
@@ -249,12 +249,11 @@ COUNT = { B: 0, P: 0, T: 0 };
 
 try {
   await axios.post("https://live-sync-system-production.up.railway.app/update", {
-    text: "🟢 开始下注（60秒）"
+    text: "🟢 开始下注 (60秒)"
   });
 } catch (e) {
   console.log("LIVE同步失败 START");
-}
-        
+}        
         let time = 60;
         const timer = setInterval(async () => {
           time -= 10;
@@ -262,7 +261,6 @@ try {
             clearInterval(timer);
             GAME.isBetting = false;
             await broadcast(LANG.STOP);
-
             try {
   await axios.post("https://live-sync-system-production.up.railway.app/update", {
     text: "⛔ 停止下注"
@@ -300,7 +298,7 @@ if (MONITOR[side] !== undefined) {
       }
 
       // ===== 开奖 =====
-      if (text.toUpperCase().startsWith("/RESULT") && userId === process.env.ADMIN_ID) {
+      if (text.startsWith("/RESULT") && userId === process.env.ADMIN_ID) {
         const result = text.split(" ")[1];
 
         ROAD.push(result);
@@ -308,29 +306,34 @@ if (MONITOR[side] !== undefined) {
 
         let report = `${LANG.RESULT(getBall(result) + " " + result)}\n\n`;
 
-        for (const uid in GAME.bets) {
-          const bet = GAME.bets[uid];
-          const u = await getUser(uid, groupId);
+      for (const uid in GAME.bets) {
+  try {
+    const bet = GAME.bets[uid];
+    const u = await getUser(uid, groupId);
 
-          let change = bet.side === result ? bet.amount : -bet.amount;
+    let change = bet.side === result ? bet.amount : -bet.amount;
 
-          if (bet.side === result) {
-            await changeBalance(uid, bet.amount * 2);
-          }
+    if (bet.side === result) {
+      await changeBalance(uid, bet.amount * 2);
+    }
 
-          const vip = getVIP(u.total_topup);
+    const vip = getVIP(u.total_topup);
 
-          await supabase.from("transactions").insert([{
-            user_id: uid,
-            name: u.name,
-            amount: bet.amount,
-            bet_side: bet.side,
-            result: result,
-            win_amount: change
-          }]);
+    await supabase.from("transactions").insert([{
+      user_id: uid,
+      name: u.name,
+      amount: bet.amount,
+      bet_side: bet.side,
+      result: result,
+      win_amount: change
+    }]);
 
-          report += `👤 ${u.name} ${vipTag(vip)} ${change > 0 ? "+" : ""}${change}\n`;
-        }
+    report += `👤 ${u.name} ${vipTag(vip)} ${change > 0 ? "+" : ""}${change}\n`;
+
+  } catch (err) {
+    console.log("❌ 结算失败:", err);
+  }
+}
 
         const fakeBots = generateFakeBots();
         fakeBots.forEach(bot => {
@@ -339,16 +342,15 @@ if (MONITOR[side] !== undefined) {
         });
 
         await broadcast(report);
-        await broadcast(`${LANG.ROAD}\n${renderRoadTable()}`);
-
-try {
+        try {
   await axios.post("https://live-sync-system-production.up.railway.app/update", {
-    text: `🎯 结果：${result}\n\n📊 路单\n${renderRoadTable()}`
+    text: report
   });
 } catch (e) {
   console.log("LIVE同步失败 RESULT");
 }
-        
+        await broadcast(`${LANG.ROAD}\n${renderRoadTable()}`);
+
         GAME.bets = {};
         return;
       }

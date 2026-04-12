@@ -1,6 +1,7 @@
 const express = require("express");
 const line = require("@line/bot-sdk");
 const { createClient } = require("@supabase/supabase-js");
+const axios = require("axios");
 
 const app = express();
 
@@ -246,6 +247,14 @@ COUNT = { B: 0, P: 0, T: 0 };
         
         await broadcast(LANG.START);
 
+try {
+  await axios.post("https://live-sync-system-production.up.railway.app/update", {
+    text: "🟢 开始下注（60秒）"
+  });
+} catch (e) {
+  console.log("LIVE同步失败 START");
+}
+        
         let time = 60;
         const timer = setInterval(async () => {
           time -= 10;
@@ -253,6 +262,14 @@ COUNT = { B: 0, P: 0, T: 0 };
             clearInterval(timer);
             GAME.isBetting = false;
             await broadcast(LANG.STOP);
+
+            try {
+  await axios.post("https://live-sync-system-production.up.railway.app/update", {
+    text: "⛔ 停止下注"
+  });
+} catch (e) {
+  console.log("LIVE同步失败 STOP");
+}
           } else {
             await broadcast(LANG.TIME(time));
           }
@@ -324,6 +341,14 @@ if (MONITOR[side] !== undefined) {
         await broadcast(report);
         await broadcast(`${LANG.ROAD}\n${renderRoadTable()}`);
 
+try {
+  await axios.post("https://live-sync-system-production.up.railway.app/update", {
+    text: `🎯 结果：${result}\n\n📊 路单\n${renderRoadTable()}`
+  });
+} catch (e) {
+  console.log("LIVE同步失败 RESULT");
+}
+        
         GAME.bets = {};
         return;
       }

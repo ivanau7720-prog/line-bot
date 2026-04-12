@@ -229,10 +229,6 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
           msg += `${i + 1}. 👤 ${p.name} ${vipTag(vip)} 💰${p.balance}\n`;
         });
 
-        return client.replyMessage(event.replyToken, {
-          type: "text",
-          text: msg
-        });
       }
 
       // ===== 开局 =====

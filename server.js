@@ -300,7 +300,7 @@ if (MONITOR[side] !== undefined) {
       }
 
       // ===== 开奖 =====
-      if (text.startsWith("/RESULT") && userId === process.env.ADMIN_ID) {
+      if (text.toUpperCase().startsWith("/RESULT") && userId === process.env.ADMIN_ID) {
         const result = text.split(" ")[1];
 
         ROAD.push(result);

@@ -374,11 +374,29 @@ if (MONITOR[side] !== undefined) {
           const bet = GAME.bets[uid];
           const u = await getUser(uid, groupId);
 
-          let change = bet.side === result ? bet.amount : -bet.amount;
+         let change;
 
-          if (bet.side === result) {
-            await changeBalance(uid, bet.amount * 2);
-          }
+if (bet.side === result) {
+
+  if (result === "B") {
+    // 庄 → 抽5%
+    change = bet.amount * 0.95;
+    await changeBalance(uid, bet.amount * 1.95);
+
+  } else if (result === "P") {
+    // 闲 → 不抽
+    change = bet.amount;
+    await changeBalance(uid, bet.amount * 2);
+
+  } else if (result === "T") {
+    // 和 → 8倍
+    change = bet.amount * 8;
+    await changeBalance(uid, bet.amount * 9);
+  }
+
+} else {
+  change = -bet.amount;
+}
 
           const vip = getVIP(u.total_topup);
 

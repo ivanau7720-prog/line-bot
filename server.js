@@ -47,6 +47,10 @@ let delay = 1500;
 let minDelay = 1200;
 let maxDelay = 8000;
 
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 async function processQueue() {
   if (sending) return;
   sending = true;
@@ -96,7 +100,8 @@ let FAKE_CONFIG = {
 let GAME = {
   isBetting: false,
   bets: {},
-  groupId: null
+  groupId: null，
+  running: false
 };
 
 // ===== 📊 路单 =====
@@ -283,9 +288,14 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
       }
 
       // ===== 开局 =====
-      if (text === "/START" && userId === process.env.ADMIN_ID) {
-        GAME.isBetting = true;
-        GAME.bets = {};
+     if (text === "/START" && userId === process.env.ADMIN_ID) {
+
+  if (GAME.running) return; // 🔥 防重复
+
+  GAME.running = true; // 🔥 开锁
+
+  GAME.isBetting = true;
+  GAME.bets = {};
 
         // MONITOR重置
 MONITOR = { B: 0, P: 0, T: 0 };
@@ -302,6 +312,7 @@ COUNT = { B: 0, P: 0, T: 0 };
             broadcast(LANG.STOP);
           } else {
             broadcast(LANG.TIME(time));
+            GAME.running = false; // 🔥 加这里
           }
         }, 10000);
 

@@ -336,8 +336,17 @@ const timer = setInterval(async () => {
         const side = text[0];
         const amount = Number(text.slice(1));
 
-        await changeBalance(userId, -amount);
-        GAME.bets[userId] = { side, amount };
+        // 🔥 余额检查
+if (user.balance < amount) {
+  return client.replyMessage(event.replyToken, {
+    type: "text",
+    text: "❌ 余额不足"
+  });
+}
+
+// 扣钱 + 记录下注
+await changeBalance(userId, -amount);
+GAME.bets[userId] = { side, amount };
 
         // ===== 🟢 MONITOR统计（新增）=====
 if (MONITOR[side] !== undefined) {
@@ -352,8 +361,10 @@ if (MONITOR[side] !== undefined) {
 
       // ===== 开奖 =====
       if (text.startsWith("/RESULT") && userId === ADMIN_ID) {
+        if (!GAME.waitingResult) return;
         const result = text.split(" ")[1];
-
+        if (!["B", "P", "T"].includes(result)) return;
+        GAME.waitingResult = false;
         ROAD.push(result);
         if (ROAD.length > 30) ROAD.shift();
 
@@ -401,11 +412,15 @@ return client.replyMessage(event.replyToken, {
   type: "text",
   text: "✅ 开奖完成"
 });
+} // 关 /RESULT
 
-    res.sendStatus(200);
-  } catch (err) {
-    console.log(err);
-    res.sendStatus(500);
+} // 🔥 关 for（必须）
+
+res.sendStatus(200); // 🔥 必须
+
+} catch (err) {
+  console.log(err);
+  res.sendStatus(500);
   }
 });
 

@@ -1,4 +1,5 @@
 const express = require("express");
+const ADMIN_ID = "U849b7dc898401c6524b5999fa441c38f";
 const line = require("@line/bot-sdk");
 const { createClient } = require("@supabase/supabase-js");
 
@@ -101,7 +102,8 @@ let GAME = {
   isBetting: false,
   bets: {},
   groupId: null,
-  running: false
+  running: false,
+  waitingResult: false
 };
 
 // ===== 📊 路单 =====
@@ -286,16 +288,18 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
           text: msg
         });
       }
+      
+   // ===== 开局 =====
+if (text === "/START" && userId === ADMIN_ID) {
 
-      // ===== 开局 =====
-    if (text === "/START") {
+  if (GAME.running || GAME.waitingResult) return; // 🔥 防重复 + 防跳局
 
-  if (GAME.running) return; // 🔥 防重复
-
-  GAME.running = true; // 🔥 开锁
+  GAME.running = true;
+  GAME.waitingResult = false;
 
   GAME.isBetting = true;
   GAME.bets = {};
+
 
         // MONITOR重置
 MONITOR = { B: 0, P: 0, T: 0 };
@@ -304,20 +308,25 @@ COUNT = { B: 0, P: 0, T: 0 };
         broadcast(LANG.START);
 
         let time = 60;
-        const timer = setInterval(async () => {
-          time -= 10;
-         if (time <= 0) {
-  clearInterval(timer);
-  GAME.isBetting = false;
-  broadcast(LANG.STOP);
+const timer = setInterval(async () => {
+  time -= 10;
 
-  GAME.running = false; // ✅ 正确位置（只在结束时）
-} else {
-  broadcast(LANG.TIME(time));
-}
-        }, 10000);
+  if (time <= 0) {
+    clearInterval(timer);
 
-        continue;
+    GAME.isBetting = false;
+
+    GAME.waitingResult = true; // 🔥 等管理员开奖（最关键）
+
+    broadcast(LANG.STOP);
+
+  } else {
+    broadcast(LANG.TIME(time));
+  }
+
+}, 10000);
+
+        return;
       }
 
       // ===== 下注 =====
@@ -342,7 +351,7 @@ if (MONITOR[side] !== undefined) {
       }
 
       // ===== 开奖 =====
-      if (text.startsWith("/RESULT") && userId === process.env.ADMIN_ID) {
+      if (text.startsWith("/RESULT") && userId === ADMIN_ID) {
         const result = text.split(" ")[1];
 
         ROAD.push(result);
@@ -383,15 +392,15 @@ if (MONITOR[side] !== undefined) {
         broadcast(report);
         broadcast(`${LANG.ROAD}\n${renderRoadTable()}`);
 
-        GAME.bets = {};
-        return;
-      }
+       GAME.bets = {};
 
-      return client.replyMessage(event.replyToken, {
-        type: "text",
-        text: "OK"
-      });
-    }
+GAME.running = false;        // 解锁下一局
+GAME.waitingResult = false;  // 结束等待
+
+return client.replyMessage(event.replyToken, {
+  type: "text",
+  text: "✅ 开奖完成"
+});
 
     res.sendStatus(200);
   } catch (err) {

@@ -4,12 +4,15 @@ const { createClient } = require("@supabase/supabase-js");
 
 const app = express();
 
-// ===== 🔥 全局工具 =====
+// ===== 👑 管理员 =====
+const ADMINS = ["U8455884cfb22877f209092cc78ea9880"];
+
+// ===== 🔥 工具 =====
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-// ===== 🟢 防429发送队列 =====
+// ===== 🚀 防429发送队列 =====
 let queue = [];
 let processing = false;
 
@@ -19,17 +22,16 @@ async function processQueue() {
 
   while (queue.length > 0) {
     const job = queue.shift();
-
     try {
       await client.pushMessage(job.to, job.message);
-      await sleep(1200); // 🔥 核心限速
+      await sleep(1200);
     } catch (err) {
       if (err.statusCode === 429) {
-        console.log("⚠️ 429 retry...");
+        console.log("429 retry...");
         await sleep(3000);
         queue.unshift(job);
       } else {
-        console.log("❌ send error", err);
+        console.log(err);
       }
     }
   }
@@ -46,7 +48,7 @@ function safePush(to, message) {
 let MONITOR = { B: 0, P: 0, T: 0 };
 let COUNT = { B: 0, P: 0, T: 0 };
 
-// ===== 🌏 语言 =====
+// ===== 🌏 泰语系统（完整保留）=====
 const LANG = {
   START: "🟢 เปิดรอบ! กรุณาวางเดิมพัน (60 วินาที)",
   TIME: (t) => `⏳ เหลือ ${t} วินาที`,
@@ -70,7 +72,7 @@ const supabase = createClient(
   process.env.SUPABASE_KEY
 );
 
-// ===== 🎭 假人 =====
+// ===== 🎭 演员系统 =====
 let FAKE_CONFIG = {
   enabled: true,
   count: 5,
@@ -82,25 +84,25 @@ let GAME = {
   isBetting: false,
   bets: {},
   groupId: null,
-  running: false // 🔥 防重复
+  running: false
 };
 
-// ===== 📊 路 =====
+// ===== 📊 路单 =====
 let ROAD = [];
 
-// ===== 🎨 球 =====
-function getBall(r) {
-  if (r === "B") return "🔴";
-  if (r === "P") return "🔵";
+// ===== 球 =====
+function getBall(result) {
+  if (result === "B") return "🔴";
+  if (result === "P") return "🔵";
   return "🟢";
 }
 
-// ===== 📊 路表 =====
+// ===== 路表 =====
 function renderRoadTable() {
   let grid = "";
   let col = 0;
 
-  ROAD.forEach(r => {
+  ROAD.forEach((r) => {
     grid += getBall(r) + " ";
     col++;
     if (col >= 6) {
@@ -112,53 +114,57 @@ function renderRoadTable() {
   return grid || "-";
 }
 
-// ===== 🎭 假人 =====
+// ===== 假人 =====
 function getRandomAmount() {
   return Math.floor(Math.random() * 9900) + 100;
 }
 
 function generateFakeBots() {
   if (!FAKE_CONFIG.enabled) return [];
-  const sides = ["B", "P", "T"];
 
-  return Array.from({ length: FAKE_CONFIG.count }).map((_, i) => ({
-    name: FAKE_CONFIG.names[i % FAKE_CONFIG.names.length] + (i + 1),
-    side: sides[Math.floor(Math.random() * 3)],
-    amount: getRandomAmount()
-  }));
+  const sides = ["B", "P", "T"];
+  let bots = [];
+
+  for (let i = 0; i < FAKE_CONFIG.count; i++) {
+    bots.push({
+      name: FAKE_CONFIG.names[i % FAKE_CONFIG.names.length] + (i + 1),
+      side: sides[Math.floor(Math.random() * 3)],
+      amount: getRandomAmount()
+    });
+  }
+
+  return bots;
 }
 
 // ===== VIP =====
 function getVIP(total) {
   if (!total) return 0;
-  if (total >= 5120000) return 1;
-  if (total >= 2560000) return 2;
-  if (total >= 1280000) return 3;
-  if (total >= 640000) return 4;
-  if (total >= 320000) return 5;
-  if (total >= 160000) return 6;
-  if (total >= 80000) return 7;
-  if (total >= 40000) return 8;
-  if (total >= 20000) return 9;
-  if (total >= 10000) return 10;
+  if (total >= 10000) return 1;
   return 0;
 }
 
-function vipTag(v) {
-  if (v >= 8) return "🔥VIP" + v;
-  if (v >= 5) return "💎VIP" + v;
-  if (v >= 1) return "⭐VIP" + v;
+function vipTag(vip) {
+  if (vip >= 1) return "⭐VIP" + vip;
   return "";
 }
 
 // ===== 用户 =====
-async function getUser(userId, groupId) {
-  const { data } = await supabase.from("players").select("*").eq("user_id", userId).single();
+async function getUser(userId) {
+  const { data } = await supabase
+    .from("players")
+    .select("*")
+    .eq("user_id", userId)
+    .single();
 
   if (!data) {
-    const user = { user_id: userId, balance: 0, name: "玩家", total_topup: 0 };
-    await supabase.from("players").insert([user]);
-    return user;
+    const newUser = {
+      user_id: userId,
+      balance: 0,
+      name: "玩家",
+      total_topup: 0
+    };
+    await supabase.from("players").insert([newUser]);
+    return newUser;
   }
 
   return data;
@@ -166,25 +172,27 @@ async function getUser(userId, groupId) {
 
 // ===== 改余额 =====
 async function changeBalance(userId, amount) {
-  const { data } = await supabase.from("players").select("*").eq("user_id", userId).single();
+  const { data } = await supabase
+    .from("players")
+    .select("*")
+    .eq("user_id", userId)
+    .single();
 
   let newBalance = Number(data.balance) + Number(amount);
-  let newTopup = data.total_topup || 0;
 
-  if (amount > 0) newTopup += amount;
-
-  await supabase.from("players").update({
-    balance: newBalance,
-    total_topup: newTopup
-  }).eq("user_id", userId);
-
-  return { balance: newBalance, total_topup: newTopup };
+  await supabase
+    .from("players")
+    .update({ balance: newBalance })
+    .eq("user_id", userId);
 }
 
 // ===== 广播 =====
 function broadcast(text) {
   if (!GAME.groupId) return;
-  safePush(GAME.groupId, { type: "text", text });
+  safePush(GAME.groupId, {
+    type: "text",
+    text
+  });
 }
 
 // ===== webhook =====
@@ -197,13 +205,15 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
 
       const userId = event.source.userId;
       const groupId = event.source.groupId;
+
       if (groupId) GAME.groupId = groupId;
 
       const text = event.message.text.trim().toUpperCase();
-      const user = await getUser(userId, groupId);
 
-      // ===== 开局 =====
-      if (text === "/START" && userId === process.env.ADMIN_ID) {
+      const user = await getUser(userId);
+
+      // ===== START（已修复429）=====
+      if (text === "/START" && ADMINS.includes(userId)) {
 
         if (GAME.running) return;
 
@@ -215,22 +225,23 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
         COUNT = { B: 0, P: 0, T: 0 };
 
         (async () => {
-          broadcast(LANG.START);
+
+          await broadcast(LANG.START);
 
           await sleep(30000);
           if (!GAME.isBetting) return;
-          broadcast(LANG.TIME(30));
+          await broadcast(LANG.TIME(30));
 
           await sleep(20000);
           if (!GAME.isBetting) return;
-          broadcast(LANG.TIME(10));
+          await broadcast(LANG.TIME(10));
 
           await sleep(10000);
-
           GAME.isBetting = false;
-          broadcast(LANG.STOP);
+          await broadcast(LANG.STOP);
 
           GAME.running = false;
+
         })();
 
         return;
@@ -259,8 +270,8 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
         });
       }
 
-      // ===== 开奖 =====
-      if (text.startsWith("/RESULT") && userId === process.env.ADMIN_ID) {
+      // ===== RESULT =====
+      if (text.startsWith("/RESULT") && ADMINS.includes(userId)) {
 
         const result = text.split(" ")[1];
 
@@ -272,7 +283,7 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
         for (const uid in GAME.bets) {
 
           const bet = GAME.bets[uid];
-          const u = await getUser(uid, groupId);
+          const u = await getUser(uid);
 
           let change = bet.side === result ? bet.amount : -bet.amount;
 
@@ -282,16 +293,17 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
 
           report += `👤 ${u.name} ${change > 0 ? "+" : ""}${change}\n`;
 
-          await sleep(200); // 🔥 防爆
+          await sleep(200);
         }
 
-        generateFakeBots().forEach(bot => {
+        const fakeBots = generateFakeBots();
+        fakeBots.forEach(bot => {
           let change = bot.side === result ? bot.amount : -bot.amount;
           report += `👤 ${bot.name} ${change > 0 ? "+" : ""}${change}\n`;
         });
 
-        broadcast(report);
-        broadcast(`${LANG.ROAD}\n${renderRoadTable()}`);
+        await broadcast(report);
+        await broadcast(`${LANG.ROAD}\n${renderRoadTable()}`);
 
         GAME.bets = {};
         return;
@@ -307,21 +319,34 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
   }
 });
 
+// ===== ADMIN（恢复）=====
+app.get("/admin", async (req, res) => {
+
+  const { data: players } = await supabase.from("players").select("*");
+
+  let html = `<html><body style="background:black;color:white;">`;
+
+  players.forEach(p => {
+    html += `<div>${p.name} 💰${p.balance}</div>`;
+  });
+
+  html += "</body></html>";
+
+  res.send(html);
+});
+
 // ===== MONITOR =====
 app.get("/monitor", (req, res) => {
 
   const total = MONITOR.B + MONITOR.P + MONITOR.T;
-  const percent = v => total ? ((v / total) * 100).toFixed(1) : 0;
 
   res.send(`
-  <html>
-  <body style="background:black;color:white;text-align:center;">
-  <h1>📊 监控</h1>
-  <h2>B: ${MONITOR.B} (${percent(MONITOR.B)}%)</h2>
-  <h2>P: ${MONITOR.P} (${percent(MONITOR.P)}%)</h2>
-  <h2>T: ${MONITOR.T} (${percent(MONITOR.T)}%)</h2>
-  </body>
-  </html>
+  <html><body style="background:black;color:white;text-align:center;">
+  <h2>B ${MONITOR.B}</h2>
+  <h2>P ${MONITOR.P}</h2>
+  <h2>T ${MONITOR.T}</h2>
+  <h3>Total ${total}</h3>
+  </body></html>
   `);
 });
 

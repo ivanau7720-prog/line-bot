@@ -288,7 +288,7 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
       }
 
       // ===== 开局 =====
-     if (text === "/START" && userId === process.env.ADMIN_ID) {
+    if (text === "/START") {
 
   if (GAME.running) return; // 🔥 防重复
 

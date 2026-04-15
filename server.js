@@ -100,7 +100,7 @@ let FAKE_CONFIG = {
 let GAME = {
   isBetting: false,
   bets: {},
-  groupId: null，
+  groupId: null,
   running: false
 };
 
@@ -306,14 +306,15 @@ COUNT = { B: 0, P: 0, T: 0 };
         let time = 60;
         const timer = setInterval(async () => {
           time -= 10;
-          if (time <= 0) {
-            clearInterval(timer);
-            GAME.isBetting = false;
-            broadcast(LANG.STOP);
-          } else {
-            broadcast(LANG.TIME(time));
-            GAME.running = false; // 🔥 加这里
-          }
+         if (time <= 0) {
+  clearInterval(timer);
+  GAME.isBetting = false;
+  broadcast(LANG.STOP);
+
+  GAME.running = false; // ✅ 正确位置（只在结束时）
+} else {
+  broadcast(LANG.TIME(time));
+}
         }, 10000);
 
         continue;

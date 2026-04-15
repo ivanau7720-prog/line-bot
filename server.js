@@ -4,6 +4,17 @@ const { createClient } = require("@supabase/supabase-js");
 
 const app = express();
 
+// ===== 🟢 MONITOR（新增）=====
+let MONITOR = {
+  B: 0,
+  P: 0,
+  T: 0
+};
+let COUNT = {
+  B: 0,
+  P: 0,
+  T: 0
+};
 // ===== 🌏 泰语系统 =====
 const LANG = {
   START: "🟢 เปิดรอบ! กรุณาวางเดิมพัน (60 วินาที)",
@@ -28,6 +39,52 @@ const supabase = createClient(
   process.env.SUPABASE_KEY
 );
 
+// ===== 🚀 防429队列 =====
+let queue = [];
+let sending = false;
+
+let delay = 1500;
+let minDelay = 1200;
+let maxDelay = 8000;
+
+async function processQueue() {
+  if (sending) return;
+  sending = true;
+
+  while (queue.length > 0) {
+    const job = queue.shift();
+
+    try {
+      await client.pushMessage(job.to, job.msg);
+
+      // 成功 → 加速
+      delay = Math.max(minDelay, delay - 100);
+
+      console.log("✅ send ok", delay);
+
+    } catch (err) {
+
+      if (err.statusCode === 429) {
+        console.log("⚠️ 429 → slow down");
+
+        delay = Math.min(maxDelay, delay + 1000);
+
+        queue.unshift(job); // 放回去
+      } else {
+        console.log(err);
+      }
+    }
+
+    await sleep(delay);
+  }
+
+  sending = false;
+}
+
+function safePush(to, msg) {
+  queue.push({ to, msg });
+  processQueue();
+}
 // ===== 🎭 演员系统 =====
 let FAKE_CONFIG = {
   enabled: true,
@@ -182,10 +239,11 @@ async function changeBalance(userId, amount) {
   return { balance: newBalance, total_topup: newTopup };
 }
 
-// ===== 广播 =====
-async function broadcast(text) {
+// ===== 广播（防429版）=====
+function broadcast(text) {
   if (!GAME.groupId) return;
-  await client.pushMessage(GAME.groupId, {
+
+  safePush(GAME.groupId, {
     type: "text",
     text
   });
@@ -229,7 +287,11 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
         GAME.isBetting = true;
         GAME.bets = {};
 
-        await broadcast(LANG.START);
+        // MONITOR重置
+MONITOR = { B: 0, P: 0, T: 0 };
+COUNT = { B: 0, P: 0, T: 0 };
+        
+        broadcast(LANG.START);
 
         let time = 60;
         const timer = setInterval(async () => {
@@ -237,9 +299,9 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
           if (time <= 0) {
             clearInterval(timer);
             GAME.isBetting = false;
-            await broadcast(LANG.STOP);
+            broadcast(LANG.STOP);
           } else {
-            await broadcast(LANG.TIME(time));
+            broadcast(LANG.TIME(time));
           }
         }, 10000);
 
@@ -256,6 +318,11 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
         await changeBalance(userId, -amount);
         GAME.bets[userId] = { side, amount };
 
+        // ===== 🟢 MONITOR统计（新增）=====
+if (MONITOR[side] !== undefined) {
+  MONITOR[side] += amount;
+  COUNT[side] += 1;
+}
         return client.replyMessage(event.replyToken, {
           type: "text",
           text: LANG.BET_OK(user.name, side, amount)
@@ -267,7 +334,7 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
         const result = text.split(" ")[1];
 
         ROAD.push(result);
-        if (ROAD.length > 30) ROAD = [];
+        if (ROAD.length > 30) ROAD.shift();
 
         let report = `${LANG.RESULT(getBall(result) + " " + result)}\n\n`;
 
@@ -301,8 +368,8 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
           report += `👤 ${bot.name} ⭐VIP ${change > 0 ? "+" : ""}${change}\n`;
         });
 
-        await broadcast(report);
-        await broadcast(`${LANG.ROAD}\n${renderRoadTable()}`);
+        broadcast(report);
+        broadcast(`${LANG.ROAD}\n${renderRoadTable()}`);
 
         GAME.bets = {};
         return;
@@ -427,6 +494,43 @@ app.post("/admin/fake", (req, res) => {
   FAKE_CONFIG.names = req.body.names.split(",");
   FAKE_CONFIG.enabled = req.body.enabled === "true";
   res.redirect("/admin");
+});
+
+// ===== 🟢 MONITOR页面 =====
+app.get("/monitor", (req, res) => {
+ 
+  const total = MONITOR.B + MONITOR.P + MONITOR.T;
+
+  const percent = (v) => total ? ((v / total) * 100).toFixed(1) : 0;
+
+  res.send(`
+    <html>
+    <head>
+      <meta http-equiv="refresh" content="1">
+    </head>
+    <body style="background:black;color:white;text-align:center;padding-top:80px;font-family:sans-serif;">
+      
+      <h1>📊 实时下注监控</h1>
+
+      <h2 style="color:red;">
+        B 🔴：${MONITOR.B}（${COUNT.B}人） ${percent(MONITOR.B)}%
+      </h2>
+
+      <h2 style="color:blue;">
+        P 🔵：${MONITOR.P}（${COUNT.P}人） ${percent(MONITOR.P)}%
+      </h2>
+
+      <h2 style="color:green;">
+        T 🟢：${MONITOR.T}（${COUNT.T}人） ${percent(MONITOR.T)}%
+      </h2>
+
+      <hr style="margin:30px;">
+
+      <h2>💰 总下注：${total}</h2>
+
+    </body>
+    </html>
+  `);
 });
 
 app.get("/", (req, res) => {

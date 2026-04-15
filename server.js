@@ -16,24 +16,44 @@ function sleep(ms) {
 let queue = [];
 let processing = false;
 
+// 🔥 动态延迟（核心）
+let delay = 1500;       // 初始速度
+let minDelay = 1200;    // 最快
+let maxDelay = 8000;    // 最慢
+
 async function processQueue() {
   if (processing) return;
   processing = true;
 
   while (queue.length > 0) {
     const job = queue.shift();
+
     try {
       await client.pushMessage(job.to, job.message);
-      await sleep(1200);
+
+      // ✅ 成功 → 慢慢加速
+      delay = Math.max(minDelay, delay - 100);
+
+      console.log("✅ send ok | delay:", delay);
+
     } catch (err) {
+
       if (err.statusCode === 429) {
-        console.log("429 retry...");
-        await sleep(3000);
+        console.log("⚠️ 429 hit → slow down");
+
+        // 🔥 关键：变慢
+        delay = Math.min(maxDelay, delay + 1000);
+
+        // 放回队列
         queue.unshift(job);
+
       } else {
-        console.log(err);
+        console.log("❌ error:", err);
       }
     }
+
+    // 🔥 每次发送用动态delay
+    await sleep(delay);
   }
 
   processing = false;

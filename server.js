@@ -299,7 +299,7 @@ COUNT = { B: 0, P: 0, T: 0 };
   }
 }, 10000);
 
-        continue;
+        return;
       }
 
       // ===== 下注 =====
@@ -334,6 +334,7 @@ if (MONITOR[side] !== undefined) {
 
       // ===== 开奖 =====
       if (text.startsWith("/RESULT") && userId === process.env.ADMIN_ID) {
+        if (!GAME.roundActive) return;
         const result = text.split(" ")[1];
 
         ROAD.push(result);

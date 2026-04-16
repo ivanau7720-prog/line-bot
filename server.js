@@ -338,9 +338,11 @@ const timer = setInterval(async () => {
 
 }, 10000);
 
-        return;
-      }
-
+return client.replyMessage(event.replyToken, {
+  type: "text",
+  text: "✅ 已开局"
+});
+}
       // ===== 下注 =====
       if (/^[BPT]\d+$/.test(text)) {
         if (!GAME.isBetting) return;

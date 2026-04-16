@@ -218,7 +218,7 @@ async function safePush(message) {
       await client.pushMessage(GAME.groupId, msg);
 
       // 🔥 关键：每条消息间隔（防429）
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise(resolve => setTimeout(resolve, 800));
 
     } catch (err) {
       console.log("Push error:", err.message);
@@ -291,9 +291,9 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
 
   let time = 60;
 
-  GAME.timer = setInterval(async () => {
+GAME.timer = setInterval(async () => {
 
-  // 🔥🔥🔥 关键锁（必须加）
+  // 🔥 双重锁（必须）
   if (!GAME.roundActive || !GAME.isBetting) {
     clearInterval(GAME.timer);
     GAME.timer = null;
@@ -302,7 +302,8 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
 
   time -= 10;
 
-  if ([50, 30, 10].includes(time)) {
+  // 🔥 只发一次（10秒）
+  if (time === 10) {
     await broadcast(LANG.TIME(time));
   }
 
@@ -315,7 +316,6 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
   }
 
 }, 10000);
-
   return;
 }
 

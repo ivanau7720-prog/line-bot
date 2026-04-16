@@ -382,9 +382,12 @@ await broadcast(finalMsg);
 GAME.roundActive = false;
         GAME.bets = {};
         return;
-      }
+          } // 结束 if RESULT
+
+    } // 🔥 结束 for（这一行必须在这里）
 
     res.sendStatus(200);
+
   } catch (err) {
     console.log(err);
     res.sendStatus(500);

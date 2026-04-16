@@ -1,82 +1,69 @@
 const express = require("express");
-const ADMIN_ID = "U849b7dc898401c6524b5999fa441c38f";
 const line = require("@line/bot-sdk");
 const { createClient } = require("@supabase/supabase-js");
 
 const app = express();
 
-// ===== 🟢 MONITOR（新增）=====
-let MONITOR = {
-  B: 0,
-  P: 0,
-  T: 0
-};
-let COUNT = {
-  B: 0,
-  P: 0,
-  T: 0
-};
-// ===== 🌏 泰语系统 =====
-const LANG = {
-  START: "🟢 เปิดรอบ! กรุณาวางเดิมพัน (60 วินาที)",
-  TIME: (t) => `⏳ เหลือ ${t} วินาที`,
-  STOP: "⛔ ปิดรับเดิมพัน รอผล",
-  RESULT: (r) => `🎯 ผลออก: ${r}`,
-  ROAD: "📊 ประวัติ (30 เกมล่าสุด)",
-  BET_OK: (name, side, amount) => `✅ ${name} เดิมพัน ${side} ${amount}`,
-  RANK: "🏆 อันดับผู้เล่น"
-};
+// ===== CONFIG =====
+const ADMIN_ID = process.env.ADMIN_ID;
 
-// ===== LINE =====
-const config = {
+const client = new line.Client({
   channelAccessToken: process.env.LINE_TOKEN,
   channelSecret: process.env.LINE_SECRET
-};
-const client = new line.Client(config);
+});
 
-// ===== DB =====
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_KEY
 );
 
-// ===== 🚀 防429队列 =====
-let queue = [];
-let sending = false;
+// ===== 🇹🇭 泰语广播 =====
+const TH = {
+  START: "🟢 เปิดรอบ! กรุณาวางเดิมพัน (60 วินาที)",
+  TIME: (t) => `⏳ เหลือ ${t} วินาที`,
+  STOP: "⛔ ปิดรับเดิมพัน",
+  RESULT: (r) => `🎯 ผลออก: ${r}`,
+  BET: (name, side, amount) => `✅ ${name} แทง ${side} ${amount}`,
+  NO_MONEY: "❌ เงินไม่พอ",
+  DONE: "✅ เสร็จสิ้น",
+  RUNNING: "⚠️ เกมกำลังดำเนินอยู่",
+  WAIT: "⚠️ กรุณาออกผลก่อน"
+};
 
-let delay = 1500;
-let minDelay = 1200;
-let maxDelay = 8000;
+// ===== GAME =====
+let GAME = {
+  groupId: null,
+  isBetting: false,
+  waitingResult: false,
+  bets: {}
+};
+
+let MONITOR = { B: 0, P: 0, T: 0 };
+let COUNT = { B: 0, P: 0, T: 0 };
+
+// ===== 🚀 防429 =====
+let QUEUE = [];
+let sending = false;
+let delay = 1200;
 
 function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise(r => setTimeout(r, ms));
 }
 
-async function processQueue() {
+async function runQueue() {
   if (sending) return;
   sending = true;
 
-  while (queue.length > 0) {
-    const job = queue.shift();
+  while (QUEUE.length) {
+    const job = QUEUE.shift();
 
     try {
       await client.pushMessage(job.to, job.msg);
-
-      // 成功 → 加速
-      delay = Math.max(minDelay, delay - 100);
-
-      console.log("✅ send ok", delay);
-
+      delay = Math.max(1000, delay - 100);
     } catch (err) {
-
       if (err.statusCode === 429) {
-        console.log("⚠️ 429 → slow down");
-
-        delay = Math.min(maxDelay, delay + 1000);
-
-        queue.unshift(job); // 放回去
-      } else {
-        console.log(err);
+        delay = Math.min(8000, delay + 1500);
+        QUEUE.unshift(job);
       }
     }
 
@@ -86,143 +73,37 @@ async function processQueue() {
   sending = false;
 }
 
-function safePush(to, msg) {
-  queue.push({ to, msg });
-  processQueue();
-}
-// ===== 🎭 演员系统 =====
-let FAKE_CONFIG = {
-  enabled: true,
-  count: 5,
-  names: ["VIP玩家", "老板", "高手"]
-};
-
-// ===== 🎯 游戏 =====
-let GAME = {
-  isBetting: false,
-  bets: {},
-  groupId: null,
-  running: false,
-  waitingResult: false
-};
-
-// ===== 📊 路单 =====
-let ROAD = [];
-
-// ===== 🎨 球 =====
-function getBall(result) {
-  if (result === "B") return "🔴";
-  if (result === "P") return "🔵";
-  return "🟢";
+function send(to, msg) {
+  QUEUE.push({ to, msg });
+  runQueue();
 }
 
-// ===== 📊 珠盘路 =====
-function renderRoadTable() {
-  let grid = "";
-  let col = 0;
-
-  ROAD.forEach((r) => {
-    grid += getBall(r) + " ";
-    col++;
-    if (col >= 6) {
-      grid += "\n";
-      col = 0;
-    }
-  });
-
-  return grid || "-";
+function broadcast(text) {
+  if (!GAME.groupId) return;
+  send(GAME.groupId, { type: "text", text });
 }
 
-// ===== 🎭 随机金额 =====
-function getRandomAmount() {
-  return Math.floor(Math.random() * 9900) + 100;
-}
-
-// ===== 🎭 生成演员 =====
-function generateFakeBots() {
-  if (!FAKE_CONFIG.enabled) return [];
-
-  const sides = ["B", "P", "T"];
-  let bots = [];
-
-  for (let i = 0; i < FAKE_CONFIG.count; i++) {
-    bots.push({
-      name: FAKE_CONFIG.names[i % FAKE_CONFIG.names.length] + (i + 1),
-      side: sides[Math.floor(Math.random() * 3)],
-      amount: getRandomAmount()
-    });
-  }
-
-  return bots;
-}
-
-// ===== VIP =====
-function getVIP(total) {
-  if (!total) return 0;
-  if (total >= 5120000) return 1;
-  if (total >= 2560000) return 2;
-  if (total >= 1280000) return 3;
-  if (total >= 640000) return 4;
-  if (total >= 320000) return 5;
-  if (total >= 160000) return 6;
-  if (total >= 80000) return 7;
-  if (total >= 40000) return 8;
-  if (total >= 20000) return 9;
-  if (total >= 10000) return 10;
-  return 0;
-}
-
-function vipTag(vip) {
-  if (vip >= 8) return "🔥VIP" + vip;
-  if (vip >= 5) return "💎VIP" + vip;
-  if (vip >= 1) return "⭐VIP" + vip;
-  return "";
-}
-
-// ===== 获取LINE名字 =====
-async function getProfileName(userId, groupId) {
-  try {
-    let profile;
-    if (groupId) {
-      profile = await client.getGroupMemberProfile(groupId, userId);
-    } else {
-      profile = await client.getProfile(userId);
-    }
-    return profile.displayName;
-  } catch {
-    return "玩家";
-  }
-}
-
-// ===== 用户 =====
-async function getUser(userId, groupId) {
-  const { data } = await supabase
+// ===== DB =====
+async function getUser(userId) {
+  let { data } = await supabase
     .from("players")
     .select("*")
     .eq("user_id", userId)
     .single();
 
-  const name = await getProfileName(userId, groupId);
-
   if (!data) {
-    const newUser = {
+    data = {
       user_id: userId,
       balance: 0,
-      name,
-      total_topup: 0
+      total_topup: 0,
+      name: "PLAYER"
     };
-    await supabase.from("players").insert([newUser]);
-    return newUser;
+    await supabase.from("players").insert([data]);
   }
 
-  await supabase.from("players")
-    .update({ name })
-    .eq("user_id", userId);
-
-  return { ...data, name };
+  return data;
 }
 
-// ===== 改余额 =====
 async function changeBalance(userId, amount) {
   const { data } = await supabase
     .from("players")
@@ -230,381 +111,210 @@ async function changeBalance(userId, amount) {
     .eq("user_id", userId)
     .single();
 
-  let newBalance = Number(data.balance) + Number(amount);
-  let newTopup = data.total_topup || 0;
-
-  if (amount > 0) newTopup += amount;
-
-  await supabase
-    .from("players")
-    .update({
-      balance: newBalance,
-      total_topup: newTopup
-    })
-    .eq("user_id", userId);
-
-  return { balance: newBalance, total_topup: newTopup };
+  await supabase.from("players").update({
+    balance: data.balance + amount,
+    total_topup: data.total_topup + (amount > 0 ? amount : 0)
+  }).eq("user_id", userId);
 }
 
-// ===== 广播（防429版）=====
-function broadcast(text) {
-  if (!GAME.groupId) return;
+// ===== WEBHOOK =====
+app.post("/webhook", line.middleware({
+  channelAccessToken: process.env.LINE_TOKEN,
+  channelSecret: process.env.LINE_SECRET
+}), async (req, res) => {
 
-  safePush(GAME.groupId, {
-    type: "text",
-    text
-  });
-}
-
-// ===== webhook =====
-app.post("/webhook", line.middleware(config), async (req, res) => {
   try {
     for (const event of req.body.events) {
+
       if (event.type !== "message") continue;
       if (event.message.type !== "text") continue;
 
-      const userId = event.source.userId || event.source.senderId;
+      const userId = event.source.userId;
       const groupId = event.source.groupId;
 
       if (groupId) GAME.groupId = groupId;
 
       const text = event.message.text.trim().toUpperCase();
-      const user = await getUser(userId, groupId);
+      const user = await getUser(userId);
 
-      // ===== 排行榜 =====
-      if (text === "/RANK") {
-        const { data } = await supabase.from("players").select("*");
-        data.sort((a, b) => b.balance - a.balance);
+      // ===== START =====
+      if (text === "/START" && userId === ADMIN_ID) {
 
-        let msg = LANG.RANK + "\n\n";
+        if (GAME.isBetting || GAME.waitingResult) {
+          return client.replyMessage(event.replyToken, {
+            type: "text",
+            text: TH.RUNNING
+          });
+        }
 
-        data.slice(0, 10).forEach((p, i) => {
-          const vip = getVIP(p.total_topup);
-          msg += `${i + 1}. 👤 ${p.name} ${vipTag(vip)} 💰${p.balance}\n`;
-        });
+        GAME.isBetting = true;
+        GAME.waitingResult = false;
+        GAME.bets = {};
+
+        MONITOR = { B: 0, P: 0, T: 0 };
+        COUNT = { B: 0, P: 0, T: 0 };
+
+        broadcast(TH.START);
+
+        let time = 60;
+        const timer = setInterval(() => {
+          time -= 10;
+
+          if (time <= 0) {
+            clearInterval(timer);
+            GAME.isBetting = false;
+            GAME.waitingResult = true;
+            broadcast(TH.STOP);
+          } else {
+            broadcast(TH.TIME(time));
+          }
+
+        }, 10000);
 
         return client.replyMessage(event.replyToken, {
           type: "text",
-          text: msg
+          text: "OK"
         });
       }
-      
-   // ===== 开局 =====
-if (text === "/START" && userId === ADMIN_ID) {
 
-  if (GAME.running) {
-  return client.replyMessage(event.replyToken, {
-    type: "text",
-    text: "⚠️ 游戏进行中"
-  });
-}
-
-if (GAME.waitingResult) {
-  return client.replyMessage(event.replyToken, {
-    type: "text",
-    text: "⚠️ 请先开奖 (/result)"
-  });
-}
-
-  GAME.running = true;
-  GAME.waitingResult = false;
-
-  GAME.isBetting = true;
-  GAME.bets = {};
-
-
-        // MONITOR重置
-MONITOR = { B: 0, P: 0, T: 0 };
-COUNT = { B: 0, P: 0, T: 0 };
-        
-        broadcast(LANG.START);
-
-        let time = 60;
-const timer = setInterval(async () => {
-  time -= 10;
-
-  if (time <= 0) {
-    clearInterval(timer);
-
-    GAME.isBetting = false;
-
-    GAME.waitingResult = true; // 🔥 等管理员开奖（最关键）
-
-    broadcast(LANG.STOP);
-
-  } else {
-    broadcast(LANG.TIME(time));
-  }
-
-}, 10000);
-
-return client.replyMessage(event.replyToken, {
-  type: "text",
-  text: "✅ 已开局"
-});
-}
-      // ===== 下注 =====
+      // ===== BET =====
       if (/^[BPT]\d+$/.test(text)) {
+
         if (!GAME.isBetting) return;
 
         const side = text[0];
         const amount = Number(text.slice(1));
 
-        // 🔥 余额检查
-if (user.balance < amount) {
-  return client.replyMessage(event.replyToken, {
-    type: "text",
-    text: "❌ 余额不足"
-  });
-}
+        if (user.balance < amount) {
+          return client.replyMessage(event.replyToken, {
+            type: "text",
+            text: TH.NO_MONEY
+          });
+        }
 
-// 扣钱 + 记录下注
-await changeBalance(userId, -amount);
-GAME.bets[userId] = { side, amount };
+        await changeBalance(userId, -amount);
+        GAME.bets[userId] = { side, amount };
 
-        // ===== 🟢 MONITOR统计（新增）=====
-if (MONITOR[side] !== undefined) {
-  MONITOR[side] += amount;
-  COUNT[side] += 1;
-}
+        MONITOR[side] += amount;
+        COUNT[side]++;
+
         return client.replyMessage(event.replyToken, {
           type: "text",
-          text: LANG.BET_OK(user.name, side, amount)
+          text: TH.BET(user.name, side, amount)
         });
       }
 
-      // ===== 开奖 =====
+      // ===== RESULT =====
       if (text.startsWith("/RESULT") && userId === ADMIN_ID) {
-        if (!GAME.waitingResult) return;
-        const result = text.split(" ")[1];
-        if (!["B", "P", "T"].includes(result)) return;
-        GAME.waitingResult = false;
-        ROAD.push(result);
-        if (ROAD.length > 30) ROAD.shift();
 
-        let report = `${LANG.RESULT(getBall(result) + " " + result)}\n\n`;
+        if (!GAME.waitingResult) {
+          return client.replyMessage(event.replyToken, {
+            type: "text",
+            text: TH.WAIT
+          });
+        }
+
+        const result = text.split(" ")[1];
+
+        let report = `${TH.RESULT(result)}\n\n`;
 
         for (const uid in GAME.bets) {
+
           const bet = GAME.bets[uid];
-          const u = await getUser(uid, groupId);
+          const u = await getUser(uid);
 
-         let change;
+          let change;
 
-if (bet.side === result) {
+          if (bet.side === result) {
 
-  if (result === "B") {
-    // 庄 → 抽5%
-    change = bet.amount * 0.95;
-    await changeBalance(uid, bet.amount * 1.95);
+            if (result === "B") {
+              change = bet.amount * 0.95;
+              await changeBalance(uid, bet.amount * 1.95);
+            } else if (result === "P") {
+              change = bet.amount;
+              await changeBalance(uid, bet.amount * 2);
+            } else {
+              change = bet.amount * 8;
+              await changeBalance(uid, bet.amount * 9);
+            }
 
-  } else if (result === "P") {
-    // 闲 → 不抽
-    change = bet.amount;
-    await changeBalance(uid, bet.amount * 2);
-
-  } else if (result === "T") {
-    // 和 → 8倍
-    change = bet.amount * 8;
-    await changeBalance(uid, bet.amount * 9);
-  }
-
-} else {
-  change = -bet.amount;
-}
-
-          const vip = getVIP(u.total_topup);
+          } else {
+            change = -bet.amount;
+          }
 
           await supabase.from("transactions").insert([{
             user_id: uid,
             name: u.name,
             amount: bet.amount,
             bet_side: bet.side,
-            result: result,
+            result,
             win_amount: change
           }]);
 
-          report += `👤 ${u.name} ${vipTag(vip)} ${change > 0 ? "+" : ""}${change}\n`;
+          report += `${u.name} ${change > 0 ? "+" : ""}${change}\n`;
         }
 
-        const fakeBots = generateFakeBots();
-        fakeBots.forEach(bot => {
-          let change = bot.side === result ? bot.amount : -bot.amount;
-          report += `👤 ${bot.name} ⭐VIP ${change > 0 ? "+" : ""}${change}\n`;
-        });
-
         broadcast(report);
-        broadcast(`${LANG.ROAD}\n${renderRoadTable()}`);
 
-       GAME.bets = {};
+        GAME.bets = {};
 
-GAME.running = false;        // 解锁下一局
-GAME.waitingResult = false;  // 结束等待
+        return client.replyMessage(event.replyToken, {
+          type: "text",
+          text: TH.DONE
+        });
+      }
 
-return client.replyMessage(event.replyToken, {
-  type: "text",
-  text: "✅ 开奖完成"
-});
-} // 关 /RESULT
+    }
 
-} // 🔥 关 for（必须）
+    res.sendStatus(200);
 
-res.sendStatus(200); // 🔥 必须
-
-} catch (err) {
-  console.log(err);
-  res.sendStatus(500);
+  } catch (err) {
+    console.log(err);
+    res.sendStatus(500);
   }
 });
 
-// ===== 后台 =====
+// ===== ADMIN =====
 app.use(express.urlencoded({ extended: true }));
 
 app.get("/admin", async (req, res) => {
-  const keyword = req.query.search || "";
 
   const { data: players } = await supabase.from("players").select("*");
-  const { data: logs } = await supabase
-    .from("transactions")
-    .select("*")
-    .order("created_at", { ascending: false })
-    .limit(20);
 
-  let filtered = players;
-  if (keyword) {
-    filtered = players.filter(p =>
-      p.name.includes(keyword) || p.user_id.includes(keyword)
-    );
-  }
+  let html = "<body style='background:black;color:white'>";
 
-  let html = `
-  <html>
-  <body style="background:black;color:white;padding:20px;">
-
-  <h2>👑 后台系统</h2>
-
-  <h3>🎭 演员系统</h3>
-  <form method="POST" action="/admin/fake">
-    数量: <input name="count" value="${FAKE_CONFIG.count}" />
-    名字: <input name="names" value="${FAKE_CONFIG.names.join(",")}" />
-    状态:
-    <select name="enabled">
-      <option value="true">开启</option>
-      <option value="false">关闭</option>
-    </select>
-    <button>保存</button>
-  </form>
-
-  <hr/>
-
-  <h3>🔍 搜索玩家</h3>
-  <form method="GET">
-    <input name="search" placeholder="输入名字或ID"/>
-    <button>搜索</button>
-  </form>
-
-  <hr/>
-  `;
-
-  for (const p of filtered) {
-    const vip = getVIP(p.total_topup);
-
-    const { data: userLogs } = await supabase
-      .from("transactions")
-      .select("*")
-      .eq("user_id", p.user_id)
-      .order("created_at", { ascending: false })
-      .limit(10);
-
+  players.forEach(p => {
     html += `
-    <div style="border:1px solid gray;padding:10px;margin-bottom:15px;">
-    
-    👤 ${p.name} ${vipTag(vip)} (${p.user_id}) 
-    💰${p.balance} 
-    💎充值:${p.total_topup}
-
-    <form method="POST" action="/admin/topup">
-      <input name="user_id" value="${p.user_id}" hidden />
-      <input name="amount" placeholder="+100 / -100" />
-      <button>充值 / 扣除</button>
-    </form>
-
-    <h4>下注记录</h4>
-    `;
-
-    userLogs.forEach(l => {
-      html += `<div>${l.bet_side} ${l.amount} → ${l.result} | 输赢:${l.win_amount}</div>`;
-    });
-
-    html += "</div>";
-  }
-
-  html += `
-  <h3>📊 最近记录</h3>
-  `;
-
-  logs.forEach(log => {
-    html += `<div>${log.name} | ${log.bet_side} ${log.amount} → ${log.result} | ${log.win_amount}</div>`;
+    <div>
+      👤 ${p.name} (${p.user_id}) 💰${p.balance}
+      <form method="POST" action="/topup">
+        <input name="user_id" value="${p.user_id}" hidden/>
+        <input name="amount"/>
+        <button>充值</button>
+      </form>
+    </div>`;
   });
-
-  html += "</body></html>";
 
   res.send(html);
 });
 
-app.post("/admin/topup", async (req, res) => {
-  const { user_id, amount } = req.body;
-  await changeBalance(user_id, Number(amount));
+app.post("/topup", async (req, res) => {
+  await changeBalance(req.body.user_id, Number(req.body.amount));
   res.redirect("/admin");
 });
 
-app.post("/admin/fake", (req, res) => {
-  FAKE_CONFIG.count = Number(req.body.count);
-  FAKE_CONFIG.names = req.body.names.split(",");
-  FAKE_CONFIG.enabled = req.body.enabled === "true";
-  res.redirect("/admin");
-});
-
-// ===== 🟢 MONITOR页面 =====
+// ===== MONITOR =====
 app.get("/monitor", (req, res) => {
- 
   const total = MONITOR.B + MONITOR.P + MONITOR.T;
 
-  const percent = (v) => total ? ((v / total) * 100).toFixed(1) : 0;
-
   res.send(`
-    <html>
-    <head>
-      <meta http-equiv="refresh" content="1">
-    </head>
-    <body style="background:black;color:white;text-align:center;padding-top:80px;font-family:sans-serif;">
-      
-      <h1>📊 实时下注监控</h1>
-
-      <h2 style="color:red;">
-        B 🔴：${MONITOR.B}（${COUNT.B}人） ${percent(MONITOR.B)}%
-      </h2>
-
-      <h2 style="color:blue;">
-        P 🔵：${MONITOR.P}（${COUNT.P}人） ${percent(MONITOR.P)}%
-      </h2>
-
-      <h2 style="color:green;">
-        T 🟢：${MONITOR.T}（${COUNT.T}人） ${percent(MONITOR.T)}%
-      </h2>
-
-      <hr style="margin:30px;">
-
-      <h2>💰 总下注：${total}</h2>
-
-    </body>
-    </html>
+  <body style="background:black;color:white;text-align:center">
+    <h2>B ${MONITOR.B}</h2>
+    <h2>P ${MONITOR.P}</h2>
+    <h2>T ${MONITOR.T}</h2>
+    <h2>Total ${total}</h2>
+  </body>
   `);
 });
 
-app.get("/", (req, res) => {
-  res.send("BOT RUNNING");
-});
-
-app.listen(process.env.PORT || 3000, () => {
-  console.log("running");
-});
+app.listen(process.env.PORT || 3000);

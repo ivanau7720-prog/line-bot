@@ -49,6 +49,7 @@ let FAKE_CONFIG = {
 // ===== 🎯 游戏 =====
 let GAME = {
   isBetting: false,
+  roundActive: false,
   bets: {},
   groupId: null
 };
@@ -268,10 +269,13 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
         });
       }
 
-      // ===== 开局 =====
-      if (text === "/START" && userId === process.env.ADMIN_ID) {
-        GAME.isBetting = true;
-        GAME.bets = {};
+     // ===== 开局 =====
+if (text === "/START" && userId === process.env.ADMIN_ID) {
+  if (GAME.roundActive) return; // ❌ 已经有一局，不允许再开
+
+  GAME.roundActive = true; // 🔥 锁定一局
+  GAME.isBetting = true;
+  GAME.bets = {};
 
         // MONITOR重置
 MONITOR = { B: 0, P: 0, T: 0 };
@@ -375,16 +379,10 @@ if (MONITOR[side] !== undefined) {
   renderRoadTable();
 
 await broadcast(finalMsg);
-
+GAME.roundActive = false;
         GAME.bets = {};
         return;
       }
-
-      return client.replyMessage(event.replyToken, {
-        type: "text",
-        text: "OK"
-      });
-    }
 
     res.sendStatus(200);
   } catch (err) {

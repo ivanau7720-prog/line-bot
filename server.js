@@ -47,11 +47,12 @@ let FAKE_CONFIG = {
 };
 
 // ===== 🎯 游戏 =====
+
 let GAME = {
   isBetting: false,
   roundActive: false,
   bets: {},
-  groupId: null
+  groupId: null,
   timer: null
 };
 
@@ -388,7 +389,7 @@ if (MONITOR[side] !== undefined) {
         
 await broadcast(finalMsg);
 
-// 🔥 清timer（必须加）
+// 🔥 清timer（必须）
 if (GAME.timer) {
   clearInterval(GAME.timer);
   GAME.timer = null;
@@ -398,6 +399,19 @@ GAME.roundActive = false;
 GAME.bets = {};
 return;
 
+} // 结束 RESULT
+
+} // 🔥 结束 for（必须）
+
+res.sendStatus(200);
+
+} catch (err) {
+  console.log(err);
+  res.sendStatus(500);
+}
+});
+
+      
 // ===== 后台 =====
 app.use(express.urlencoded({ extended: true }));
 

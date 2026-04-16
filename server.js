@@ -292,20 +292,29 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
   let time = 60;
 
   GAME.timer = setInterval(async () => {
-    time -= 10;
 
-    if ([50, 30, 10].includes(time)) {
-      await broadcast(LANG.TIME(time));
-    }
+  // 🔥🔥🔥 关键锁（必须加）
+  if (!GAME.roundActive || !GAME.isBetting) {
+    clearInterval(GAME.timer);
+    GAME.timer = null;
+    return;
+  }
 
-    if (time <= 0) {
-      clearInterval(GAME.timer);
-      GAME.timer = null;
+  time -= 10;
 
-      GAME.isBetting = false;
-      await broadcast(LANG.STOP);
-    }
-  }, 10000);
+  if ([50, 30, 10].includes(time)) {
+    await broadcast(LANG.TIME(time));
+  }
+
+  if (time <= 0) {
+    clearInterval(GAME.timer);
+    GAME.timer = null;
+
+    GAME.isBetting = false;
+    await broadcast(LANG.STOP);
+  }
+
+}, 10000);
 
   return;
 }

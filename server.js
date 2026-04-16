@@ -52,6 +52,7 @@ let GAME = {
   roundActive: false,
   bets: {},
   groupId: null
+  timer: null
 };
 
 let lastBetTime = {};
@@ -269,38 +270,44 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
         });
       }
 
-     // ===== 开局 =====
-if (text === "/START" && userId === process.env.ADMIN_ID) {
-  if (GAME.roundActive) return; // ❌ 已经有一局，不允许再开
+     if (text === "/START" && userId === process.env.ADMIN_ID) {
+  if (GAME.roundActive) return;
 
-  GAME.roundActive = true; // 🔥 锁定一局
+  // 🔥 清掉旧timer（关键）
+  if (GAME.timer) {
+    clearInterval(GAME.timer);
+    GAME.timer = null;
+  }
+
+  GAME.roundActive = true;
   GAME.isBetting = true;
   GAME.bets = {};
 
-        // MONITOR重置
-MONITOR = { B: 0, P: 0, T: 0 };
-COUNT = { B: 0, P: 0, T: 0 };
-        
-        await broadcast(LANG.START);
+  MONITOR = { B: 0, P: 0, T: 0 };
+  COUNT = { B: 0, P: 0, T: 0 };
 
-        let time = 60;
-        const timer = setInterval(async () => {
-  time -= 10;
+  await broadcast(LANG.START);
 
-  // 🔥 只在关键时间提醒
-  if ([50, 30, 10].includes(time)) {
-    await broadcast(LANG.TIME(time));
-  }
+  let time = 60;
 
-  if (time <= 0) {
-    clearInterval(timer);
-    GAME.isBetting = false;
-    await broadcast(LANG.STOP);
-  }
-}, 10000);
+  GAME.timer = setInterval(async () => {
+    time -= 10;
 
-        return;
-      }
+    if ([50, 30, 10].includes(time)) {
+      await broadcast(LANG.TIME(time));
+    }
+
+    if (time <= 0) {
+      clearInterval(GAME.timer);
+      GAME.timer = null;
+
+      GAME.isBetting = false;
+      await broadcast(LANG.STOP);
+    }
+  }, 10000);
+
+  return;
+}
 
       // ===== 下注 =====
 if (/^[BPT]\d+$/.test(text)) {
@@ -378,22 +385,18 @@ if (MONITOR[side] !== undefined) {
   LANG.ROAD +
   "\n" +
   renderRoadTable();
-
+        
 await broadcast(finalMsg);
+
+// 🔥 清timer（必须加）
+if (GAME.timer) {
+  clearInterval(GAME.timer);
+  GAME.timer = null;
+}
+
 GAME.roundActive = false;
-        GAME.bets = {};
-        return;
-          } // 结束 if RESULT
-
-    } // 🔥 结束 for（这一行必须在这里）
-
-    res.sendStatus(200);
-
-  } catch (err) {
-    console.log(err);
-    res.sendStatus(500);
-  }
-});
+GAME.bets = {};
+return;
 
 // ===== 后台 =====
 app.use(express.urlencoded({ extended: true }));

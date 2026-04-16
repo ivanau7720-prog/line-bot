@@ -263,7 +263,7 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
       if (event.type !== "message") continue;
       if (event.message.type !== "text") continue;
 
-      const userId = event.source.userId;
+      const userId = event.source.userId || event.source.senderId;
       const groupId = event.source.groupId;
 
       if (groupId) GAME.groupId = groupId;
@@ -292,7 +292,19 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
    // ===== 开局 =====
 if (text === "/START" && userId === ADMIN_ID) {
 
-  if (GAME.running || GAME.waitingResult) return; // 🔥 防重复 + 防跳局
+  if (GAME.running) {
+  return client.replyMessage(event.replyToken, {
+    type: "text",
+    text: "⚠️ 游戏进行中"
+  });
+}
+
+if (GAME.waitingResult) {
+  return client.replyMessage(event.replyToken, {
+    type: "text",
+    text: "⚠️ 请先开奖 (/result)"
+  });
+}
 
   GAME.running = true;
   GAME.waitingResult = false;

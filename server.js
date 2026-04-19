@@ -60,6 +60,7 @@ let lastBetTime = {};
 
 // ===== 📊 路单 =====
 let ROAD = [];
+let betBuffer = [];
 
 // ===== 🎨 球 =====
 function getBall(result) {
@@ -209,10 +210,10 @@ let currentDelay = BASE_DELAY;
 async function safePush(message) {
 
   // ❗ 防队列爆炸
-  if (queue.length > 20) {
-    console.log("🚫 队列过长，丢弃消息");
-    return;
-  }
+if (queue.length > 20) {
+  console.log("🚫 队列过长，丢弃旧消息");
+  queue.shift(); // 🔥 删除最旧的，不是return
+}
 
   queue.push(message);
 
@@ -224,24 +225,24 @@ async function safePush(message) {
 
     const msg = queue.shift();
 
-    try {
-      await client.pushMessage(GAME.groupId, msg);
+  try {
+  await client.pushMessage(GAME.groupId, msg);
 
-      // ✅ 成功 → 慢慢恢复
-      currentDelay = Math.max(BASE_DELAY, currentDelay - 100);
+  currentDelay = Math.max(BASE_DELAY, currentDelay - 100);
 
-    } catch (err) {
+} catch (err) {
 
-      console.log("Push error:", err.statusCode || err.message);
+  console.log("Push error:", err.statusCode || err.message);
 
-      // 🔥 429降速
-      if (err.statusCode === 429) {
-        currentDelay += 1000;
-        console.log("⚠️ 降速:", currentDelay);
-      } else {
-        currentDelay += 500;
-      }
-    }
+  if (err.statusCode === 429) {
+    currentDelay += 1000;
+    console.log("⚠️ 降速:", currentDelay);
+  } else {
+    currentDelay += 500;
+  }
+
+  continue; // 🔥🔥🔥 关键！防卡死
+}
 
     // 🔥 动态延迟
     await new Promise(resolve => setTimeout(resolve, currentDelay));
@@ -255,7 +256,8 @@ async function broadcast(text) {
   if (!GAME.groupId) return;
 
   // ❗ 防重复
-  if (text === lastMessage) return;
+  
+  if (text === lastMessage && queue.length > 0) return;
   lastMessage = text;
 
   await safePush({
@@ -315,8 +317,10 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
   GAME.isBetting = true;
   GAME.bets = {};
 
-  MONITOR = { B: 0, P: 0, T: 0 };
-  COUNT = { B: 0, P: 0, T: 0 };
+MONITOR = { B: 0, P: 0, T: 0 };
+COUNT = { B: 0, P: 0, T: 0 };
+
+betBuffer = []; // 🔥 必须加
 
   await broadcast(LANG.START);
 
@@ -338,13 +342,20 @@ GAME.timer = setInterval(async () => {
     await broadcast(LANG.TIME(time));
   }
 
-  if (time <= 0) {
-    clearInterval(GAME.timer);
-    GAME.timer = null;
+ if (time <= 0) {
+  clearInterval(GAME.timer);
+  GAME.timer = null;
 
-    GAME.isBetting = false;
-    await broadcast(LANG.STOP);
+  GAME.isBetting = false;
+
+  await broadcast(LANG.STOP);
+
+  // 🔥🔥🔥 在这里加（关键）
+  if (betBuffer.length > 0) {
+    await broadcast("📊 本局下注\n\n" + betBuffer.join("\n"));
+    betBuffer = [];
   }
+}
 
 }, 10000);
   return;
@@ -366,24 +377,27 @@ if (/^[BPT]\d+$/.test(text)) {
   const side = text[0];
   const amount = Number(text.slice(1));
 
-  await changeBalance(userId, -amount);
-  GAME.bets[userId] = { side, amount };
+  if (user.balance < amount) return;
+
+await changeBalance(userId, -amount);
+
+GAME.bets[userId] = { side, amount }; // 🔥🔥🔥 必须加
 
         // ===== 🟢 MONITOR统计（新增）=====
 if (MONITOR[side] !== undefined) {
   MONITOR[side] += amount;
   COUNT[side] += 1;
 }
-        return client.replyMessage(event.replyToken, {
-          type: "text",
-          text: LANG.BET_OK(user.name, side, amount)
-        });
-      }
+ betBuffer.push(`📥 ${user.name} ${side} ${amount}`);
+
+  return;
+}
 
       // ===== 开奖 =====
       if (text.startsWith("/RESULT") && userId === process.env.ADMIN_ID) {
         if (!GAME.roundActive) return;
         const result = text.split(" ")[1];
+if (!result) return;
 
         ROAD.push(result);
         if (ROAD.length > 30) ROAD.shift();

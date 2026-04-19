@@ -1,37 +1,9 @@
 const express = require("express");
-const line = require("@line/bot-sdk");
 const { createClient } = require("@supabase/supabase-js");
 
 const app = express();
-
-// ===== 🟢 MONITOR（新增）=====
-let MONITOR = {
-  B: 0,
-  P: 0,
-  T: 0
-};
-let COUNT = {
-  B: 0,
-  P: 0,
-  T: 0
-};
-// ===== 🌏 泰语系统 =====
-const LANG = {
-  START: "🟢 เปิดรอบ! กรุณาวางเดิมพัน (60 วินาที)",
-  TIME: (t) => `⏳ เหลือ ${t} วินาที`,
-  STOP: "⛔ ปิดรับเดิมพัน รอผล",
-  RESULT: (r) => `🎯 ผลออก: ${r}`,
-  ROAD: "📊 ประวัติ (30 เกมล่าสุด)",
-  BET_OK: (name, side, amount) => `✅ ${name} เดิมพัน ${side} ${amount}`,
-  RANK: "🏆 อันดับผู้เล่น"
-};
-
-// ===== LINE =====
-const config = {
-  channelAccessToken: process.env.LINE_TOKEN,
-  channelSecret: process.env.LINE_SECRET
-};
-const client = new line.Client(config);
+app.use(express.json());
+app.use(express.static("public"));
 
 // ===== DB =====
 const supabase = createClient(
@@ -39,140 +11,34 @@ const supabase = createClient(
   process.env.SUPABASE_KEY
 );
 
-// ===== 🎭 演员系统 =====
-let FAKE_CONFIG = {
-  enabled: true,
-  count: 5,
-  names: ["VIP玩家", "老板", "高手"]
-};
-
-// ===== 🎯 游戏 =====
-
+// ===== 游戏状态 =====
 let GAME = {
   isBetting: false,
   roundActive: false,
   bets: {},
-  groupId: null,
-  timer: null
+  timer: null,
+  timeLeft: 60
 };
 
-let lastBetTime = {};
-
-// ===== 📊 路单 =====
-let ROAD = [];
-let betBuffer = [];
-
-// ===== 🎨 球 =====
-function getBall(result) {
-  if (result === "B") return "🔴";
-  if (result === "P") return "🔵";
-  return "🟢";
-}
-
-// ===== 📊 珠盘路 =====
-function renderRoadTable() {
-  let grid = "";
-  let col = 0;
-
-  ROAD.forEach((r) => {
-    grid += getBall(r) + " ";
-    col++;
-    if (col >= 6) {
-      grid += "\n";
-      col = 0;
-    }
-  });
-
-  return grid || "-";
-}
-
-// ===== 🎭 随机金额 =====
-function getRandomAmount() {
-  return Math.floor(Math.random() * 9900) + 100;
-}
-
-// ===== 🎭 生成演员 =====
-function generateFakeBots() {
-  if (!FAKE_CONFIG.enabled) return [];
-
-  const sides = ["B", "P", "T"];
-  let bots = [];
-
-  for (let i = 0; i < FAKE_CONFIG.count; i++) {
-    bots.push({
-      name: FAKE_CONFIG.names[i % FAKE_CONFIG.names.length] + (i + 1),
-      side: sides[Math.floor(Math.random() * 3)],
-      amount: getRandomAmount()
-    });
-  }
-
-  return bots;
-}
-
-// ===== VIP =====
-function getVIP(total) {
-  if (!total) return 0;
-  if (total >= 5120000) return 1;
-  if (total >= 2560000) return 2;
-  if (total >= 1280000) return 3;
-  if (total >= 640000) return 4;
-  if (total >= 320000) return 5;
-  if (total >= 160000) return 6;
-  if (total >= 80000) return 7;
-  if (total >= 40000) return 8;
-  if (total >= 20000) return 9;
-  if (total >= 10000) return 10;
-  return 0;
-}
-
-function vipTag(vip) {
-  if (vip >= 8) return "🔥VIP" + vip;
-  if (vip >= 5) return "💎VIP" + vip;
-  if (vip >= 1) return "⭐VIP" + vip;
-  return "";
-}
-
-// ===== 获取LINE名字 =====
-async function getProfileName(userId, groupId) {
-  try {
-    let profile;
-    if (groupId) {
-      profile = await client.getGroupMemberProfile(groupId, userId);
-    } else {
-      profile = await client.getProfile(userId);
-    }
-    return profile.displayName;
-  } catch {
-    return "玩家";
-  }
-}
-
-// ===== 用户 =====
-async function getUser(userId, groupId) {
+// ===== 获取用户 =====
+async function getUser(userId) {
   const { data } = await supabase
     .from("players")
     .select("*")
     .eq("user_id", userId)
     .single();
 
-  const name = await getProfileName(userId, groupId);
-
   if (!data) {
     const newUser = {
       user_id: userId,
-      balance: 0,
-      name,
-      total_topup: 0
+      balance: 1000,
+      name: "玩家"
     };
     await supabase.from("players").insert([newUser]);
     return newUser;
   }
 
-  await supabase.from("players")
-    .update({ name })
-    .eq("user_id", userId);
-
-  return { ...data, name };
+  return data;
 }
 
 // ===== 改余额 =====
@@ -183,500 +49,88 @@ async function changeBalance(userId, amount) {
     .eq("user_id", userId)
     .single();
 
-  let newBalance = Number(data.balance) + Number(amount);
-  let newTopup = data.total_topup || 0;
-
-  if (amount > 0) newTopup += amount;
+  const newBalance = Number(data.balance) + Number(amount);
 
   await supabase
     .from("players")
-    .update({
-      balance: newBalance,
-      total_topup: newTopup
-    })
+    .update({ balance: newBalance })
     .eq("user_id", userId);
-
-  return { balance: newBalance, total_topup: newTopup };
 }
 
-// ===== 🚀 终极防429系统 =====
-let queue = [];
-let isSending = false;
-let lastMessage = "";
-let BASE_DELAY = 800;
-let currentDelay = BASE_DELAY;
-
-// 🔥 主发送函数
-async function safePush(message) {
-
-  // ❗ 防队列爆炸
-if (queue.length > 20) {
-  console.log("🚫 队列过长，丢弃旧消息");
-  queue.shift(); // 🔥 删除最旧的，不是return
-}
-
-  queue.push(message);
-
-  if (isSending) return;
-
-  isSending = true;
-
-  while (queue.length > 0) {
-
-    const msg = queue.shift();
-
-  try {
-  await client.pushMessage(GAME.groupId, msg);
-
-  currentDelay = Math.max(BASE_DELAY, currentDelay - 100);
-
-} catch (err) {
-
-  console.log("Push error:", err.statusCode || err.message);
-
-  if (err.statusCode === 429) {
-    currentDelay += 1000;
-    console.log("⚠️ 降速:", currentDelay);
-  } else {
-    currentDelay += 500;
-  }
-
-  continue; // 🔥🔥🔥 关键！防卡死
-}
-
-    // 🔥 动态延迟
-    await new Promise(resolve => setTimeout(resolve, currentDelay));
-  }
-
-  isSending = false;
-}
-
-// ===== 📢 广播 =====
-async function broadcast(text) {
-  if (!GAME.groupId) return;
-
-  console.log("📢 广播:", text); // 🔥 加这个看日志
-
-  try {
-    await client.pushMessage(GAME.groupId, {
-      type: "text",
-      text
-    });
-  } catch (err) {
-    console.log("❌ push失败:", err.statusCode);
-  }
-}
-// ===== webhook =====
-app.post("/webhook", line.middleware(config), async (req, res) => {
-  try {
-    for (const event of req.body.events) {
-      if (event.type !== "message") continue;
-      if (event.message.type !== "text") continue;
-
-      const userId = event.source.userId;
-      const groupId = event.source.groupId;
-      
-
-      if (groupId) GAME.groupId = groupId;
-
-      const text = event.message.text.trim().toUpperCase();
-      const user = await getUser(userId, groupId);
-
-      // ===== 排行榜 =====
-      if (text === "/RANK") {
-        const { data } = await supabase.from("players").select("*");
-        data.sort((a, b) => b.balance - a.balance);
-
-        let msg = LANG.RANK + "\n\n";
-
-        data.slice(0, 10).forEach((p, i) => {
-          const vip = getVIP(p.total_topup);
-          msg += `${i + 1}. 👤 ${p.name} ${vipTag(vip)} 💰${p.balance}\n`;
-        });
-
-        return client.replyMessage(event.replyToken, {
-          type: "text",
-          text: msg
-        });
-      }
-console.log("ADMIN:", process.env.ADMIN_ID);
-console.log("USER:", userId);
-console.log("TEXT:", text);
-      
-    if (text === "/START" && userId === process.env.ADMIN_ID) {
-  if (GAME.roundActive) return;
-
-  // 🔥 清掉旧timer（关键）
-  if (GAME.timer) {
-    clearInterval(GAME.timer);
-    GAME.timer = null;
-  }
-
-  // 🔥🔥🔥 加这三行（防429核心）
-  queue = [];
-  currentDelay = BASE_DELAY;
-  lastMessage = "";
+// ===== 开局 =====
+app.post("/start", (req, res) => {
+  if (GAME.roundActive) return res.json({ msg: "已在进行中" });
 
   GAME.roundActive = true;
   GAME.isBetting = true;
   GAME.bets = {};
+  GAME.timeLeft = 60;
 
-MONITOR = { B: 0, P: 0, T: 0 };
-COUNT = { B: 0, P: 0, T: 0 };
+  GAME.timer = setInterval(() => {
+    GAME.timeLeft -= 1;
 
-betBuffer = []; // 🔥 必须加
-
- await client.replyMessage(event.replyToken, {
-  type: "text",
-  text: LANG.START
-});
-
-let time = 60;
-
-GAME.timer = setInterval(async () => {
-
-  // 🔥 双重锁（必须）
-  if (!GAME.roundActive || !GAME.isBetting) {
-    clearInterval(GAME.timer);
-    GAME.timer = null;
-    return;
-  }
-
-  time -= 10;
-
-  // 🔥 只发一次（10秒）
-  if (time === 10) {
-    await broadcast(LANG.TIME(time));
-  }
-
-  if (time <= 0) {
-    clearInterval(GAME.timer);
-    GAME.timer = null;
-
-    GAME.isBetting = false;
-    GAME.roundActive = false;
-
-    let finalMsg = LANG.STOP;
-
-    if (betBuffer.length > 0) {
-      finalMsg += "\n\n📊 本局下注\n\n" + betBuffer.join("\n");
-      betBuffer = [];
+    if (GAME.timeLeft <= 0) {
+      GAME.isBetting = false;
+      clearInterval(GAME.timer);
     }
+  }, 1000);
 
-    await broadcast(finalMsg);
-  }
-
-}, 10000);
-
-return;
-
-      // ===== 下注 =====
-if (/^[BPT]\d+$/.test(text)) {
-  const now = Date.now();
-
-  // 🔥 每人2秒只能下注一次（防刷）
-  if (lastBetTime[userId] && now - lastBetTime[userId] < 2000) {
-    return;
-  }
-
-  lastBetTime[userId] = now;
-
-  if (!GAME.isBetting) return;
-
-  const side = text[0];
-  const amount = Number(text.slice(1));
-
-  if (user.balance < amount) return;
-
-await changeBalance(userId, -amount);
-
-GAME.bets[userId] = { side, amount }; // 🔥🔥🔥 必须加
-
-        // ===== 🟢 MONITOR统计（新增）=====
-if (MONITOR[side] !== undefined) {
-  MONITOR[side] += amount;
-  COUNT[side] += 1;
-}
- betBuffer.push(`📥 ${user.name} ${side} ${amount}`);
-
-  return;
-}
-
-      // ===== 开奖 =====
-      if (text.startsWith("/RESULT") && userId === process.env.ADMIN_ID) {
-        if (!GAME.roundActive) return;
-        const result = text.split(" ")[1];
-if (!result) return;
-
-        ROAD.push(result);
-        if (ROAD.length > 30) ROAD.shift();
-
-        let report = `${LANG.RESULT(getBall(result) + " " + result)}\n\n`;
-
-        for (const uid in GAME.bets) {
-          const bet = GAME.bets[uid];
-          const u = await getUser(uid, groupId);
-
-          let change = bet.side === result ? bet.amount : -bet.amount;
-
-          if (bet.side === result) {
-            await changeBalance(uid, bet.amount * 2);
-          }
-
-          const vip = getVIP(u.total_topup);
-
-          await supabase.from("transactions").insert([{
-            user_id: uid,
-            name: u.name,
-            amount: bet.amount,
-            bet_side: bet.side,
-            result: result,
-            win_amount: change
-          }]);
-
-          report += `👤 ${u.name} ${vipTag(vip)} ${change > 0 ? "+" : ""}${change}\n`;
-        }
-
-        const fakeBots = generateFakeBots();
-        fakeBots.forEach(bot => {
-          let change = bot.side === result ? bot.amount : -bot.amount;
-          report += `👤 ${bot.name} ⭐VIP ${change > 0 ? "+" : ""}${change}\n`;
-        });
-
-        const finalMsg =
-  report +
-  "\n\n" +
-  LANG.ROAD +
-  "\n" +
-  renderRoadTable();
-        
-// 🔥 清队列（必须在前）
-queue = [];
-
-// 发送结果
-await broadcast(finalMsg);
-        
-// 🔥 清timer（必须）
-if (GAME.timer) {
-  clearInterval(GAME.timer);
-  GAME.timer = null;
-}
-
-GAME.roundActive = false;
-GAME.bets = {};
-return;
-
-} // 结束 RESULT
-
-} // 🔥 结束 for（必须）
-
-res.sendStatus(200);
-
-} catch (err) {
-  console.log(err);
-  res.sendStatus(500);
-}
+  res.json({ msg: "开局成功" });
 });
 
-      
-// ===== 后台 =====
-app.use(express.urlencoded({ extended: true }));
-
-app.get("/admin", async (req, res) => {
-  const keyword = req.query.search || "";
-
-  const { data: players } = await supabase.from("players").select("*");
-  const { data: logs } = await supabase
-    .from("transactions")
-    .select("*")
-    .order("created_at", { ascending: false })
-    .limit(20);
-
-  let filtered = players;
-  if (keyword) {
-    filtered = players.filter(p =>
-      p.name.includes(keyword) || p.user_id.includes(keyword)
-    );
-  }
-
-  let html = `
-  <html>
-  <body style="background:black;color:white;padding:20px;">
-
-  <h2>👑 后台系统</h2>
-
-  <h3>🎭 演员系统</h3>
-  <form method="POST" action="/admin/fake">
-    数量: <input name="count" value="${FAKE_CONFIG.count}" />
-    名字: <input name="names" value="${FAKE_CONFIG.names.join(",")}" />
-    状态:
-    <select name="enabled">
-      <option value="true">开启</option>
-      <option value="false">关闭</option>
-    </select>
-    <button>保存</button>
-  </form>
-
-  <hr/>
-
-  <h3>🔍 搜索玩家</h3>
-  <form method="GET">
-    <input name="search" placeholder="输入名字或ID"/>
-    <button>搜索</button>
-  </form>
-
-  <hr/>
-  `;
-
-  for (const p of filtered) {
-    const vip = getVIP(p.total_topup);
-
-    const { data: userLogs } = await supabase
-      .from("transactions")
-      .select("*")
-      .eq("user_id", p.user_id)
-      .order("created_at", { ascending: false })
-      .limit(10);
-
-    html += `
-    <div style="border:1px solid gray;padding:10px;margin-bottom:15px;">
-    
-    👤 ${p.name} ${vipTag(vip)} (${p.user_id}) 
-    💰${p.balance} 
-    💎充值:${p.total_topup}
-
-    <form method="POST" action="/admin/topup">
-      <input name="user_id" value="${p.user_id}" hidden />
-      <input name="amount" placeholder="+100 / -100" />
-      <button>充值 / 扣除</button>
-    </form>
-
-    <h4>下注记录</h4>
-    `;
-
-    userLogs.forEach(l => {
-      html += `<div>${l.bet_side} ${l.amount} → ${l.result} | 输赢:${l.win_amount}</div>`;
-    });
-
-    html += "</div>";
-  }
-
-  html += `
-  <h3>📊 最近记录</h3>
-  `;
-
-  logs.forEach(log => {
-    html += `<div>${log.name} | ${log.bet_side} ${log.amount} → ${log.result} | ${log.win_amount}</div>`;
-  });
-
-  html += "</body></html>";
-
-  res.send(html);
-});
-
-app.post("/admin/topup", async (req, res) => {
-  const { user_id, amount } = req.body;
-  await changeBalance(user_id, Number(amount));
-  res.redirect("/admin");
-});
-
-app.post("/admin/fake", (req, res) => {
-  FAKE_CONFIG.count = Number(req.body.count);
-  FAKE_CONFIG.names = req.body.names.split(",");
-  FAKE_CONFIG.enabled = req.body.enabled === "true";
-  res.redirect("/admin");
-});
-
-// ===== 🟢 MONITOR页面 =====
-app.get("/monitor", (req, res) => {
- 
-  const total = MONITOR.B + MONITOR.P + MONITOR.T;
-
-  const percent = (v) => total ? ((v / total) * 100).toFixed(1) : 0;
-
-  res.send(`
-    <html>
-    <head>
-      <meta http-equiv="refresh" content="1">
-    </head>
-    <body style="background:black;color:white;text-align:center;padding-top:80px;font-family:sans-serif;">
-      
-      <h1>📊 实时下注监控</h1>
-
-      <h2 style="color:red;">
-        B 🔴：${MONITOR.B}（${COUNT.B}人） ${percent(MONITOR.B)}%
-      </h2>
-
-      <h2 style="color:blue;">
-        P 🔵：${MONITOR.P}（${COUNT.P}人） ${percent(MONITOR.P)}%
-      </h2>
-
-      <h2 style="color:green;">
-        T 🟢：${MONITOR.T}（${COUNT.T}人） ${percent(MONITOR.T)}%
-      </h2>
-
-      <hr style="margin:30px;">
-
-      <h2>💰 总下注：${total}</h2>
-
-    </body>
-    </html>
-  `);
-});
-
-// ===== 网页下注 API（新增）=====
-app.use(express.json());
-
+// ===== 下注 =====
 app.post("/bet", async (req, res) => {
-  try {
-    const { userId, side, amount } = req.body;
+  const { userId, side, amount } = req.body;
 
-    // ❌ 没开局不能下注
-    if (!GAME.isBetting) {
-      return res.json({ success: false, msg: "已停止下注" });
-    }
-
-    // ❌ 非法下注
-    if (!["B", "P", "T"].includes(side)) {
-      return res.json({ success: false, msg: "无效下注" });
-    }
-
-    const user = await getUser(userId);
-
-    // ❌ 余额不足
-    if (user.balance < amount) {
-      return res.json({ success: false, msg: "余额不足" });
-    }
-
-    // 扣钱
-    await changeBalance(userId, -amount);
-
-    // 记录下注（核心）
-    GAME.bets[userId] = { side, amount };
-
-    // 统计（你原本系统）
-    if (MONITOR[side] !== undefined) {
-      MONITOR[side] += amount;
-      COUNT[side] += 1;
-    }
-
-    // 下注记录
-    betBuffer.push(`📥 ${user.name} ${side} ${amount}`);
-
-    return res.json({ success: true });
-
-  } catch (err) {
-    console.log(err);
-    res.json({ success: false });
+  if (!GAME.isBetting) {
+    return res.json({ success: false, msg: "已停止下注" });
   }
+
+  if (!["B", "P", "T"].includes(side)) {
+    return res.json({ success: false });
+  }
+
+  const user = await getUser(userId);
+
+  if (user.balance < amount) {
+    return res.json({ success: false, msg: "余额不足" });
+  }
+
+  await changeBalance(userId, -amount);
+
+  GAME.bets[userId] = { side, amount };
+
+  res.json({ success: true });
 });
 
-app.use(express.static("public"));
+// ===== 结算 =====
+app.post("/result", async (req, res) => {
+  const { result } = req.body;
 
-app.get("/", (req, res) => {
-  res.send("BOT RUNNING");
+  if (!GAME.roundActive) return res.json({ msg: "没有进行中的局" });
+
+  for (const uid in GAME.bets) {
+    const bet = GAME.bets[uid];
+
+    if (bet.side === result) {
+      await changeBalance(uid, bet.amount * 2);
+    }
+  }
+
+  GAME.roundActive = false;
+  GAME.isBetting = false;
+  GAME.bets = {};
+
+  res.json({ msg: "结算完成" });
 });
 
-app.listen(process.env.PORT || 3000, () => {
-  console.log("running");
+// ===== 状态 =====
+app.get("/state", (req, res) => {
+  res.json({
+    isBetting: GAME.isBetting,
+    timeLeft: GAME.timeLeft,
+    total: GAME.bets
+  });
 });
+
+app.listen(3000, () => console.log("RUNNING"));

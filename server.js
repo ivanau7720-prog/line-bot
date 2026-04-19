@@ -255,17 +255,17 @@ if (queue.length > 20) {
 async function broadcast(text) {
   if (!GAME.groupId) return;
 
-  // ❗ 防重复
-  
-  if (text === lastMessage && queue.length > 0) return;
-  lastMessage = text;
+  console.log("📢 广播:", text); // 🔥 加这个看日志
 
-  await safePush({
-    type: "text",
-    text
-  });
+  try {
+    await client.pushMessage(GAME.groupId, {
+      type: "text",
+      text
+    });
+  } catch (err) {
+    console.log("❌ push失败:", err.statusCode);
+  }
 }
-
 // ===== webhook =====
 app.post("/webhook", line.middleware(config), async (req, res) => {
   try {
@@ -275,7 +275,7 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
 
       const userId = event.source.userId;
       const groupId = event.source.groupId;
-      console.log("你的ID:", userId);
+      
 
       if (groupId) GAME.groupId = groupId;
 

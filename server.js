@@ -326,9 +326,12 @@ COUNT = { B: 0, P: 0, T: 0 };
 
 betBuffer = []; // 🔥 必须加
 
-  await broadcast(LANG.START);
+ await client.replyMessage(event.replyToken, {
+  type: "text",
+  text: LANG.START
+});
 
-  let time = 60;
+let time = 60;
 
 GAME.timer = setInterval(async () => {
 
@@ -346,24 +349,26 @@ GAME.timer = setInterval(async () => {
     await broadcast(LANG.TIME(time));
   }
 
- if (time <= 0) {
-  clearInterval(GAME.timer);
-  GAME.timer = null;
+  if (time <= 0) {
+    clearInterval(GAME.timer);
+    GAME.timer = null;
 
-  GAME.isBetting = false;
+    GAME.isBetting = false;
+    GAME.roundActive = false;
 
-  await broadcast(LANG.STOP);
+    let finalMsg = LANG.STOP;
 
-  // 🔥🔥🔥 在这里加（关键）
-  if (betBuffer.length > 0) {
-    await broadcast("📊 本局下注\n\n" + betBuffer.join("\n"));
-    betBuffer = [];
+    if (betBuffer.length > 0) {
+      finalMsg += "\n\n📊 本局下注\n\n" + betBuffer.join("\n");
+      betBuffer = [];
+    }
+
+    await broadcast(finalMsg);
   }
-}
 
 }, 10000);
-  return;
-}
+
+return;
 
       // ===== 下注 =====
 if (/^[BPT]\d+$/.test(text)) {
@@ -618,6 +623,55 @@ app.get("/monitor", (req, res) => {
     </html>
   `);
 });
+
+// ===== 网页下注 API（新增）=====
+app.use(express.json());
+
+app.post("/bet", async (req, res) => {
+  try {
+    const { userId, side, amount } = req.body;
+
+    // ❌ 没开局不能下注
+    if (!GAME.isBetting) {
+      return res.json({ success: false, msg: "已停止下注" });
+    }
+
+    // ❌ 非法下注
+    if (!["B", "P", "T"].includes(side)) {
+      return res.json({ success: false, msg: "无效下注" });
+    }
+
+    const user = await getUser(userId);
+
+    // ❌ 余额不足
+    if (user.balance < amount) {
+      return res.json({ success: false, msg: "余额不足" });
+    }
+
+    // 扣钱
+    await changeBalance(userId, -amount);
+
+    // 记录下注（核心）
+    GAME.bets[userId] = { side, amount };
+
+    // 统计（你原本系统）
+    if (MONITOR[side] !== undefined) {
+      MONITOR[side] += amount;
+      COUNT[side] += 1;
+    }
+
+    // 下注记录
+    betBuffer.push(`📥 ${user.name} ${side} ${amount}`);
+
+    return res.json({ success: true });
+
+  } catch (err) {
+    console.log(err);
+    res.json({ success: false });
+  }
+});
+
+app.use(express.static("public"));
 
 app.get("/", (req, res) => {
   res.send("BOT RUNNING");

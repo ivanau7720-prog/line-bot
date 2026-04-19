@@ -299,7 +299,10 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
           text: msg
         });
       }
-
+console.log("ADMIN:", process.env.ADMIN_ID);
+console.log("USER:", userId);
+console.log("TEXT:", text);
+      
     if (text === "/START" && userId === process.env.ADMIN_ID) {
   if (GAME.roundActive) return;
 

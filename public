@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+
+<body style="background:black;color:white;text-align:center">
+
+<h2>🎰 百家乐下注</h2>
+
+<input id="userId" placeholder="输入你的ID"><br><br>
+
+<input id="amount" placeholder="金额"><br><br>
+
+<button onclick="bet('B')">庄</button>
+<button onclick="bet('P')">闲</button>
+<button onclick="bet('T')">和</button>
+
+<h3 id="status"></h3>
+
+<script>
+async function bet(side){
+  const userId = document.getElementById("userId").value;
+  const amount = Number(document.getElementById("amount").value);
+
+  const res = await fetch("/bet", {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({userId, side, amount})
+  });
+
+  const data = await res.json();
+  alert(data.msg || (data.success ? "成功" : "失败"));
+}
+
+async function update(){
+  const res = await fetch("/state");
+  const data = await res.json();
+
+  document.getElementById("status").innerText =
+    "状态: " + (data.isBetting ? "下注中" : "停止") +
+    " | 剩余: " + data.timeLeft;
+}
+
+setInterval(update,1000);
+</script>
+
+</body>
+</html>

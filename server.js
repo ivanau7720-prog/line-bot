@@ -275,6 +275,7 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
 
       const userId = event.source.userId;
       const groupId = event.source.groupId;
+      console.log("你的ID:", userId);
 
       if (groupId) GAME.groupId = groupId;
 

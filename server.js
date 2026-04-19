@@ -198,39 +198,65 @@ async function changeBalance(userId, amount) {
   return { balance: newBalance, total_topup: newTopup };
 }
 
-// ===== 🟢 防429发送队列 =====
+// ===== 🚀 终极防429系统 =====
 let queue = [];
 let isSending = false;
+let lastMessage = "";
+let BASE_DELAY = 800;
+let currentDelay = BASE_DELAY;
 
-// 安全发送（核心）
+// 🔥 主发送函数
 async function safePush(message) {
+
+  // ❗ 防队列爆炸
+  if (queue.length > 20) {
+    console.log("🚫 队列过长，丢弃消息");
+    return;
+  }
+
   queue.push(message);
 
-  // 如果已经在发送，就不要重复启动
   if (isSending) return;
 
   isSending = true;
 
   while (queue.length > 0) {
+
     const msg = queue.shift();
 
     try {
       await client.pushMessage(GAME.groupId, msg);
 
-      // 🔥 关键：每条消息间隔（防429）
-      await new Promise(resolve => setTimeout(resolve, 800));
+      // ✅ 成功 → 慢慢恢复
+      currentDelay = Math.max(BASE_DELAY, currentDelay - 100);
 
     } catch (err) {
-      console.log("Push error:", err.message);
+
+      console.log("Push error:", err.statusCode || err.message);
+
+      // 🔥 429降速
+      if (err.statusCode === 429) {
+        currentDelay += 1000;
+        console.log("⚠️ 降速:", currentDelay);
+      } else {
+        currentDelay += 500;
+      }
     }
+
+    // 🔥 动态延迟
+    await new Promise(resolve => setTimeout(resolve, currentDelay));
   }
 
   isSending = false;
 }
 
-// ===== 广播（替代原本broadcast）=====
+// ===== 📢 广播 =====
 async function broadcast(text) {
   if (!GAME.groupId) return;
+
+  // ❗ 防重复
+  if (text === lastMessage) return;
+  lastMessage = text;
 
   await safePush({
     type: "text",
@@ -271,7 +297,7 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
         });
       }
 
-     if (text === "/START" && userId === process.env.ADMIN_ID) {
+    if (text === "/START" && userId === process.env.ADMIN_ID) {
   if (GAME.roundActive) return;
 
   // 🔥 清掉旧timer（关键）
@@ -279,6 +305,11 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
     clearInterval(GAME.timer);
     GAME.timer = null;
   }
+
+  // 🔥🔥🔥 加这三行（防429核心）
+  queue = [];
+  currentDelay = BASE_DELAY;
+  lastMessage = "";
 
   GAME.roundActive = true;
   GAME.isBetting = true;
@@ -396,8 +427,12 @@ if (MONITOR[side] !== undefined) {
   "\n" +
   renderRoadTable();
         
-await broadcast(finalMsg);
+// 🔥 清队列（必须在前）
+queue = [];
 
+// 发送结果
+await broadcast(finalMsg);
+        
 // 🔥 清timer（必须）
 if (GAME.timer) {
   clearInterval(GAME.timer);

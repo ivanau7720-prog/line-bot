@@ -31,8 +31,7 @@ async function getUser(userId) {
   if (!data) {
     const newUser = {
       user_id: userId,
-      balance: 1000,
-      name: "玩家"
+      balance: 1000
     };
     await supabase.from("players").insert([newUser]);
     return newUser;
@@ -61,21 +60,17 @@ async function changeBalance(userId, amount) {
 app.post("/start", async (req, res) => {
   if (GAME.roundActive) return res.json({ msg: "已在进行中" });
 
-  // 创建新一局
-  const { data, error } = await supabase
+  const { data } = await supabase
     .from("rounds")
     .insert([{ status: "betting" }])
     .select()
     .single();
-
-  if (error) return res.json({ msg: "开局失败", error });
 
   GAME.currentRoundId = data.id;
   GAME.roundActive = true;
   GAME.isBetting = true;
   GAME.timeLeft = 60;
 
-  // 倒计时
   GAME.timer = setInterval(() => {
     GAME.timeLeft -= 1;
 
@@ -85,7 +80,7 @@ app.post("/start", async (req, res) => {
     }
   }, 1000);
 
-  res.json({ msg: "开局成功", roundId: GAME.currentRoundId });
+  res.json({ msg: "开局成功" });
 });
 
 // ===== 下注 =====
@@ -106,10 +101,8 @@ app.post("/bet", async (req, res) => {
     return res.json({ success: false, msg: "余额不足" });
   }
 
-  // 扣钱
   await changeBalance(userId, -amount);
 
-  // 写入下注记录（绑定 round）
   await supabase.from("transactions").insert([
     {
       user_id: userId,
@@ -119,7 +112,7 @@ app.post("/bet", async (req, res) => {
     }
   ]);
 
-  res.json({ success: true });
+  res.json({ success: true, msg: "下注成功" });
 });
 
 // ===== 结算 =====
@@ -130,7 +123,6 @@ app.post("/result", async (req, res) => {
     return res.json({ msg: "没有进行中的局" });
   }
 
-  // 获取当前局下注
   const { data: bets } = await supabase
     .from("transactions")
     .select("*")
@@ -142,7 +134,6 @@ app.post("/result", async (req, res) => {
     }
   }
 
-  // 更新局结果
   await supabase
     .from("rounds")
     .update({ result, status: "done" })
@@ -152,10 +143,10 @@ app.post("/result", async (req, res) => {
   GAME.isBetting = false;
   GAME.currentRoundId = null;
 
-  res.json({ msg: "结算完成" });
+  res.json({ msg: "结算完成：" + result });
 });
 
-// ===== 游戏状态 =====
+// ===== 状态 =====
 app.get("/state", (req, res) => {
   res.json({
     isBetting: GAME.isBetting,
@@ -163,7 +154,7 @@ app.get("/state", (req, res) => {
   });
 });
 
-// ===== 历史记录 =====
+// ===== 历史 =====
 app.get("/history", async (req, res) => {
   const { data } = await supabase
     .from("rounds")
@@ -174,6 +165,5 @@ app.get("/history", async (req, res) => {
   res.json(data);
 });
 
-// ===== 启动服务器 =====
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log("RUNNING ON " + PORT));
+app.listen(PORT, () => console.log("RUNNING"));

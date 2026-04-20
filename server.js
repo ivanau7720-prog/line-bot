@@ -205,6 +205,51 @@ app.get("/history", async (req, res) => {
   res.json(data || []);
 });
 
+// ===== 🆕 查询余额 =====
+app.get("/balance/:userId", async (req, res) => {
+  try {
+    const userId = req.params.userId;
+
+    const { data } = await supabase
+      .from("players")
+      .select("balance")
+      .eq("user_id", userId)
+      .single();
+
+    res.json({ balance: data?.balance || 0 });
+
+  } catch (err) {
+    console.log(err);
+    res.json({ balance: 0 });
+  }
+});
+
+// ===== 🆕 下注统计 =====
+app.get("/stats", async (req, res) => {
+  try {
+    if (!GAME.currentRoundId) {
+      return res.json({ B: 0, P: 0, T: 0 });
+    }
+
+    const { data } = await supabase
+      .from("transactions")
+      .select("bet_side, amount")
+      .eq("round_id", GAME.currentRoundId);
+
+    let stats = { B: 0, P: 0, T: 0 };
+
+    data.forEach(b => {
+      stats[b.bet_side] += b.amount;
+    });
+
+    res.json(stats);
+
+  } catch (err) {
+    console.log(err);
+    res.json({ B: 0, P: 0, T: 0 });
+  }
+});
+
 // ===== 启动 =====
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log("🚀 RUNNING ON " + PORT));

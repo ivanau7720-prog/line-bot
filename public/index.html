@@ -6,9 +6,9 @@
 
 <h2>🎮 控制台</h2>
 <button onclick="startGame()">开始游戏</button>
-<button onclick="setResult('B')">开庄</button>
-<button onclick="setResult('P')">开闲</button>
-<button onclick="setResult('T')">开和</button>
+<button onclick="result('B')">开庄</button>
+<button onclick="result('P')">开闲</button>
+<button onclick="result('T')">开和</button>
 
 <hr>
 
@@ -43,15 +43,29 @@ async function startGame() {
 }
 
 // 结算
-async function setResult(r) {
-  const res = await fetch("/result", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ result: r })
-  });
+async function result(r) {
+  try {
+    const res = await fetch("/result", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ result: r })
+    });
 
-  const data = await res.json();
-  alert(data.msg);
+    const data = await res.json();
+
+    // 🔥 防 undefined（关键）
+    if (!data || !data.msg) {
+      alert("❌ 后端没有返回 msg");
+      console.log("返回内容:", data);
+      return;
+    }
+
+    alert(data.msg);
+
+  } catch (err) {
+    alert("❌ 请求失败");
+    console.error(err);
+  }
 }
 
 // 下注
@@ -66,7 +80,7 @@ async function bet(side) {
   });
 
   const data = await res.json();
-  document.getElementById("msg").innerText = data.msg;
+  document.getElementById("msg").innerText = data.msg || "下注成功";
 }
 
 // 状态

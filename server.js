@@ -1,83 +1,92 @@
 const express = require("express");
 const { createClient } = require("@supabase/supabase-js");
+const axios = require("axios");
+const jwt = require("jsonwebtoken");
 
 const app = express();
 app.use(express.json());
 app.use(express.static("public"));
 
-// ===== Supabase =====
+// ===== LINE LOGIN CONFIG =====
+const LINE_CLIENT_ID = process.env.LINE_CLIENT_ID;
+const LINE_CLIENT_SECRET = process.env.LINE_CLIENT_SECRET;
+const REDIRECT_URI = "https://line-bot-production-dabe.up.railway.app/callback";
+
+// ===== 环境检查 =====
+if (!process.env.SUPABASE_URL || !process.env.SUPABASE_KEY) {
+  console.error("❌ 缺少 SUPABASE 环境变量");
+  process.exit(1);
+}
+
+// ===== DB =====
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_KEY
 );
 
-// ===== 游戏状态 ===== 
+// ===== 游戏状态 =====
 let GAME = {
   isBetting: false,
   roundActive: false,
+  bets: {},
   timer: null,
-  timeLeft: 60,
-  currentRoundId: null
+  timeLeft: 60
 };
 
 // ===== 获取用户 =====
 async function getUser(userId) {
-  const { data, error } = await supabase
-    .from("players")
-    .select("*")
-    .eq("user_id", userId)
-    .single();
+  try {
+    const { data } = await supabase
+      .from("players")
+      .select("*")
+      .eq("user_id", userId)
+      .single();
 
-  if (error || !data) {
-    const newUser = {
-      user_id: userId,
-      balance: 1000
-    };
+    if (!data) {
+      const newUser = {
+        user_id: userId,
+        balance: 1000,
+        name: "玩家"
+      };
+      await supabase.from("players").insert([newUser]);
+      return newUser;
+    }
 
-    await supabase.from("players").insert([newUser]);
-    return newUser;
+    return data;
+  } catch (err) {
+    console.error("getUser error:", err);
+    return null;
   }
-
-  return data;
 }
 
-// ===== 修改余额 =====
+// ===== 改余额 =====
 async function changeBalance(userId, amount) {
-  const { data } = await supabase
-    .from("players")
-    .select("*")
-    .eq("user_id", userId)
-    .single();
+  try {
+    const { data } = await supabase
+      .from("players")
+      .select("*")
+      .eq("user_id", userId)
+      .single();
 
-  const newBalance = Number(data.balance) + Number(amount);
+    const newBalance = Number(data.balance) + Number(amount);
 
-  await supabase
-    .from("players")
-    .update({ balance: newBalance })
-    .eq("user_id", userId);
+    await supabase
+      .from("players")
+      .update({ balance: newBalance })
+      .eq("user_id", userId);
+  } catch (err) {
+    console.error("changeBalance error:", err);
+  }
 }
 
 // ===== 开局 =====
-app.post("/start", async (req, res) => {
+app.post("/start", (req, res) => {
   try {
-    if (GAME.roundActive) {
-      return res.json({ msg: "⚠️ 已在进行中" });
-    }
+    if (GAME.roundActive) return res.json({ msg: "已在进行中" });
 
-    const { data, error } = await supabase
-      .from("rounds")
-      .insert([{ status: "betting" }])
-      .select()
-      .single();
-
-    if (error) {
-      console.log(error);
-      return res.json({ msg: "❌ 开局失败" });
-    }
-
-    GAME.currentRoundId = data.id;
     GAME.roundActive = true;
     GAME.isBetting = true;
+    GAME.bets = {};
     GAME.timeLeft = 60;
 
     GAME.timer = setInterval(() => {
@@ -89,11 +98,10 @@ app.post("/start", async (req, res) => {
       }
     }, 1000);
 
-    res.json({ msg: "✅ 开局成功" });
-
+    res.json({ msg: "开局成功" });
   } catch (err) {
-    console.log(err);
-    res.json({ msg: "❌ 系统错误" });
+    console.error(err);
+    res.status(500).json({ msg: "错误" });
   }
 });
 
@@ -103,40 +111,28 @@ app.post("/bet", async (req, res) => {
     const { userId, side, amount } = req.body;
 
     if (!GAME.isBetting) {
-      return res.json({ success: false, msg: "❌ 已停止下注" });
+      return res.json({ success: false, msg: "已停止下注" });
     }
 
     if (!["B", "P", "T"].includes(side)) {
-      return res.json({ success: false, msg: "❌ 下注错误" });
+      return res.json({ success: false });
     }
 
     const user = await getUser(userId);
+    if (!user) return res.json({ success: false });
 
     if (user.balance < amount) {
-      return res.json({ success: false, msg: "❌ 余额不足" });
+      return res.json({ success: false, msg: "余额不足" });
     }
 
     await changeBalance(userId, -amount);
 
-    const { error } = await supabase.from("transactions").insert([
-      {
-        user_id: userId,
-        amount,
-        bet_side: side,
-        round_id: GAME.currentRoundId
-      }
-    ]);
+    GAME.bets[userId] = { side, amount };
 
-    if (error) {
-      console.log(error);
-      return res.json({ msg: "❌ 下注失败(DB错误)" });
-    }
-
-    res.json({ success: true, msg: "✅ 下注成功" });
-
+    res.json({ success: true });
   } catch (err) {
-    console.log(err);
-    res.json({ msg: "❌ 系统错误" });
+    console.error(err);
+    res.status(500).json({ success: false });
   }
 });
 
@@ -145,44 +141,24 @@ app.post("/result", async (req, res) => {
   try {
     const { result } = req.body;
 
-    if (!GAME.roundActive) {
-      return res.json({ msg: "❌ 没有进行中的局" });
-    }
+    if (!GAME.roundActive) return res.json({ msg: "没有进行中的局" });
 
-    const { data: bets, error } = await supabase
-      .from("transactions")
-      .select("*")
-      .eq("round_id", GAME.currentRoundId);
+    for (const uid in GAME.bets) {
+      const bet = GAME.bets[uid]; 
 
-    if (error) {
-      console.log(error);
-      return res.json({ msg: "❌ 获取下注失败" });
-    }
-
-    if (!bets || bets.length === 0) {
-      return res.json({ msg: "⚠️ 没有下注记录" });
-    }
-
-    for (const bet of bets) {
-      if (bet.bet_side === result) {
-        await changeBalance(bet.user_id, bet.amount * 2);
+      if (bet.side === result) {
+        await changeBalance(uid, bet.amount * 2);
       }
     }
 
-    await supabase
-      .from("rounds")
-      .update({ result, status: "done" })
-      .eq("id", GAME.currentRoundId);
-
     GAME.roundActive = false;
     GAME.isBetting = false;
-    GAME.currentRoundId = null;
+    GAME.bets = {};
 
-    res.json({ msg: "🎉 结算完成：" + result });
-
+    res.json({ msg: "结算完成" });
   } catch (err) {
-    console.log(err);
-    res.json({ msg: "❌ 结算失败" });
+    console.error(err);
+    res.status(500).json({ msg: "错误" });
   }
 });
 
@@ -190,66 +166,52 @@ app.post("/result", async (req, res) => {
 app.get("/state", (req, res) => {
   res.json({
     isBetting: GAME.isBetting,
-    timeLeft: GAME.timeLeft
+    timeLeft: GAME.timeLeft,
+    total: GAME.bets
   });
 });
 
-// ===== 历史 =====
-app.get("/history", async (req, res) => {
-  const { data } = await supabase
-    .from("rounds")
-    .select("*")
-    .order("created_at", { ascending: false })
-    .limit(20);
-
-  res.json(data || []);
+// ===== LINE 登录 =====
+app.get("/login", (req, res) => {
+  const url = `https://access.line.me/oauth2/v2.1/authorize?response_type=code&client_id=${LINE_CLIENT_ID}&redirect_uri=${REDIRECT_URI}&state=abc123&scope=profile%20openid`;
+  res.redirect(url);
 });
 
-// ===== 🆕 查询余额 =====
-app.get("/balance/:userId", async (req, res) => {
+// ===== LINE 回调 =====
+app.get("/callback", async (req, res) => {
+  const code = req.query.code;
+
   try {
-    const userId = req.params.userId;
+   const tokenRes = await axios.post(
+  "https://api.line.me/oauth2/v2.1/token",
+  new URLSearchParams({
+    grant_type: "authorization_code",
+    code: code,
+    redirect_uri: REDIRECT_URI,
+    client_id: LINE_CLIENT_ID,
+    client_secret: LINE_CLIENT_SECRET
+  })
+);
 
-    const { data } = await supabase
-      .from("players")
-      .select("balance")
-      .eq("user_id", userId)
-      .single();
+    const id_token = tokenRes.data.id_token;
 
-    res.json({ balance: data?.balance || 0 });
+    const decoded = jwt.decode(id_token);
+    const userId = decoded.sub;
+    const name = decoded.name;
+
+    // 自动注册玩家
+    await getUser(userId);
+
+    res.send(`登录成功<br>ID: ${userId}<br>名字: ${name}`);
 
   } catch (err) {
-    console.log(err);
-    res.json({ balance: 0 });
-  }
-});
-
-// ===== 🆕 下注统计 =====
-app.get("/stats", async (req, res) => {
-  try {
-    if (!GAME.currentRoundId) {
-      return res.json({ B: 0, P: 0, T: 0 });
-    }
-
-    const { data } = await supabase
-      .from("transactions")
-      .select("bet_side, amount")
-      .eq("round_id", GAME.currentRoundId);
-
-    let stats = { B: 0, P: 0, T: 0 };
-
-    data.forEach(b => {
-      stats[b.bet_side] += b.amount;
-    });
-
-    res.json(stats);
-
-  } catch (err) {
-    console.log(err);
-    res.json({ B: 0, P: 0, T: 0 });
+    console.error(err);
+    res.send("登录失败");
   }
 });
 
 // ===== 启动 =====
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log("🚀 RUNNING ON " + PORT));
+app.listen(PORT, () => {
+  console.log("RUNNING ON", PORT);
+});

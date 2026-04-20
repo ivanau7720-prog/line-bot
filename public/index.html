@@ -154,6 +154,22 @@ setInterval(() => {
 function login() {
   window.location.href = "/login";
 }
+
+// ===== 自动读取 LINE 登录 =====
+window.onload = function () {
+  const params = new URLSearchParams(window.location.search);
+
+  const userId = params.get("userId");
+  const name = params.get("name");
+
+  if (userId) {
+    document.getElementById("userId").value = userId;
+  }
+
+  if (name) {
+    document.querySelector("h1").innerText = "🎰 百家乐系统 - " + name;
+  }
+};
   
 </script>
 

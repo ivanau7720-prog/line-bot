@@ -40,7 +40,16 @@
 <div id="history"></div>
 
 <script>
+// ===== 读取登录信息 =====
+const params = new URLSearchParams(window.location.search);
+const userIdFromUrl = params.get("userId");
 
+if (userIdFromUrl) {
+  window.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("userId").value = userIdFromUrl;
+  });
+}
+  
 // 开局
 async function startGame() {
   const res = await fetch("/start", { method: "POST" });

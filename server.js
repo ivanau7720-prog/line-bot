@@ -11,7 +11,7 @@ const supabase = createClient(
   process.env.SUPABASE_KEY
 );
 
-// ===== 游戏状态 =====
+// ===== 游戏状态 ===== 
 let GAME = {
   isBetting: false,
   roundActive: false,

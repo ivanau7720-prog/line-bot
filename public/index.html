@@ -6,9 +6,9 @@
 
 <h2>🎮 控制台</h2>
 <button onclick="startGame()">开始游戏</button>
-<button onclick="setResult('B')">开庄</button>
-<button onclick="setResult('P')">开闲</button>
-<button onclick="setResult('T')">开和</button>
+<button onclick="result('B')">开庄</button>
+<button onclick="result('P')">开闲</button>
+<button onclick="result('T')">开和</button>
 
 <hr>
 
@@ -35,15 +35,15 @@
 
 <script>
 
-// 开局
+// ===== 开局 =====
 async function startGame() {
   const res = await fetch("/start", { method: "POST" });
   const data = await res.json();
   alert(data.msg);
 }
 
-// 结算
-async function setResult(r) {
+// ===== 结算 =====
+async function result(r) {
   const res = await fetch("/result", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -54,7 +54,7 @@ async function setResult(r) {
   alert(data.msg);
 }
 
-// 下注
+// ===== 下注 =====
 async function bet(side) {
   const userId = document.getElementById("userId").value;
   const amount = Number(document.getElementById("amount").value);
@@ -66,10 +66,10 @@ async function bet(side) {
   });
 
   const data = await res.json();
-  document.getElementById("msg").innerText = data.msg;
+  document.getElementById("msg").innerText = data.msg || "下注成功";
 }
 
-// 状态
+// ===== 状态 =====
 async function loadState() {
   const res = await fetch("/state");
   const data = await res.json();
@@ -79,7 +79,7 @@ async function loadState() {
     " | 剩余: " + data.timeLeft;
 }
 
-// 历史
+// ===== 历史 =====
 async function loadHistory() {
   const res = await fetch("/history");
   const data = await res.json();
@@ -92,7 +92,7 @@ async function loadHistory() {
   document.getElementById("history").innerHTML = html;
 }
 
-// 自动刷新
+// ===== 自动刷新 =====
 setInterval(() => {
   loadState();
   loadHistory();

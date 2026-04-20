@@ -4,6 +4,8 @@
 
 <h1>🎰 百家乐系统</h1>
 
+<button onclick="login()">LINE 登录</button>
+  
 <h2>🎮 控制台</h2>
 <button onclick="startGame()">开始游戏</button>
 <button onclick="result('B')">开庄</button>
@@ -140,6 +142,10 @@ setInterval(() => {
   loadStats();   // 新
 }, 1000);
 
+function login() {
+  window.location.href = "/login";
+}
+  
 </script>
 
 </body>

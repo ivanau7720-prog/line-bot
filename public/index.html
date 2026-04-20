@@ -25,8 +25,13 @@
 <h2>💰 玩家下注</h2>
 <h3 id="balance">余额：--</h3>
 
-<input id="userId" placeholder="输入ID"><br><br>
-<input id="amount" placeholder="金额"><br><br>
+  <h3>🎯 选择筹码</h3>
+
+<button onclick="selectChip(10)">10</button>
+<button onclick="selectChip(50)">50</button>
+<button onclick="selectChip(100)">100</button>
+
+<h3 id="selected">已选：0</h3>
 
 <button onclick="bet('B')">庄</button>
 <button onclick="bet('P')">闲</button>

@@ -12,6 +12,12 @@ const LINE_CLIENT_ID = process.env.LINE_CLIENT_ID;
 const LINE_CLIENT_SECRET = process.env.LINE_CLIENT_SECRET;
 const REDIRECT_URI = "https://line-bot-production-dabe.up.railway.app/callback";
 
+// ===== LINE 环境检查 =====
+if (!LINE_CLIENT_ID || !LINE_CLIENT_SECRET) {
+  console.error("❌ 缺少 LINE 环境变量");
+  process.exit(1);
+}
+
 // ===== 环境检查 =====
 if (!process.env.SUPABASE_URL || !process.env.SUPABASE_KEY) {
   console.error("❌ 缺少 SUPABASE 环境变量");
@@ -182,7 +188,12 @@ app.get("/callback", async (req, res) => {
   const code = req.query.code;
 
   try {
-   const tokenRes = await axios.post(
+  // 👉 防止没有 code
+if (!code) {
+  return res.send("❌ 没有 code");
+}
+
+const tokenRes = await axios.post(
   "https://api.line.me/oauth2/v2.1/token",
   new URLSearchParams({
     grant_type: "authorization_code",
@@ -190,7 +201,12 @@ app.get("/callback", async (req, res) => {
     redirect_uri: REDIRECT_URI,
     client_id: LINE_CLIENT_ID,
     client_secret: LINE_CLIENT_SECRET
-  })
+  }),
+  {
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded"
+    }
+  }
 );
 
     const id_token = tokenRes.data.id_token;

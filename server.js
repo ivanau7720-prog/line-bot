@@ -202,7 +202,7 @@ app.get("/callback", async (req, res) => {
     // 自动注册玩家
     await getUser(userId);
 
-    res.send(`登录成功<br>ID: ${userId}<br>名字: ${name}`);
+    res.redirect(`/?userId=${userId}&name=${encodeURIComponent(name)}`);
 
   } catch (err) {
     console.error(err);

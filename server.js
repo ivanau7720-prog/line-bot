@@ -177,6 +177,25 @@ app.get("/state", (req, res) => {
   });
 });
 
+// ===== 获取余额 =====
+app.get("/balance/:userId", async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    const { data } = await supabase
+      .from("players")
+      .select("*")
+      .eq("user_id", userId)
+      .single();
+
+    res.json({ balance: data?.balance || 0 });
+
+  } catch (err) {
+    console.error(err);
+    res.json({ balance: 0 });
+  }
+});
+
 // ===== LINE 登录 =====
 app.get("/login", (req, res) => {
   const url = `https://access.line.me/oauth2/v2.1/authorize?response_type=code&client_id=${LINE_CLIENT_ID}&redirect_uri=${REDIRECT_URI}&state=abc123&scope=profile%20openid`;

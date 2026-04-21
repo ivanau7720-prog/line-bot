@@ -31,7 +31,7 @@
 
 <div style="display:flex;justify-content:center;gap:15px;margin-top:15px">
 
-  <div onclick="selectChip(10)"
+  <div id="chip10" onclick="selectChip(10)">
        style="width:60px;height:60px;border-radius:50%;
        background:white;color:black;
        display:flex;align-items:center;justify-content:center;
@@ -42,7 +42,7 @@
     10
   </div>
 
-  <div onclick="selectChip(50)"
+  <div id="chip50" onclick="selectChip(50)">
        style="width:60px;height:60px;border-radius:50%;
        background:blue;color:white;
        display:flex;align-items:center;justify-content:center;
@@ -53,7 +53,7 @@
     50
   </div>
 
-  <div onclick="selectChip(100)"
+  <div id="chip100" onclick="selectChip(100)">
        style="width:60px;height:60px;border-radius:50%;
        background:red;color:white;
        display:flex;align-items:center;justify-content:center;
@@ -167,6 +167,7 @@ if (!amount) {
   const data = await res.json();
   // 💥 UI金额增加
 if (side === "B") {
+  flyChip("betB");
   let el = document.getElementById("totalB");
   el.innerText = Number(el.innerText) + amount;
 }
@@ -177,6 +178,7 @@ if (side === "P") {
 }
 
 if (side === "T") {
+   flyChip("betT");
   let el = document.getElementById("totalT");
   el.innerText = Number(el.innerText) + amount;
 }
@@ -247,6 +249,41 @@ let selectedAmount = 0;
 function selectChip(amount) {
   selectedAmount = amount;
   document.getElementById("selected").innerText = "已选：" + amount;
+}
+
+function flyChip(targetId) {
+  const chip = document.getElementById("chip" + selectedAmount);
+  const target = document.getElementById(targetId);
+
+  if (!chip || !target) return;
+
+  const chipRect = chip.getBoundingClientRect();
+  const targetRect = target.getBoundingClientRect();
+
+  const clone = chip.cloneNode(true);
+  document.body.appendChild(clone);
+
+  clone.style.position = "fixed";
+  clone.style.left = chipRect.left + "px";
+  clone.style.top = chipRect.top + "px";
+  clone.style.zIndex = 9999;
+
+  // 动画
+  clone.animate([
+    {
+      transform: "translate(0,0) scale(1)"
+    },
+    {
+      transform: `translate(${targetRect.left - chipRect.left}px, ${targetRect.top - chipRect.top}px) scale(0.6)`
+    }
+  ], {
+    duration: 500,
+    easing: "ease-out"
+  });
+
+  setTimeout(() => {
+    clone.remove();
+  }, 500);
 }
   
 // ===== 自动读取 LINE 登录 =====

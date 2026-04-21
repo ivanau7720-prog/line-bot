@@ -165,6 +165,21 @@ if (!amount) {
   });
 
   const data = await res.json();
+  // 💥 UI金额增加
+if (side === "B") {
+  let el = document.getElementById("totalB");
+  el.innerText = Number(el.innerText) + amount;
+}
+
+if (side === "P") {
+  let el = document.getElementById("totalP");
+  el.innerText = Number(el.innerText) + amount;
+}
+
+if (side === "T") {
+  let el = document.getElementById("totalT");
+  el.innerText = Number(el.innerText) + amount;
+}
   document.getElementById("msg").innerText = data.msg || "下注成功";
 }
 

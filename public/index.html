@@ -42,27 +42,27 @@
   10
 </div>
 
-  <div id="chip50" onclick="selectChip(50)">
-       style="width:60px;height:60px;border-radius:50%;
-       background:blue;color:white;
-       display:flex;align-items:center;justify-content:center;
-       font-weight:bold;cursor:pointer;
-       transition:0.2s;"
-       onmouseover="this.style.transform='scale(1.2)'"
-       onmouseout="this.style.transform='scale(1)'">
-    50
-  </div>
+ <div id="chip50" onclick="selectChip(50)"
+     style="width:60px;height:60px;border-radius:50%;
+     background:blue;color:white;
+     display:flex;align-items:center;justify-content:center;
+     font-weight:bold;cursor:pointer;
+     transition:0.2s;"
+     onmouseover="this.style.transform='scale(1.2)'"
+     onmouseout="this.style.transform='scale(1)'">
+  50
+</div>
 
-  <div id="chip100" onclick="selectChip(100)">
-       style="width:60px;height:60px;border-radius:50%;
-       background:red;color:white;
-       display:flex;align-items:center;justify-content:center;
-       font-weight:bold;cursor:pointer;
-       transition:0.2s;"
-       onmouseover="this.style.transform='scale(1.2)'"
-       onmouseout="this.style.transform='scale(1)'">
-    100
-  </div>
+  <div id="chip100" onclick="selectChip(100)"
+     style="width:60px;height:60px;border-radius:50%;
+     background:red;color:white;
+     display:flex;align-items:center;justify-content:center;
+     font-weight:bold;cursor:pointer;
+     transition:0.2s;"
+     onmouseover="this.style.transform='scale(1.2)'"
+     onmouseout="this.style.transform='scale(1)'">
+  100
+</div>
 
 </div>
 
@@ -73,27 +73,24 @@
 <div style="display:flex;justify-content:center;gap:15px;margin-top:20px">
 
  <div id="betB" onclick="bet('B')" 
-     style="background:red;color:white;padding:30px 50px;
-     font-size:22px;border-radius:15px;cursor:pointer;
-     transition:0.2s;"
+     style="position:relative;background:red;color:white;padding:30px 50px;
+     font-size:22px;border-radius:15px;cursor:pointer;transition:0.2s;"
      onmouseover="this.style.transform='scale(1.1)'"
      onmouseout="this.style.transform='scale(1)'">
   🔴 庄<br><span id="totalB">0</span>
 </div>
 
 <div id="betP" onclick="bet('P')" 
-     style="background:blue;color:white;padding:30px 50px;
-     font-size:22px;border-radius:15px;cursor:pointer;
-     transition:0.2s;"
+     style="position:relative;background:blue;color:white;padding:30px 50px;
+     font-size:22px;border-radius:15px;cursor:pointer;transition:0.2s;"
      onmouseover="this.style.transform='scale(1.1)'"
      onmouseout="this.style.transform='scale(1)'">
   🔵 闲<br><span id="totalP">0</span>
 </div>
 
 <div id="betT" onclick="bet('T')" 
-     style="background:green;color:white;padding:30px 50px;
-     font-size:22px;border-radius:15px;cursor:pointer;
-     transition:0.2s;"
+     style="position:relative;background:green;color:white;padding:30px 50px;
+     font-size:22px;border-radius:15px;cursor:pointer;transition:0.2s;"
      onmouseover="this.style.transform='scale(1.1)'"
      onmouseout="this.style.transform='scale(1)'">
   🟢 和<br><span id="totalT">0</span>
@@ -262,7 +259,7 @@ function flyChip(targetId) {
   const targetRect = target.getBoundingClientRect();
 
   const clone = chip.cloneNode(true);
-  document.body.appendChild(clone);
+target.appendChild(clone);
 
   clone.style.position = "fixed";
   clone.style.left = chipRect.left + "px";
@@ -283,8 +280,12 @@ function flyChip(targetId) {
   });
 
   setTimeout(() => {
-    clone.remove();
-  }, 500);
+  // 👉 不删除，改为堆叠到目标
+  clone.style.position = "absolute";
+  clone.style.left = (target.offsetLeft + Math.random() * 30) + "px";
+  clone.style.top = (target.offsetTop + Math.random() * 30) + "px";
+  clone.style.transform = "scale(0.6)";
+}, 500);
 }
   
 // ===== 自动读取 LINE 登录 =====

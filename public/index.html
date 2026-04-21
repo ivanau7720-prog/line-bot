@@ -81,8 +81,18 @@ async function result(r) {
 
 // 下注
 async function bet(side) {
-  const userId = document.getElementById("userId").value;
-  const amount = Number(document.getElementById("amount").value);
+  const userId = currentUserId;
+const amount = selectedAmount;
+
+if (!userId) {
+  alert("请先登录");
+  return;
+}
+
+if (!amount) {
+  alert("请选择筹码");
+  return;
+}
 
   const res = await fetch("/bet", {
     method: "POST",

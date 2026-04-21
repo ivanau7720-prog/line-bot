@@ -129,7 +129,7 @@ async function loadHistory() {
 
 // ===== 余额 =====
 async function loadBalance() {
-  const userId = document.getElementById("userId").value;
+  const userId = currentUserId;
 
   if (!userId) return;
 
@@ -177,9 +177,9 @@ window.onload = function () {
   const userId = params.get("userId");
   const name = params.get("name");
 
-  if (userId) {
-    document.getElementById("userId").value = userId;
-  }
+ if (userId) {
+  currentUserId = userId; 
+}
 
   if (name) {
     document.querySelector("h1").innerText = "🎰 百家乐系统 - " + name;

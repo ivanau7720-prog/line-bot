@@ -27,42 +27,77 @@
 
   <h3>🎯 选择筹码</h3>
 
-<button onclick="selectChip(10)">10</button>
-<button onclick="selectChip(50)">50</button>
-<button onclick="selectChip(100)">100</button>
+<h3>💰 选择筹码</h3>
 
-<h3 id="selected">已选：0</h3>
+<div style="display:flex;justify-content:center;gap:15px;margin-top:15px">
+
+  <div onclick="selectChip(10)"
+       style="width:60px;height:60px;border-radius:50%;
+       background:white;color:black;
+       display:flex;align-items:center;justify-content:center;
+       font-weight:bold;cursor:pointer;
+       transition:0.2s;"
+       onmouseover="this.style.transform='scale(1.2)'"
+       onmouseout="this.style.transform='scale(1)'">
+    10
+  </div>
+
+  <div onclick="selectChip(50)"
+       style="width:60px;height:60px;border-radius:50%;
+       background:blue;color:white;
+       display:flex;align-items:center;justify-content:center;
+       font-weight:bold;cursor:pointer;
+       transition:0.2s;"
+       onmouseover="this.style.transform='scale(1.2)'"
+       onmouseout="this.style.transform='scale(1)'">
+    50
+  </div>
+
+  <div onclick="selectChip(100)"
+       style="width:60px;height:60px;border-radius:50%;
+       background:red;color:white;
+       display:flex;align-items:center;justify-content:center;
+       font-weight:bold;cursor:pointer;
+       transition:0.2s;"
+       onmouseover="this.style.transform='scale(1.2)'"
+       onmouseout="this.style.transform='scale(1)'">
+    100
+  </div>
+
+</div>
+
+<h2 id="selected" style="color:gold;margin-top:10px">已选：0</h2>
 
 <h2>🎯 下注区域</h2>
 
 <div style="display:flex;justify-content:center;gap:15px;margin-top:20px">
 
-  <div onclick="bet('B')" 
-       style="background:red;color:white;padding:30px 50px;
-       font-size:22px;border-radius:15px;cursor:pointer;
-       transition:0.2s;"
-       onmouseover="this.style.transform='scale(1.1)'"
-       onmouseout="this.style.transform='scale(1)'">
-    🔴 庄
-  </div>
+ <div id="betB" onclick="bet('B')" 
+     style="background:red;color:white;padding:30px 50px;
+     font-size:22px;border-radius:15px;cursor:pointer;
+     transition:0.2s;"
+     onmouseover="this.style.transform='scale(1.1)'"
+     onmouseout="this.style.transform='scale(1)'">
+  🔴 庄<br><span id="totalB">0</span>
+</div>
 
-  <div onclick="bet('P')" 
-       style="background:blue;color:white;padding:30px 50px;
-       font-size:22px;border-radius:15px;cursor:pointer;
-       transition:0.2s;"
-       onmouseover="this.style.transform='scale(1.1)'"
-       onmouseout="this.style.transform='scale(1)'">
-    🔵 闲
-  </div>
+<div id="betP" onclick="bet('P')" 
+     style="background:blue;color:white;padding:30px 50px;
+     font-size:22px;border-radius:15px;cursor:pointer;
+     transition:0.2s;"
+     onmouseover="this.style.transform='scale(1.1)'"
+     onmouseout="this.style.transform='scale(1)'">
+  🔵 闲<br><span id="totalP">0</span>
+</div>
 
-  <div onclick="bet('T')" 
-       style="background:green;color:white;padding:30px 50px;
-       font-size:22px;border-radius:15px;cursor:pointer;
-       transition:0.2s;"
-       onmouseover="this.style.transform='scale(1.1)'"
-       onmouseout="this.style.transform='scale(1)'">
-    🟢 和
-  </div>
+<div id="betT" onclick="bet('T')" 
+     style="background:green;color:white;padding:30px 50px;
+     font-size:22px;border-radius:15px;cursor:pointer;
+     transition:0.2s;"
+     onmouseover="this.style.transform='scale(1.1)'"
+     onmouseout="this.style.transform='scale(1)'">
+  🟢 和<br><span id="totalT">0</span>
+</div>
 
 </div>
 

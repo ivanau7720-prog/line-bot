@@ -31,16 +31,16 @@
 
 <div style="display:flex;justify-content:center;gap:15px;margin-top:15px">
 
-  <div id="chip10" onclick="selectChip(10)">
-       style="width:60px;height:60px;border-radius:50%;
-       background:white;color:black;
-       display:flex;align-items:center;justify-content:center;
-       font-weight:bold;cursor:pointer;
-       transition:0.2s;"
-       onmouseover="this.style.transform='scale(1.2)'"
-       onmouseout="this.style.transform='scale(1)'">
-    10
-  </div>
+  <div id="chip10" onclick="selectChip(10)"
+     style="width:60px;height:60px;border-radius:50%;
+     background:white;color:black;
+     display:flex;align-items:center;justify-content:center;
+     font-weight:bold;cursor:pointer;
+     transition:0.2s;"
+     onmouseover="this.style.transform='scale(1.2)'"
+     onmouseout="this.style.transform='scale(1)'">
+  10
+</div>
 
   <div id="chip50" onclick="selectChip(50)">
        style="width:60px;height:60px;border-radius:50%;
@@ -173,6 +173,7 @@ if (side === "B") {
 }
 
 if (side === "P") {
+   flyChip("betP");
   let el = document.getElementById("totalP");
   el.innerText = Number(el.innerText) + amount;
 }

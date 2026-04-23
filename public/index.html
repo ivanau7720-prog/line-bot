@@ -213,9 +213,32 @@ async function loadState() {
   const res = await fetch("/state");
   const data = await res.json();
 
+  // 原本状态（保留）
   document.getElementById("status").innerText =
     (data.isBetting ? "🟢 可下注" : "🔴 停止") +
     " | 剩余: " + data.timeLeft;
+
+  // 💥 清空显示
+  document.getElementById("totalB").innerHTML = "";
+  document.getElementById("totalP").innerHTML = "";
+  document.getElementById("totalT").innerHTML = "";
+
+  // 💥 显示所有玩家下注
+  for (const uid in data.total) {
+    const bet = data.total[uid];
+
+    let target = "";
+
+    if (bet.side === "B") target = "totalB";
+    if (bet.side === "P") target = "totalP";
+    if (bet.side === "T") target = "totalT";
+
+    document.getElementById(target).innerHTML += `
+      <div style="font-size:12px;color:gold">
+        ${uid} 💰${bet.amount}
+      </div>
+    `;
+  }
 }
 
 // 历史

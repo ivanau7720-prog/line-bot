@@ -149,18 +149,27 @@ async function result(r) {
 
 // 下注
 async function bet(side) {
+
+  // 🔥 下注锁定（防作弊）
+  const state = await fetch("/state").then(r => r.json());
+
+  if (!state.isBetting) {
+    alert("❌ 已停止下注");
+    return;
+  }
+
   const userId = currentUserId;
-const amount = selectedAmount;
+  const amount = selectedAmount;
 
-if (!userId) {
-  alert("请先登录");
-  return;
-}
+  if (!userId) {
+    alert("请先登录");
+    return;
+  }
 
-if (!amount) {
-  alert("请选择筹码");
-  return;
-}
+  if (!amount) {
+    alert("请选择筹码");
+    return;
+  }
 
   const res = await fetch("/bet", {
     method: "POST",
@@ -169,24 +178,26 @@ if (!amount) {
   });
 
   const data = await res.json();
-  // 💥 UI金额增加
-if (side === "B") {
-  flyChip("betB");
-  let el = document.getElementById("totalB");
-  el.innerText = Number(el.innerText) + amount;
-}
 
-if (side === "P") {
-   flyChip("betP");
-  let el = document.getElementById("totalP");
-  el.innerText = Number(el.innerText) + amount;
-}
+  // 💥 UI金额 + 动画
+  if (side === "B") {
+    flyChip("betB");
+    let el = document.getElementById("totalB");
+    el.innerText = Number(el.innerText) + amount;
+  }
 
-if (side === "T") {
-   flyChip("betT");
-  let el = document.getElementById("totalT");
-  el.innerText = Number(el.innerText) + amount;
-}
+  if (side === "P") {
+    flyChip("betP");
+    let el = document.getElementById("totalP");
+    el.innerText = Number(el.innerText) + amount;
+  }
+
+  if (side === "T") {
+    flyChip("betT");
+    let el = document.getElementById("totalT");
+    el.innerText = Number(el.innerText) + amount;
+  }
+
   document.getElementById("msg").innerText = data.msg || "下注成功";
 }
 

@@ -158,9 +158,10 @@ async function bet(side) {
     return;
   }
 
-  const userId = currentUserId;
-  const amount = selectedAmount;
-
+ const userId = currentUserId;
+const amount = selectedAmount;
+const playerName = document.querySelector("h1").innerText.replace("🎰 百家乐系统 - ", "");
+  
   if (!userId) {
     alert("请先登录");
     return;
@@ -183,19 +184,25 @@ async function bet(side) {
   if (side === "B") {
     flyChip("betB");
     let el = document.getElementById("totalB");
-    el.innerText = Number(el.innerText) + amount;
+el.innerHTML += `<div style="font-size:12px;color:gold">
+${playerName} 💰${amount}
+</div>`;
   }
 
   if (side === "P") {
     flyChip("betP");
     let el = document.getElementById("totalP");
-    el.innerText = Number(el.innerText) + amount;
+el.innerHTML += `<div style="font-size:12px;color:gold">
+${playerName} 💰${amount}
+</div>`;
   }
 
   if (side === "T") {
     flyChip("betT");
     let el = document.getElementById("totalT");
-    el.innerText = Number(el.innerText) + amount;
+el.innerHTML += `<div style="font-size:12px;color:gold">
+${playerName} 💰${amount}
+</div>`;
   }
 
   document.getElementById("msg").innerText = data.msg || "下注成功";

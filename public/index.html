@@ -2,6 +2,8 @@
 <html>
 <body style="background:black;color:white;text-align:center;font-family:sans-serif">
 
+<div style="display:flex;flex-direction:column;height:100vh;">
+
 <h1>🎰 百家乐系统</h1>
 <h2>🎥 直播画面</h2>
 
@@ -102,34 +104,34 @@ allowfullscreen>
 
   </div>
 
-  <!-- 和 -->
-  <div onclick="bet('T')" 
-    style="
-    width:180px;
-    height:120px;
-    background:linear-gradient(#28c76f,#007f3b);
-    border-radius:20px;
-    box-shadow:0 0 20px #00ff88;
-    display:flex;
-    flex-direction:column;
-    justify-content:center;
-    align-items:center;
-    font-size:22px;
-    font-weight:bold;
-    cursor:pointer;
-    transition:0.3s;
-  "
-  onmouseover="this.style.transform='scale(1.1)'"
-  onmouseout="this.style.transform='scale(1)'">
+<!-- 和 -->
+<div onclick="bet('T')" 
+  style="
+  width:180px;
+  height:120px;
+  background:linear-gradient(#28c76f,#007f3b);
+  border-radius:20px;
+  box-shadow:0 0 20px #00ff88;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  font-size:22px;
+  font-weight:bold;
+  cursor:pointer;
+  transition:0.3s;
+"
+onmouseover="this.style.transform='scale(1.1)'"
+onmouseout="this.style.transform='scale(1)'">
 
-    🟢 和
-    <div style="font-size:12px;margin-top:5px">
-      👥 <span id="countT">0</span>
-    </div>
-    <div id="totalT" style="font-size:11px;color:gold;margin-top:6px"></div>
-
+  🟢 和
+  <div style="font-size:12px;margin-top:5px">
+    👥 <span id="countT">0</span>
   </div>
+  <div id="totalT" style="font-size:11px;color:gold;margin-top:6px"></div>
 
+</div>
+  
   <!-- 庄 -->
   <div onclick="bet('B')" 
     style="
@@ -157,44 +159,7 @@ allowfullscreen>
     <div id="totalB" style="font-size:12px;color:gold;margin-top:8px"></div>
 
   </div>
-
-</div>
-  <!-- 和 -->
- <div onclick="bet('T')" 
-     style="flex:1;
-     background:#1ca84c;
-     height:160px;
-     border:3px solid gold;
-     box-shadow:0 0 20px gold;
-     transition:0.2s;
-     display:flex;flex-direction:column;
-     align-items:center;justify-content:center;
-     font-size:32px;font-weight:bold;
-     cursor:pointer;"
-     onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 0 40px gold'"
-     onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 0 20px gold'">
-    和（<span id="countT">0</span>人 🔥）
-    <div id="totalT" style="font-size:16px;margin-top:10px"></div>
-  </div>
-
-  <!-- 庄 -->
- <div onclick="bet('B')" 
-     style="flex:1;
-     background:#d62828;
-     height:160px;
-     border:3px solid gold;
-     box-shadow:0 0 20px gold;
-     transition:0.2s;
-     display:flex;flex-direction:column;
-     align-items:center;justify-content:center;
-     font-size:32px;font-weight:bold;
-     cursor:pointer;"
-     onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 0 40px gold'"
-     onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 0 20px gold'">
-    
-    庄（<span id="countB">0</span>人 🔥）
-<div id="totalB" style="font-size:16px;margin-top:10px"></div>
-  </div>
+  
 
 </div>
 <h3 id="msg"></h3>
@@ -421,5 +386,6 @@ window.onload = function () {
   
 </script>
 
+</div>
 </body>
 </html>

@@ -91,18 +91,24 @@ font-size:14px;
 <div style="
   display:flex;
   justify-content:center;
-  gap:20px;
-  margin-top:30px;
+  gap:10px;
+  margin-top:20px;
+  padding:15px;
+  border:3px solid gold;
+  border-radius:20px;
+  box-shadow:0 0 30px gold inset, 0 0 20px gold;
+  background:radial-gradient(circle at center, #222, #000);
 ">
 
   <!-- 闲 -->
-  <div onclick="bet('P')" 
+  <div id="areaP" onclick="bet('P')"
     style="
     width:220px;
     height:140px;
     background:linear-gradient(#2a4fff,#001aff);
     border-radius:20px;
-    box-shadow:0 0 20px #1e3cff;
+    box-shadow:0 0 25px #1e3cff, 0 0 60px rgba(0,0,255,0.4) inset;
+border:2px solid gold;
     display:flex;
     flex-direction:column;
     justify-content:center;
@@ -112,7 +118,10 @@ font-size:14px;
     cursor:pointer;
     transition:0.3s;
   "
-  onmouseover="this.style.transform='scale(1.1)'"
+  onmouseover="
+this.style.transform='scale(1.1)';
+this.style.boxShadow='0 0 60px gold, 0 0 100px blue';
+"
   onmouseout="this.style.transform='scale(1)'">
 
     🔵 闲
@@ -124,13 +133,14 @@ font-size:14px;
   </div>
 
 <!-- 和 -->
-<div onclick="bet('T')" 
+<div id="areaT" onclick="bet('T')"
   style="
   width:180px;
   height:120px;
   background:linear-gradient(#28c76f,#007f3b);
   border-radius:20px;
-  box-shadow:0 0 20px #00ff88;
+ box-shadow:0 0 25px #00ff88, 0 0 60px rgba(0,255,100,0.4) inset;
+border:2px solid gold;
   display:flex;
   flex-direction:column;
   justify-content:center;
@@ -140,7 +150,10 @@ font-size:14px;
   cursor:pointer;
   transition:0.3s;
 "
-onmouseover="this.style.transform='scale(1.1)'"
+onmouseover="
+this.style.transform='scale(1.1)';
+this.style.boxShadow='0 0 60px gold, 0 0 100px #00ff88';
+"
 onmouseout="this.style.transform='scale(1)'">
 
   🟢 和
@@ -152,13 +165,14 @@ onmouseout="this.style.transform='scale(1)'">
 </div>
   
   <!-- 庄 -->
-  <div onclick="bet('B')" 
+  <div id="areaB" onclick="bet('B')" 
     style="
     width:220px;
     height:140px;
     background:linear-gradient(#ff4b4b,#8b0000);
     border-radius:20px;
-    box-shadow:0 0 20px red;
+   box-shadow:0 0 25px red, 0 0 60px rgba(255,0,0,0.4) inset;
+border:2px solid gold;
     display:flex;
     flex-direction:column;
     justify-content:center;
@@ -168,7 +182,10 @@ onmouseout="this.style.transform='scale(1)'">
     cursor:pointer;
     transition:0.3s;
   "
-  onmouseover="this.style.transform='scale(1.1)'"
+  onmouseover="
+this.style.transform='scale(1.1)';
+this.style.boxShadow='0 0 60px gold, 0 0 100px red';
+"
   onmouseout="this.style.transform='scale(1)'">
 
     🔴 庄
@@ -183,13 +200,21 @@ onmouseout="this.style.transform='scale(1)'">
 </div>
 <h3 id="msg"></h3>
 
-<hr>
-
-<h2>📜 历史记录</h2>
-<div id="history"></div>
+<div style="margin-top:10px;font-size:12px;color:#aaa">
+📜 历史记录
+</div>
+<div id="history" style="
+display:flex;
+flex-wrap:wrap;
+justify-content:center;
+margin-top:5px;
+font-size:12px;
+">
+</div>
 
 <script>
 
+let lastResult = "";   
 
 // 下注
 async function bet(side) {
@@ -304,7 +329,14 @@ async function loadHistory() {
   data.forEach(r => {
     html += `<span style="margin:5px">${r.result || "-"}</span>`;
   });
+if (data.length > 0) {
+  const last = data[data.length - 1];
 
+ if (last.result && last.result !== lastResult) {
+  lastResult = last.result;
+  showResult(last.result);
+}
+}
   document.getElementById("history").innerHTML = html;
 }
 
@@ -398,10 +430,44 @@ window.onload = function () {
   currentUserId = userId; 
 }
 
-  if (name) {
-    document.querySelector("h1").innerText = "🎰 百家乐系统 - " + name;
-  }
 };
+
+function showResult(result) {
+
+  const B = document.getElementById("areaB");
+  const P = document.getElementById("areaP");
+  const T = document.getElementById("areaT");
+
+  // 先全部变暗
+  B.style.opacity = 0.3;
+  P.style.opacity = 0.3;
+  T.style.opacity = 0.3;
+
+  let win = null;
+
+  if (result === "B") win = B;
+  if (result === "P") win = P;
+  if (result === "T") win = T;
+
+  if (!win) return;
+
+  // 💥 胜利发光
+  win.style.opacity = 1;
+  win.style.transform = "scale(1.2)";
+  win.style.boxShadow = "0 0 80px gold, 0 0 150px gold";
+
+  // ✨ 1.5秒后恢复
+  setTimeout(() => {
+    B.style.opacity = 1;
+    P.style.opacity = 1;
+    T.style.opacity = 1;
+
+    B.style.transform = "scale(1)";
+    P.style.transform = "scale(1)";
+    T.style.transform = "scale(1)";
+
+  }, 1500);
+}
   
 </script>
 

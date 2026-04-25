@@ -254,7 +254,11 @@ this.style.boxShadow='0 0 60px gold, 0 0 100px red';
 
 <script>
 
-let lastResult = "";   
+let lastResult = "";
+
+let countdown = 60;
+let timerInterval = null;
+let wasBetting = false;  
 
 // 下注
 async function bet(side) {
@@ -328,8 +332,52 @@ async function loadState() {
   let countP = 0;
   let countT = 0;
   // 原本状态（保留）
-  document.getElementById("status").innerText =
-  data.isBetting ? "🟢 下注中" : "🔴 停止下注";
+ if (data.isBetting) {
+
+  // 👉 如果刚开始下注（第一次）
+  if (!wasBetting) {
+
+    countdown = 60;
+
+    // 防止重复
+    if (timerInterval) {
+      clearInterval(timerInterval);
+    }
+
+    timerInterval = setInterval(async () => {
+
+      document.getElementById("status").innerText =
+        "🟢 下注中（" + countdown + "秒）";
+
+      countdown--;
+
+      // ⛔ 时间到自动停止
+      if (countdown < 0 && timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+
+        await fetch("/stop", { method: "POST" });
+
+        document.getElementById("status").innerText = "🔴 停止下注";
+      }
+
+    }, 1000);
+  }
+
+  wasBetting = true;
+
+} else {
+
+  document.getElementById("status").innerText = "🔴 停止下注";
+
+  // 停止倒计时
+  if (timerInterval) {
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
+
+  wasBetting = false;
+}
 
   // 💥 清空显示
   document.getElementById("totalB").innerHTML = "";

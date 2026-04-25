@@ -1,8 +1,33 @@
 <!DOCTYPE html>
 <html>
 <body style="background:black;color:white;text-align:center;font-family:sans-serif">
+
 <audio id="betSound" src="https://www.soundjay.com/buttons/sounds/button-16.mp3"></audio>
 <audio id="winSound" src="https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3"></audio>
+
+<!-- 👇👇👇 在这里加 👇👇👇 -->
+<div id="resultFlash" style="
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.8);
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:80px;
+font-weight:bold;
+color:gold;
+z-index:9999;
+opacity:0;
+pointer-events:none;
+transition:0.5s;
+">
+RESULT
+</div>
+<!-- 👆👆👆 加到这里 👆👆👆 -->
+
 <div style="display:flex;flex-direction:column;height:100vh;">
 
 <div style="flex:1.6;position:relative;">
@@ -343,19 +368,19 @@ async function loadHistory() {
 
 let columns = [];
 let col = [];
-let last = "";
-
+let lastType = "";
+  
 data.forEach(r => {
   if (!r.result) return;
 
-  if (r.result === last || last === "") {
+  if (r.result === lastType || lastType === "") {
     col.push(r.result);
   } else {
     columns.push(col);
     col = [r.result];
   }
 
-  last = r.result;
+  lastType = r.result;
 });
 
 if (col.length > 0) columns.push(col);
@@ -510,6 +535,22 @@ function showResult(result) {
   win.style.opacity = 1;
   win.style.transform = "scale(1.2)";
   win.style.boxShadow = "0 0 80px gold, 0 0 150px gold";
+  const flash = document.getElementById("resultFlash");
+
+let text = "RESULT";
+if (result === "B") text = "庄 WIN";
+if (result === "P") text = "闲 WIN";
+if (result === "T") text = "和";
+
+flash.innerText = text;
+flash.style.opacity = 1;
+flash.style.transform = "scale(1.2)";
+
+// 1.5秒后消失
+setTimeout(() => {
+  flash.style.opacity = 0;
+flash.style.transform = "scale(1)";
+}, 1500);
   document.getElementById("winSound").play();
   // ✨ 1.5秒后恢复
   setTimeout(() => {

@@ -67,28 +67,98 @@ allowfullscreen>
 
 <h2 id="selected" style="color:gold;margin-top:10px">已选：0</h2>
 
-<h2 style="margin-top:20px">🎯 下注区域</h2>
-
-<div style="display:flex;width:100%;margin-top:20px">
+<div style="
+  display:flex;
+  justify-content:center;
+  gap:20px;
+  margin-top:30px;
+">
 
   <!-- 闲 -->
- <div onclick="bet('P')" 
-     style="flex:1;
-     background:#1e3cff;
-     height:160px;
-     border:3px solid gold;
-     box-shadow:0 0 20px gold;
-     transition:0.2s;
-     display:flex;flex-direction:column;
-     align-items:center;justify-content:center;
-     font-size:32px;font-weight:bold;
-     cursor:pointer;"
-     onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 0 40px gold'"
-     onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 0 20px gold'">
-    闲（<span id="countP">0</span>人 🔥）
-    <div id="totalP" style="font-size:16px;margin-top:10px"></div>
+  <div onclick="bet('P')" 
+    style="
+    width:220px;
+    height:140px;
+    background:linear-gradient(#2a4fff,#001aff);
+    border-radius:20px;
+    box-shadow:0 0 20px #1e3cff;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    font-size:26px;
+    font-weight:bold;
+    cursor:pointer;
+    transition:0.3s;
+  "
+  onmouseover="this.style.transform='scale(1.1)'"
+  onmouseout="this.style.transform='scale(1)'">
+
+    🔵 闲
+    <div style="font-size:14px;margin-top:5px">
+      👥 <span id="countP">0</span>
+    </div>
+    <div id="totalP" style="font-size:12px;color:gold;margin-top:8px"></div>
+
   </div>
 
+  <!-- 和 -->
+  <div onclick="bet('T')" 
+    style="
+    width:180px;
+    height:120px;
+    background:linear-gradient(#28c76f,#007f3b);
+    border-radius:20px;
+    box-shadow:0 0 20px #00ff88;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    font-size:22px;
+    font-weight:bold;
+    cursor:pointer;
+    transition:0.3s;
+  "
+  onmouseover="this.style.transform='scale(1.1)'"
+  onmouseout="this.style.transform='scale(1)'">
+
+    🟢 和
+    <div style="font-size:12px;margin-top:5px">
+      👥 <span id="countT">0</span>
+    </div>
+    <div id="totalT" style="font-size:11px;color:gold;margin-top:6px"></div>
+
+  </div>
+
+  <!-- 庄 -->
+  <div onclick="bet('B')" 
+    style="
+    width:220px;
+    height:140px;
+    background:linear-gradient(#ff4b4b,#8b0000);
+    border-radius:20px;
+    box-shadow:0 0 20px red;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    font-size:26px;
+    font-weight:bold;
+    cursor:pointer;
+    transition:0.3s;
+  "
+  onmouseover="this.style.transform='scale(1.1)'"
+  onmouseout="this.style.transform='scale(1)'">
+
+    🔴 庄
+    <div style="font-size:14px;margin-top:5px">
+      👥 <span id="countB">0</span>
+    </div>
+    <div id="totalB" style="font-size:12px;color:gold;margin-top:8px"></div>
+
+  </div>
+
+</div>
   <!-- 和 -->
  <div onclick="bet('T')" 
      style="flex:1;
@@ -173,7 +243,7 @@ const playerName = document.querySelector("h1").innerText.replace("🎰 百家�
 
   // 💥 UI金额 + 动画
   if (side === "B") {
-    flyChip("betB");
+  flyChip("totalB");
     let el = document.getElementById("totalB");
 el.innerHTML += `<div style="font-size:12px;color:gold">
 ${playerName} 💰${amount}
@@ -181,7 +251,7 @@ ${playerName} 💰${amount}
   }
 
   if (side === "P") {
-    flyChip("betP");
+    flyChip("totalP");
     let el = document.getElementById("totalP");
 el.innerHTML += `<div style="font-size:12px;color:gold">
 ${playerName} 💰${amount}
@@ -189,7 +259,7 @@ ${playerName} 💰${amount}
   }
 
   if (side === "T") {
-    flyChip("betT");
+    flyChip("totalT");
     let el = document.getElementById("totalT");
 el.innerHTML += `<div style="font-size:12px;color:gold">
 ${playerName} 💰${amount}

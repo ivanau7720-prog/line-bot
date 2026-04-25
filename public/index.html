@@ -341,35 +341,49 @@ async function loadHistory() {
   const res = await fetch("/history");
   const data = await res.json();
 
-  let html = "";
-  data.forEach(r => {
-    if (r.result === "B") {
-  html += `<div style="
-   width:14px;
-   height:14px;
-    border-radius:50%;
-    background:red;
-  "></div>`;
-}
+let columns = [];
+let col = [];
+let last = "";
 
-if (r.result === "P") {
-  html += `<div style="
-    width:14px;
-    height:14px;
-    border-radius:50%;
-    background:blue;
-  "></div>`;
-}
+data.forEach(r => {
+  if (!r.result) return;
 
-if (r.result === "T") {
-  html += `<div style="
-    width:14px;
-    height:14px;
-    border-radius:50%;
-    background:green;
-  "></div>`;
-}
+  if (r.result === last || last === "") {
+    col.push(r.result);
+  } else {
+    columns.push(col);
+    col = [r.result];
+  }
+
+  last = r.result;
+});
+
+if (col.length > 0) columns.push(col);
+
+let html = '<div style="display:flex;align-items:flex-start">';
+
+columns.forEach(c => {
+  html += '<div style="display:flex;flex-direction:column;margin-right:3px">';
+  
+  c.forEach(r => {
+    let color = "red";
+    if (r === "P") color = "blue";
+    if (r === "T") color = "green";
+
+    html += `<div style="
+      width:14px;
+      height:14px;
+      border-radius:50%;
+      background:${color};
+      margin-bottom:3px;
+    "></div>`;
   });
+
+  html += '</div>';
+});
+
+html += '</div>';
+  
 if (data.length > 0) {
   const last = data[data.length - 1];
 

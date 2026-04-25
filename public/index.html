@@ -5,19 +5,12 @@
 <h1>🎰 百家乐系统</h1>
 <h2>🎥 直播画面</h2>
 
-<iframe width="500" height="300"
+<iframe width="100%" height="420"
 src="https://www.youtube.com/embed/直播ID"
 frameborder="0"
 allowfullscreen>
 </iframe>
   
-<button onclick="login()">LINE 登录</button>
-  
-<h2>🎮 控制台</h2>
-<button onclick="startGame()">开始游戏</button>
-<button onclick="result('B')">开庄</button>
-<button onclick="result('P')">开闲</button>
-<button onclick="result('T')">开和</button>
 
 <hr>
 
@@ -32,7 +25,6 @@ allowfullscreen>
 <h2>💰 玩家下注</h2>
 <h3 id="balance">余额：--</h3>
 
-  <h3>🎯 选择筹码</h3>
 
 <h3>💰 选择筹码</h3>
 
@@ -75,36 +67,65 @@ allowfullscreen>
 
 <h2 id="selected" style="color:gold;margin-top:10px">已选：0</h2>
 
-<h2>🎯 下注区域</h2>
+<h2 style="margin-top:20px">🎯 下注区域</h2>
 
-<div style="display:flex;justify-content:center;gap:15px;margin-top:20px">
+<div style="display:flex;width:100%;margin-top:20px">
 
- <div id="betB" onclick="bet('B')" 
-     style="position:relative;background:red;color:white;padding:30px 50px;
-     font-size:22px;border-radius:15px;cursor:pointer;transition:0.2s;"
-     onmouseover="this.style.transform='scale(1.1)'"
-     onmouseout="this.style.transform='scale(1)'">
-  🔴 庄<br><span id="totalB">0</span>
+  <!-- 闲 -->
+ <div onclick="bet('P')" 
+     style="flex:1;
+     background:#1e3cff;
+     height:160px;
+     border:3px solid gold;
+     box-shadow:0 0 20px gold;
+     transition:0.2s;
+     display:flex;flex-direction:column;
+     align-items:center;justify-content:center;
+     font-size:32px;font-weight:bold;
+     cursor:pointer;"
+     onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 0 40px gold'"
+     onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 0 20px gold'">
+    闲
+    <div id="totalP" style="font-size:16px;margin-top:10px"></div>
+  </div>
+
+  <!-- 和 -->
+ <div onclick="bet('T')" 
+     style="flex:1;
+     background:#1ca84c;
+     height:160px;
+     border:3px solid gold;
+     box-shadow:0 0 20px gold;
+     transition:0.2s;
+     display:flex;flex-direction:column;
+     align-items:center;justify-content:center;
+     font-size:32px;font-weight:bold;
+     cursor:pointer;"
+     onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 0 40px gold'"
+     onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 0 20px gold'">
+    和
+    <div id="totalT" style="font-size:16px;margin-top:10px"></div>
+  </div>
+
+  <!-- 庄 -->
+ <div onclick="bet('B')" 
+     style="flex:1;
+     background:#d62828;
+     height:160px;
+     border:3px solid gold;
+     box-shadow:0 0 20px gold;
+     transition:0.2s;
+     display:flex;flex-direction:column;
+     align-items:center;justify-content:center;
+     font-size:32px;font-weight:bold;
+     cursor:pointer;"
+     onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 0 40px gold'"
+     onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 0 20px gold'">
+    庄
+    <div id="totalB" style="font-size:16px;margin-top:10px"></div>
+  </div>
+
 </div>
-
-<div id="betP" onclick="bet('P')" 
-     style="position:relative;background:blue;color:white;padding:30px 50px;
-     font-size:22px;border-radius:15px;cursor:pointer;transition:0.2s;"
-     onmouseover="this.style.transform='scale(1.1)'"
-     onmouseout="this.style.transform='scale(1)'">
-  🔵 闲<br><span id="totalP">0</span>
-</div>
-
-<div id="betT" onclick="bet('T')" 
-     style="position:relative;background:green;color:white;padding:30px 50px;
-     font-size:22px;border-radius:15px;cursor:pointer;transition:0.2s;"
-     onmouseover="this.style.transform='scale(1.1)'"
-     onmouseout="this.style.transform='scale(1)'">
-  🟢 和<br><span id="totalT">0</span>
-</div>
-
-</div>
-
 <h3 id="msg"></h3>
 
 <hr>
@@ -114,38 +135,6 @@ allowfullscreen>
 
 <script>
 
-// 开局
-async function startGame() {
-  const res = await fetch("/start", { method: "POST" });
-  const data = await res.json();
-  alert(data.msg);
-}
-
-// 结算
-async function result(r) {
-  try {
-    const res = await fetch("/result", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ result: r })
-    });
-
-    const data = await res.json();
-
-    // 🔥 防 undefined（关键）
-    if (!data || !data.msg) {
-      alert("❌ 后端没有返回 msg");
-      console.log("返回内容:", data);
-      return;
-    }
-
-    alert(data.msg);
-
-  } catch (err) {
-    alert("❌ 请求失败");
-    console.error(err);
-  }
-}
 
 // 下注
 async function bet(side) {
@@ -158,19 +147,20 @@ async function bet(side) {
     return;
   }
 
- const userId = currentUserId;
+const userId = currentUserId;
 const amount = selectedAmount;
-const playerName = document.querySelector("h1").innerText.replace("🎰 百家乐系统 - ", "");
-  
-  if (!userId) {
-    alert("请先登录");
-    return;
-  }
 
-  if (!amount) {
-    alert("请选择筹码");
-    return;
-  }
+if (!userId) {
+  alert("请通过LINE进入游戏");
+  return;
+}
+
+if (!amount) {
+  alert("请选择筹码");
+  return;
+}
+
+const playerName = document.querySelector("h1").innerText.replace("🎰 百家乐系统 - ", "");
 
   const res = await fetch("/bet", {
     method: "POST",
@@ -215,8 +205,7 @@ async function loadState() {
 
   // 原本状态（保留）
   document.getElementById("status").innerText =
-    (data.isBetting ? "🟢 可下注" : "🔴 停止") +
-    " | 剩余: " + data.timeLeft;
+  data.isBetting ? "🟢 下注中" : "🔴 停止下注";
 
   // 💥 清空显示
   document.getElementById("totalB").innerHTML = "";
@@ -284,9 +273,6 @@ setInterval(() => {
   loadStats();   // 新
 }, 1000);
 
-function login() {
-  window.location.href = "/login";
-}
 
 let currentUserId = "";
 let selectedAmount = 0;

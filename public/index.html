@@ -5,7 +5,7 @@
 <audio id="winSound" src="https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3"></audio>
 <div style="display:flex;flex-direction:column;height:100vh;">
 
-<div style="flex:1.2;position:relative;">
+<div style="flex:1.6;position:relative;">
 
   <iframe 
     src="https://www.youtube.com/embed/直播ID"
@@ -51,8 +51,9 @@ max-width:200px;
 
 </div>
 <div style="
-  flex:1.3;
+  flex:1;
   background:#111;
+  overflow:auto;
   padding:10px;
   display:flex;
   flex-direction:column;
@@ -344,8 +345,8 @@ async function loadHistory() {
   data.forEach(r => {
     if (r.result === "B") {
   html += `<div style="
-    width:12px;
-    height:12px;
+   width:14px;
+   height:14px;
     border-radius:50%;
     background:red;
   "></div>`;
@@ -353,8 +354,8 @@ async function loadHistory() {
 
 if (r.result === "P") {
   html += `<div style="
-    width:12px;
-    height:12px;
+    width:14px;
+    height:14px;
     border-radius:50%;
     background:blue;
   "></div>`;
@@ -362,8 +363,8 @@ if (r.result === "P") {
 
 if (r.result === "T") {
   html += `<div style="
-    width:12px;
-    height:12px;
+    width:14px;
+    height:14px;
     border-radius:50%;
     background:green;
   "></div>`;

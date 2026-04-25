@@ -85,7 +85,7 @@ allowfullscreen>
      cursor:pointer;"
      onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 0 40px gold'"
      onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 0 20px gold'">
-    闲
+    闲（<span id="countP">0</span>人 🔥）
     <div id="totalP" style="font-size:16px;margin-top:10px"></div>
   </div>
 
@@ -103,7 +103,7 @@ allowfullscreen>
      cursor:pointer;"
      onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 0 40px gold'"
      onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 0 20px gold'">
-    和
+    和（<span id="countT">0</span>人 🔥）
     <div id="totalT" style="font-size:16px;margin-top:10px"></div>
   </div>
 
@@ -121,8 +121,9 @@ allowfullscreen>
      cursor:pointer;"
      onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 0 40px gold'"
      onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 0 20px gold'">
-    庄
-    <div id="totalB" style="font-size:16px;margin-top:10px"></div>
+    
+    庄（<span id="countB">0</span>人 🔥）
+<div id="totalB" style="font-size:16px;margin-top:10px"></div>
   </div>
 
 </div>
@@ -203,6 +204,9 @@ async function loadState() {
   const res = await fetch("/state");
   const data = await res.json();
 
+  let countB = 0;
+  let countP = 0;
+  let countT = 0;
   // 原本状态（保留）
   document.getElementById("status").innerText =
   data.isBetting ? "🟢 下注中" : "🔴 停止下注";
@@ -213,23 +217,30 @@ async function loadState() {
   document.getElementById("totalT").innerHTML = "";
 
   // 💥 显示所有玩家下注
-  for (const uid in data.total) {
-    const bet = data.total[uid];
+for (const uid in data.total) {
+  const bet = data.total[uid];
 
-    let target = "";
+  // 👇 就是在这里加（这3行）
+  if (bet.side === "B") countB++;
+  if (bet.side === "P") countP++;
+  if (bet.side === "T") countT++;
 
-    if (bet.side === "B") target = "totalB";
-    if (bet.side === "P") target = "totalP";
-    if (bet.side === "T") target = "totalT";
+  let target = "";
 
-    document.getElementById(target).innerHTML += `
-      <div style="font-size:12px;color:gold">
-        ${uid} 💰${bet.amount}
-      </div>
-    `;
-  }
+  if (bet.side === "B") target = "totalB";
+  if (bet.side === "P") target = "totalP";
+  if (bet.side === "T") target = "totalT";
+
+  document.getElementById(target).innerHTML += `
+    <div style="font-size:12px;color:gold">
+      ${uid} 💰${bet.amount}
+    </div>
+  `;
 }
-
+document.getElementById("countB").innerText = countB;
+document.getElementById("countP").innerText = countP;
+document.getElementById("countT").innerText = countT;
+}
 // 历史
 async function loadHistory() {
   const res = await fetch("/history");

@@ -148,13 +148,25 @@ app.post("/bet", async (req, res) => {
 
 // ===== 结算 =====
 app.post("/result", async (req, res) => {
-  try {
-    const { result } = req.body;
-
+  try { 
+   const { result } = req.body;
+    
     if (!GAME.roundActive) {
       return res.json({ msg: "没有进行中的局" });
     }
+// 👉 写入局记录（现在位置正确）
+const { data: roundData } = await supabase
+  .from("rounds")
+  .insert([
+    {
+      result: result,
+      status: "done"
+    }
+  ])
+  .select()
+  .single();
 
+const roundId = roundData.id;
     for (const uid in GAME.bets) {
       const bet = GAME.bets[uid];
 
@@ -189,26 +201,40 @@ app.post("/result", async (req, res) => {
       }
 
       await supabase
-        .from("players")
-        .update({
-          balance,
-          total_win: win,
-          total_lose: lose
-        })
-        .eq("user_id", uid);
-    }
+  .from("players")
+  .update({
+    balance,
+    total_win: win,
+    total_lose: lose
+  })
+  .eq("user_id", uid);
 
-    GAME.roundActive = false;
-    GAME.isBetting = false;
-    GAME.bets = {};
-
-    res.json({ msg: "结算完成" });
-
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ msg: "错误" });
+// 👇👇👇 新加这里（很关键）
+await supabase.from("transactions").insert([
+  {
+    user_id: uid,
+    amount: bet.amount,
+    bet_side: bet.side,
+    result: result,
+    win_amount: bet.side === result ? bet.amount : 0,
+    type: bet.side === result ? "win" : "lose",
+    round_id: roundId
   }
+]);
+}      
+
+GAME.roundActive = false;
+GAME.isBetting = false; 
+GAME.bets = {};
+
+res.json({ msg: "结算完成" });
+
+} catch (err) {
+  console.error(err);
+  res.status(500).json({ msg: "错误" });
+}
 });
+
 
 // ===== 状态 =====
 app.get("/state", (req, res) => {

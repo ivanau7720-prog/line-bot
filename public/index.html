@@ -56,8 +56,11 @@ body{
   justify-content:center;
   font-weight:bold;
   cursor:pointer;
-  background:linear-gradient(#fff,#ccc);
-  box-shadow:0 0 10px rgba(255,255,255,0.5);
+  background:radial-gradient(circle,#ffffff,#aaaaaa);
+  border:2px solid gold;
+  box-shadow:
+    0 0 10px rgba(255,255,255,0.8),
+    inset 0 0 5px rgba(0,0,0,0.5);
 }
   
 /* 📱 手机适配（就在这里加👇） */
@@ -111,7 +114,15 @@ body{
 #areaP:active, #areaT:active, #areaB:active{
   transform: scale(0.95);
 }
-  
+
+.chip:hover{
+  transform:scale(1.2);
+}  
+
+.disabled{
+  pointer-events: none;
+  filter: grayscale(1);
+}  
 </style>
   
 </head>
@@ -435,6 +446,10 @@ async function loadState() {
   // 原本状态（保留）
  if (data.isBetting) {
 
+   document.getElementById("areaB").classList.remove("disabled");
+   document.getElementById("areaP").classList.remove("disabled");
+   document.getElementById("areaT").classList.remove("disabled");
+   
   // 👉 如果刚开始下注（第一次）
   if (!wasBetting) {
 
@@ -448,7 +463,7 @@ async function loadState() {
     timerInterval = setInterval(async () => {
 
       document.getElementById("status").innerText =
-  "🟢 下注中（" + countdown + "秒）";
+      "🟢 BETTING " + countdown + "s" 
 
 /* 👇 加这一段（进度条核心） */
 let percent = (countdown / totalTime) * 100;
@@ -486,6 +501,9 @@ countdown--;
 
         document.getElementById("status").innerText = "🔴 停止下注";
         document.getElementById("progressInner").style.width = "0%";
+        document.getElementById("areaB").classList.add("disabled");
+        document.getElementById("areaP").classList.add("disabled");
+        document.getElementById("areaT").classList.add("disabled");
       }
 
     }, 1000);
@@ -496,6 +514,9 @@ countdown--;
 } else {
 
   document.getElementById("status").innerText = "🔴 停止下注";
+   document.getElementById("areaB").style.opacity = 0.3;
+   document.getElementById("areaP").style.opacity = 0.3;
+   document.getElementById("areaT").style.opacity = 0.3;
 
   // 停止倒计时
   if (timerInterval) {

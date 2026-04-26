@@ -15,15 +15,39 @@
 <hr>
 
 <h3>💰 玩家资金</h3>
+
 <input id="uid" placeholder="玩家ID">
 <input id="amt" placeholder="金额">
 
-<button onclick="add()">➕ 加钱</button> <button onclick="minus()">➖ 扣钱</button>
+<button onclick="add()">➕ 加钱</button>
+<button onclick="minus()">➖ 扣钱</button>
+
+<!-- 👇👇👇 这里是你新加的 -->
+<h3>👥 玩家列表</h3>
+<div id="players"></div>
+<!-- 👆👆👆 -->
 
 <hr>
 
 <script>
 
+async function loadPlayers(){
+  const res = await fetch("/admin/players");
+  const data = await res.json();
+
+  let html = "";
+
+  data.forEach(p=>{
+    html += `
+      <div style="margin:5px 0">
+        🆔 ${p.id} | 💰${p.balance} | 赢:${p.win} | 输:${p.lose}
+      </div>
+    `;
+  });
+
+  document.getElementById("players").innerHTML = html;
+}
+  
 async function startGame(){
   await fetch("/start",{method:"POST"});
 }
@@ -64,6 +88,10 @@ async function minus(){
   });
 }
 
+setInterval(()=>{
+  loadPlayers();
+},2000);
+  
 </script>
 
 </body>

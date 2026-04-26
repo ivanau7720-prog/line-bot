@@ -98,6 +98,7 @@ body{
 
 <audio id="betSound" src="https://www.soundjay.com/buttons/sounds/button-16.mp3"></audio>
 <audio id="winSound" src="https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3"></audio>
+<audio id="tickSound" src="https://www.soundjay.com/button/sounds/beep-07.mp3"></audio>  
 
 <!-- 👇👇👇 在这里加 👇👇👇 -->
 <div id="resultFlash" style="
@@ -180,6 +181,22 @@ max-width:200px;
 
 </div>
 
+  <div id="progressBar" style="
+  width:100%;
+  height:10px;
+  background:#333;
+  border-radius:10px;
+  overflow:hidden;
+  margin-top:5px;
+">
+  <div id="progressInner" style="
+    height:100%;
+    width:100%;
+    background:linear-gradient(90deg, lime, yellow, red);
+    transition:1s linear;
+  "></div>
+</div>
+  
 <h3>💰 选择筹码</h3>
 
 <div style="display:flex;justify-content:center;gap:15px;margin-top:15px">
@@ -341,7 +358,8 @@ let lastResult = "";
 
 let countdown = 60;
 let timerInterval = null;
-let wasBetting = false;  
+let wasBetting = false; 
+let totalTime = 60;  
 
 // 下注
 async function bet(side) {
@@ -430,9 +448,34 @@ async function loadState() {
     timerInterval = setInterval(async () => {
 
       document.getElementById("status").innerText =
-        "🟢 下注中（" + countdown + "秒）";
+  "🟢 下注中（" + countdown + "秒）";
 
-      countdown--;
+/* 👇 加这一段（进度条核心） */
+let percent = (countdown / totalTime) * 100;
+document.getElementById("progressInner").style.width = percent + "%";
+
+/* 👇👇👇 把刚才那段代码贴在这里 👇👇👇 */
+if (countdown <= 5 && countdown > 0) {
+
+  document.getElementById("progressInner").style.background = "red";
+
+  document.getElementById("progressInner").style.opacity =
+    (countdown % 2 === 0) ? "1" : "0.3";
+
+  const tick = document.getElementById("tickSound");
+  tick.currentTime = 0;
+  tick.play();
+
+} else {
+
+  document.getElementById("progressInner").style.background =
+    "linear-gradient(90deg, lime, yellow, red)";
+
+  document.getElementById("progressInner").style.opacity = "1";
+}
+/* 👆👆👆 贴到这里结束 👆👆👆 */
+
+countdown--;
 
       // ⛔ 时间到自动停止
       if (countdown < 0 && timerInterval) {
@@ -442,6 +485,7 @@ async function loadState() {
         await fetch("/stop", { method: "POST" });
 
         document.getElementById("status").innerText = "🔴 停止下注";
+        document.getElementById("progressInner").style.width = "0%";
       }
 
     }, 1000);

@@ -62,7 +62,11 @@ h2,h3{
 <body>
 
 <h2>🎮 管理员面板</h2>
-
+<div class="card">
+  <h3>📊 盈利统计</h3>
+  <div id="profitToday">今日盈利：--</div>
+  <div id="profitTotal">总盈利：--</div>
+</div>
 <div class="card">
   <h3>🎰 游戏控制</h3>
 
@@ -188,12 +192,23 @@ async function loadRounds(){
 
   document.getElementById("tx").innerHTML = html;
 }
+  
+async function loadProfit(){
+  const res = await fetch("/admin/profit");
+  const data = await res.json();
 
+  document.getElementById("profitToday").innerText =
+    "今日盈利：" + data.today;
+
+  document.getElementById("profitTotal").innerText =
+    "总盈利：" + data.total;
+}
   
 setInterval(()=>{
   loadPlayers();
   loadRounds();
   loadTx();
+  loadProfit();   // 👈 加这一行
 },2000);
   
 </script>

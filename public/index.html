@@ -100,7 +100,7 @@ body{
   display:flex;
   justify-content:center;
 }
-
+}
 
 </style>
   
@@ -219,15 +219,12 @@ display:flex;
 flex-direction:column;
 justify-content:center;
 align-items:center;
-height:100%;
-overflow:hidden;
+padding:20px 0;
 ">
 
 <div style="
-transform:scale(0.6);
-transform-origin:center;
 width:100%;
-max-width:500px;
+max-width:900px;
 margin:auto;
 ">
   
@@ -244,12 +241,13 @@ margin:auto;
     已选：<span id="selected">0</span>
   </div>
 
-  <div style="
+ <div style="
 display:flex;
 justify-content:center;
 align-items:center;
-gap:30px;
-margin-top:15px;
+gap:50px;
+margin-top:25px;
+flex-wrap:wrap;
 ">
 
   <!-- 筹码 -->
@@ -264,7 +262,8 @@ margin-top:15px;
 
     <!-- 闲 -->
     <div id="areaP" onclick="bet('P')" style="
-      width:150px;height:100px;
+      width:220px;height:130px;
+      font-size:20px;
       background:linear-gradient(#2a4fff,#001aff);
       border-radius:20px;
       display:flex;align-items:center;justify-content:center;
@@ -273,7 +272,8 @@ margin-top:15px;
 
     <!-- 和 -->
     <div id="areaT" onclick="bet('T')" style="
-      width:150px;height:100px;
+      width:220px;height:130px;
+      font-size:20px;
       background:linear-gradient(#28c76f,#007f3b);
       border-radius:20px;
       display:flex;align-items:center;justify-content:center;
@@ -282,7 +282,8 @@ margin-top:15px;
 
     <!-- 庄 -->
     <div id="areaB" onclick="bet('B')" style="
-      width:150px;height:100px;
+      width:220px;height:130px;
+      font-size:20px;
       background:linear-gradient(#ff4b4b,#8b0000);
       border-radius:20px;
       display:flex;align-items:center;justify-content:center;
@@ -726,7 +727,5 @@ function showWin(amount){
 }
   
 </script>
-
-</div>
 </body>
 </html>

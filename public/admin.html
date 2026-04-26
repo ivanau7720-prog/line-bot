@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+
+<html>
+<body style="background:#111;color:white;font-family:sans-serif;padding:20px">
+
+<h2>🎮 管理员面板</h2>
+
+<h3>🎰 游戏控制</h3>
+<button onclick="startGame()">▶ 开始下注</button>
+<button onclick="stopGame()">⛔ 停止下注</button>
+
+<input id="resultInput" placeholder="输入 B / P / T">
+<button onclick="setResult()">🏁 开奖</button>
+
+<hr>
+
+<h3>💰 玩家资金</h3>
+<input id="uid" placeholder="玩家ID">
+<input id="amt" placeholder="金额">
+
+<button onclick="add()">➕ 加钱</button> <button onclick="minus()">➖ 扣钱</button>
+
+<hr>
+
+<script>
+
+async function startGame(){
+  await fetch("/start",{method:"POST"});
+}
+
+async function stopGame(){
+  await fetch("/stop",{method:"POST"});
+}
+
+async function setResult(){
+  const result = document.getElementById("resultInput").value;
+
+  await fetch("/result",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({result})
+  });
+}
+
+async function add(){
+  const userId = document.getElementById("uid").value;
+  const amount = Number(document.getElementById("amt").value);
+
+  await fetch("/admin/add",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({userId,amount})
+  });
+}
+
+async function minus(){
+  const userId = document.getElementById("uid").value;
+  const amount = Number(document.getElementById("amt").value);
+
+  await fetch("/admin/minus",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({userId,amount})
+  });
+}
+
+</script>
+
+</body>
+</html>

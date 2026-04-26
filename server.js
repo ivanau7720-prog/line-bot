@@ -76,7 +76,9 @@ async function changeBalance(userId, amount) {
       .eq("user_id", userId)
       .single();
 
-    const newBalance = Number(data.balance) + Number(amount);
+    let newBalance = Number(data.balance) + Number(amount);
+
+if (newBalance < 0) newBalance = 0;
 
     await supabase
       .from("players")
@@ -149,14 +151,51 @@ app.post("/result", async (req, res) => {
   try {
     const { result } = req.body;
 
-    if (!GAME.roundActive) return res.json({ msg: "没有进行中的局" });
+    if (!GAME.roundActive) {
+      return res.json({ msg: "没有进行中的局" });
+    }
 
     for (const uid in GAME.bets) {
-      const bet = GAME.bets[uid]; 
+      const bet = GAME.bets[uid];
 
+      const { data } = await supabase
+        .from("players")
+        .select("*")
+        .eq("user_id", uid)
+        .single();
+
+      if (!data) continue;
+
+      let balance = Number(data.balance);
+      let win = Number(data.total_win || 0);
+      let lose = Number(data.total_lose || 0);
+
+      // 🎯 赢
       if (bet.side === result) {
-        await changeBalance(uid, bet.amount * 2);
+
+        let payout = bet.amount * 2;
+
+        // 👉 庄抽5%
+        if (result === "B") {
+          payout = bet.amount * 1.95;
+        }
+
+        balance += payout;
+        win += bet.amount;
+
+      } else {
+        // 🎯 输
+        lose += bet.amount;
       }
+
+      await supabase
+        .from("players")
+        .update({
+          balance,
+          total_win: win,
+          total_lose: lose
+        })
+        .eq("user_id", uid);
     }
 
     GAME.roundActive = false;
@@ -164,6 +203,7 @@ app.post("/result", async (req, res) => {
     GAME.bets = {};
 
     res.json({ msg: "结算完成" });
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ msg: "错误" });
@@ -208,8 +248,9 @@ app.get("/admin/players", async (req, res) => {
     const list = data.map(p => ({
       id: p.user_id,
       balance: p.balance,
-      win: p.win || 0,
-      lose: p.lose || 0
+      win: p.total_win || 0,
+      lose: p.total_lose || 0
+      
     }));
 
     res.json(list);
@@ -217,6 +258,36 @@ app.get("/admin/players", async (req, res) => {
   } catch (err) {
     console.error(err);
     res.json([]);
+  }
+});
+
+// ===== 管理员：加钱 =====
+app.post("/admin/add", async (req, res) => {
+  try {
+    const { userId, amount } = req.body;
+
+    await changeBalance(userId, amount);
+
+    res.json({ success: true });
+
+  } catch (err) {
+    console.error(err);
+    res.json({ success: false });
+  }
+});
+
+// ===== 管理员：扣钱 =====
+app.post("/admin/minus", async (req, res) => {
+  try {
+    const { userId, amount } = req.body;
+
+    await changeBalance(userId, -amount);
+
+    res.json({ success: true });
+
+  } catch (err) {
+    console.error(err);
+    res.json({ success: false });
   }
 });
 

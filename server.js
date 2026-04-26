@@ -198,6 +198,28 @@ app.get("/balance/:userId", async (req, res) => {
   }
 });
 
+// ===== 管理员：玩家列表 =====
+app.get("/admin/players", async (req, res) => {
+  try {
+    const { data } = await supabase
+      .from("players")
+      .select("*");
+
+    const list = data.map(p => ({
+      id: p.user_id,
+      balance: p.balance,
+      win: p.win || 0,
+      lose: p.lose || 0
+    }));
+
+    res.json(list);
+
+  } catch (err) {
+    console.error(err);
+    res.json([]);
+  }
+});
+
 // ===== LINE 登录 =====
 app.get("/login", (req, res) => {
   const url = `https://access.line.me/oauth2/v2.1/authorize?response_type=code&client_id=${LINE_CLIENT_ID}&redirect_uri=${REDIRECT_URI}&state=abc123&scope=profile%20openid`;

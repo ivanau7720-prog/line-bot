@@ -25,7 +25,13 @@
 <!-- 👇👇👇 这里是你新加的 -->
 <h3>👥 玩家列表</h3>
 <div id="players"></div>
-<!-- 👆👆👆 -->
+<hr>
+
+<h3>📜 游戏记录</h3>
+<div id="rounds"></div>
+
+<h3>💰 交易记录</h3>
+<div id="tx"></div>
 
 <hr>
 
@@ -87,9 +93,37 @@ async function minus(){
     body: JSON.stringify({userId,amount})
   });
 }
+async function loadRounds(){
+  const res = await fetch("/admin/rounds");
+  const data = await res.json();
 
+  let html = "";
+
+  data.forEach(r=>{
+    html += `<div>🎯 ${r.result}</div>`;
+  });
+
+  document.getElementById("rounds").innerHTML = html;
+}
+
+  async function loadTx(){
+  const res = await fetch("/admin/transactions");
+  const data = await res.json();
+
+  let html = "";
+
+  data.forEach(t=>{
+    html += `<div>${t.user_id} | ${t.bet_side} | ${t.amount} | ${t.type}</div>`;
+  });
+
+  document.getElementById("tx").innerHTML = html;
+}
+
+  
 setInterval(()=>{
   loadPlayers();
+  loadRounds();
+  loadTx();
 },2000);
   
 </script>

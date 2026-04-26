@@ -309,6 +309,41 @@ app.get("/admin/transactions", async (req, res) => {
   res.json(data || []);
 });
 
+// ===== 盈利统计 =====
+app.get("/admin/profit", async (req, res) => {
+  try {
+    const { data } = await supabase
+      .from("transactions")
+      .select("*");
+
+    let total = 0;
+    let today = 0;
+
+    const now = new Date().toDateString();
+
+    data.forEach(t => {
+      const profit = t.type === "lose"
+        ? t.amount
+        : -t.win_amount;
+
+      total += profit;
+
+      const d = new Date(t.created_at).toDateString();
+      if (d === now) {
+        today += profit;
+      }
+    });
+
+    res.json({
+      total,
+      today
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.json({ total:0, today:0 });
+  }
+});
 // ===== 管理员：加钱 =====
 app.post("/admin/add", async (req, res) => {
   try {

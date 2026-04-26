@@ -39,6 +39,8 @@ let GAME = {
   timeLeft: 60
 };
 
+let playersCache = {};
+
 // ===== 获取用户 =====
 async function getUser(userId) {
   try {

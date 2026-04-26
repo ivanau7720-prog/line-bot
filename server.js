@@ -287,6 +287,28 @@ app.get("/admin/players", async (req, res) => {
   }
 });
 
+// ===== 管理员：局记录 =====
+app.get("/admin/rounds", async (req, res) => {
+  const { data } = await supabase
+    .from("rounds")
+    .select("*")
+    .order("id", { ascending: false })
+    .limit(20);
+
+  res.json(data || []);
+});
+
+// ===== 管理员：交易记录 =====
+app.get("/admin/transactions", async (req, res) => {
+  const { data } = await supabase
+    .from("transactions")
+    .select("*")
+    .order("id", { ascending: false })
+    .limit(50);
+
+  res.json(data || []);
+});
+
 // ===== 管理员：加钱 =====
 app.post("/admin/add", async (req, res) => {
   try {

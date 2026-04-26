@@ -1,19 +1,85 @@
 <!DOCTYPE html>
-
 <html>
-<body style="background:#111;color:white;font-family:sans-serif;padding:20px">
+
+<head>
+
+<meta charset="UTF-8">
+
+<style>
+
+body{
+  background: radial-gradient(circle at center, #0b3d2e, #000);
+  color: white;
+  font-family: sans-serif;
+  padding:20px;
+}
+
+/* 卡片 */
+.card{
+  background: rgba(0,0,0,0.6);
+  border:1px solid gold;
+  border-radius:12px;
+  padding:15px;
+  margin-bottom:20px;
+  box-shadow:0 0 15px rgba(255,215,0,0.3);
+}
+
+/* 按钮 */
+button{
+  padding:10px 15px;
+  border:none;
+  border-radius:8px;
+  background: linear-gradient(45deg,#ffcc00,#ff9900);
+  color:black;
+  font-weight:bold;
+  cursor:pointer;
+  margin:5px;
+  transition:0.3s;
+}
+
+button:hover{
+  transform:scale(1.1);
+  box-shadow:0 0 15px gold;
+}
+
+/* 标题 */
+h2,h3{
+  color: gold;
+}
+
+/* 列表 */
+#players div,
+#rounds div,
+#tx div{
+  padding:6px;
+  border-bottom:1px solid rgba(255,255,255,0.1);
+}
+
+</style>
+
+</head>
+
+<body>
 
 <h2>🎮 管理员面板</h2>
 
-<h3>🎰 游戏控制</h3>
-<button onclick="startGame()">▶ 开始下注</button>
-<button onclick="stopGame()">⛔ 停止下注</button>
+<div class="card">
+  <h3>🎰 游戏控制</h3>
 
-<input id="resultInput" placeholder="输入 B / P / T">
-<button onclick="setResult()">🏁 开奖</button>
+  <button onclick="startGame()">▶ 开始下注</button>
+  <button onclick="stopGame()">⛔ 停止下注</button>
 
-<hr>
+  <br><br>
 
+  <input id="resultInput" placeholder="输入 B / P / T" 
+    style="padding:8px;border-radius:6px;border:none;">
+
+  <button onclick="setResult()">🏁 开奖</button>
+</div>
+  
+
+
+<div class="card">
 <h3>💰 玩家资金</h3>
 
 <input id="uid" placeholder="玩家ID">
@@ -21,19 +87,23 @@
 
 <button onclick="add()">➕ 加钱</button>
 <button onclick="minus()">➖ 扣钱</button>
-
+</div>
+  
 <!-- 👇👇👇 这里是你新加的 -->
-<h3>👥 玩家列表</h3>
-<div id="players"></div>
-<hr>
+<div class="card">
+  <h3>👥 玩家列表</h3>
+  <div id="players"></div>
+</div>
 
-<h3>📜 游戏记录</h3>
-<div id="rounds"></div>
+ <div class="card">
+ <h3>📜 游戏记录</h3>
+ <div id="rounds"></div>
+  </div>
 
-<h3>💰 交易记录</h3>
-<div id="tx"></div>
-
-<hr>
+<div class="card">
+  <h3>💰 交易记录</h3>
+  <div id="tx"></div>
+</div>
 
 <script>
 

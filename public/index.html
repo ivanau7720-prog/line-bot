@@ -126,7 +126,26 @@ transition:0.5s;
 ">
 RESULT
 </div>
-<!-- 👆👆👆 加到这里 👆👆👆 -->
+
+  <div id="winPopup" style="
+position:fixed;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%) scale(0.5);
+background:rgba(0,0,0,0.8);
+padding:20px 40px;
+border-radius:20px;
+color:gold;
+font-size:28px;
+font-weight:bold;
+z-index:9999;
+opacity:0;
+pointer-events:none;
+transition:0.3s;
+box-shadow:0 0 20px gold, 0 0 60px gold;
+">
+🎉 你赢了 +0
+</div>
 
 <div class="container">
 
@@ -381,6 +400,11 @@ async function bet(side) {
 const userId = currentUserId;
 const amount = selectedAmount;
 
+window.myLastBet = {
+  side: side,
+  amount: amount
+};
+
 if (!userId) {
   alert("请通过LINE进入游戏");
   return;
@@ -475,7 +499,7 @@ if (countdown <= 5 && countdown > 0) {
 } else {
 
   document.getElementById("progressInner").style.background =
-    "linear-gradient(90deg, lime, yellow, red)";
+    "linear-gradient(90deg, #00ff99, #ffff00, #ff0000)"
 
   document.getElementById("progressInner").style.opacity = "1";
 }
@@ -699,7 +723,6 @@ function showResult(result) {
   const P = document.getElementById("areaP");
   const T = document.getElementById("areaT");
 
-  // 先全部变暗
   B.style.opacity = 0.3;
   P.style.opacity = 0.3;
   T.style.opacity = 0.3;
@@ -712,37 +735,46 @@ function showResult(result) {
 
   if (!win) return;
 
-  // 💥 胜利发光
+  const myBet = window.myLastBet;
+
+  if (myBet && myBet.side === result) {
+    showWin(myBet.amount);
+  }
+
+  // 💥 发光
   win.style.opacity = 1;
   win.style.transform = "scale(1.2)";
   win.style.boxShadow = "0 0 80px gold, 0 0 150px gold";
+
   const flash = document.getElementById("resultFlash");
 
-let text = "RESULT";
-if (result === "B") text = "庄 WIN";
-if (result === "P") text = "闲 WIN";
-if (result === "T") text = "和";
+  let text = "RESULT";
+  if (result === "B") text = "庄 WIN";
+  if (result === "P") text = "闲 WIN";
+  if (result === "T") text = "和";
 
-flash.innerText = text;
-flash.style.opacity = 1;
-flash.style.transform = "scale(1.2)";
+  flash.innerText = text;
+  flash.style.opacity = 1;
 
-// 1.5秒后消失
-setTimeout(() => {
-  flash.style.opacity = 0;
-flash.style.transform = "scale(1)";
-}, 1500);
-  document.getElementById("winSound").play();
-  // ✨ 1.5秒后恢复
   setTimeout(() => {
-    B.style.opacity = 1;
-    P.style.opacity = 1;
-    T.style.opacity = 1;
+    flash.style.opacity = 0;
+  }, 1500);
+}
 
-    B.style.transform = "scale(1)";
-    P.style.transform = "scale(1)";
-    T.style.transform = "scale(1)";
+function showWin(amount){
 
+  const el = document.getElementById("winPopup");
+
+  el.innerText = "🎉 你赢了 +" + amount;
+
+  el.style.opacity = 1;
+  el.style.transform = "translate(-50%,-50%) scale(1.2)";
+
+  document.getElementById("winSound").play();
+
+  setTimeout(() => {
+    el.style.opacity = 0;
+    el.style.transform = "translate(-50%,-50%) scale(0.5)";
   }, 1500);
 }
   

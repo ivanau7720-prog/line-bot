@@ -358,15 +358,14 @@ align-items:center;
 ">
 
  <!-- 闲 -->
-<div id="areaP" onclick="bet('P')" style="
+<div id="areaP" onclick="bet('P')"style="
 position:relative;
 width:100%;
 height:92px;
 font-size:26px;
-background:linear-gradient(145deg,#003cff,#001a66);
-border:2px solid #00aaff;
-color:#00ccff;
-box-shadow:0 0 18px #00aaff;
+background:linear-gradient(145deg,#001d66,#004cff,#000);
+border:2px solid #ffd700;
+color:#ffffff;
 border-radius:20px;
 display:flex;
 flex-direction:column;
@@ -374,9 +373,13 @@ align-items:center;
 justify-content:center;
 font-weight:bold;
 cursor:pointer;
-box-shadow:0 0 25px rgba(0,100,255,0.9);
+box-shadow:
+0 0 10px #ffd700,
+0 0 25px rgba(0,80,255,0.8),
+inset 0 0 15px rgba(255,215,0,0.2);
 transition:0.2s;
-">
+"
+
 🔵 闲
 <div id="countP" style="font-size:12px;">0人</div>
 <div id="totalP" style="font-size:11px;color:gold;"></div>
@@ -388,10 +391,9 @@ position:relative;
 width:100%;
 height:92px;
 font-size:26px;
-background:linear-gradient(145deg,#00c853,#005d22);
-border:2px solid #00ff66;
-color:#00ff66;
-box-shadow:0 0 18px #00ff66;
+background:linear-gradient(145deg,#003d10,#00aa33,#000);
+border:2px solid #ffd700;
+color:#ffffff;
 border-radius:20px;
 display:flex;
 flex-direction:column;
@@ -399,24 +401,26 @@ align-items:center;
 justify-content:center;
 font-weight:bold;
 cursor:pointer;
-box-shadow:0 0 25px rgba(0,255,100,0.9);
+box-shadow:
+0 0 10px #ffd700,
+0 0 25px rgba(0,255,80,0.8),
+inset 0 0 15px rgba(255,215,0,0.2);
 transition:0.2s;
-">
+"
 🟢 和
 <div id="countT" style="font-size:12px;">0人</div>
 <div id="totalT" style="font-size:11px;color:gold;"></div>
 </div>
 
 <!-- 庄 -->
-<div id="areaB" onclick="bet('B')" style="
+<div id="areaB" onclick="bet('B')"style="
 position:relative;
 width:100%;
 height:92px;
 font-size:26px;
-background:linear-gradient(145deg,#ff1a1a,#7a0000);
-border:2px solid #ff3333;
-color:#ff4444;
-box-shadow:0 0 18px #ff3333;
+background:linear-gradient(145deg,#550000,#ff0000,#000);
+border:2px solid #ffd700;
+color:#ffffff;
 border-radius:20px;
 display:flex;
 flex-direction:column;
@@ -424,9 +428,13 @@ align-items:center;
 justify-content:center;
 font-weight:bold;
 cursor:pointer;
-box-shadow:0 0 25px rgba(255,0,0,0.9);
+box-shadow:
+0 0 10px #ffd700,
+0 0 25px rgba(255,0,0,0.8),
+inset 0 0 15px rgba(255,215,0,0.2);
 transition:0.2s;
-">
+" 
+
 🔴 庄
 <div id="countB" style="font-size:12px;">0人</div>
 <div id="totalB" style="font-size:11px;color:gold;"></div>
@@ -581,14 +589,23 @@ document.getElementById("progressInner").style.width = percent + "%";
 /* 👇👇👇 把刚才那段代码贴在这里 👇👇👇 */
 if (countdown <= 5 && countdown > 0) {
 
-  document.getElementById("progressInner").style.background = "red";
+  document.getElementById("progressInner").style.background =
+"linear-gradient(90deg,#ff0000,#990000,#ff0000)";
 
-  document.getElementById("progressInner").style.opacity =
-    (countdown % 2 === 0) ? "1" : "0.3";
+document.getElementById("progressInner").style.boxShadow =
+"0 0 20px red,0 0 40px red";
 
-  const tick = document.getElementById("tickSound");
-  tick.currentTime = 0;
-  tick.play();
+document.getElementById("status").style.color = "#ff0000";
+
+document.getElementById("status").style.textShadow =
+"0 0 10px red,0 0 30px red";
+
+document.getElementById("progressInner").style.opacity =
+(countdown % 2 === 0) ? "1" : "0.25";
+
+const tick = document.getElementById("tickSound");
+tick.currentTime = 0;
+tick.play();
 
 } else {
 

@@ -382,7 +382,7 @@ align-items:center;
 ">
 
  <!-- 闲 -->
-<div id="areaP" onclick="bet('P')"style="
+<div id="areaP" onclick="bet('P')" style="
 position:relative;
 width:100%;
 height:92px;
@@ -437,7 +437,7 @@ transition:0.2s;
 </div>
 
 <!-- 庄 -->
-<div id="areaB" onclick="bet('B')"style="
+<div id="areaB" onclick="bet('B')" style="
 position:relative;
 width:100%;
 height:92px;
@@ -467,6 +467,45 @@ transition:0.2s;
 
 
 </div>
+
+</div>
+
+<!-- 黑金 Confirm 按钮 -->
+<div style="
+width:78%;
+max-width:900px;
+margin:14px auto 10px auto;
+display:flex;
+justify-content:center;
+">
+
+<button onclick="confirmBet(event)" style="
+width:100%;
+height:58px;
+border:none;
+border-radius:18px;
+font-size:22px;
+font-weight:bold;
+cursor:pointer;
+
+color:#ffd700;
+
+background:linear-gradient(145deg,#000000,#2b1a00,#000000);
+
+border:2px solid #ffd700;
+
+box-shadow:
+0 0 12px #ffd700,
+0 0 28px rgba(255,215,0,0.35),
+inset 0 0 10px rgba(255,215,0,0.2);
+
+transition:0.2s;
+letter-spacing:1px;
+">
+
+✔ ยืนยันเดิมพัน
+
+</button>
 
 </div>
   
@@ -501,6 +540,23 @@ transition: width 1s linear, background 0.3s;
 
 <script>
 
+function confirmBet(event){
+
+const btn = event.target;
+
+btn.style.transform = "scale(0.95)";
+
+setTimeout(()=>{
+btn.style.transform = "scale(1)";
+},150);
+
+document.getElementById("betSound").play();
+
+document.getElementById("msg").innerText =
+"✔ ยืนยันเดิมพัน สำเร็จ";
+
+}
+  
 let lastResult = "";
 
 let countdown = 60;

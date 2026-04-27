@@ -32,17 +32,16 @@ html, body{
 }
 
 .top{
-  flex:6;
+  flex:7;
   position:relative;
 }
 
 .bottom{
-  flex:4;
+  flex:3;
   background:linear-gradient(to top,#000,#111,#000);
-  box-shadow:0 -10px 40px rgba(255,215,0,0.2);
+  box-shadow:0 -10px 40px rgba(255,215,0,0.25);
   padding:10px;
 }
-
 .top iframe{
   width:100%;
   height:100%;
@@ -118,7 +117,7 @@ html, body{
 }
 
 .chip:hover{
-  transform:scale(1.2);
+ transform:scale(1.08);
 }  
 
 @keyframes glow {
@@ -139,10 +138,10 @@ html, body{
 
 /* 🔴 封盘效果升级 */
 .disabled{
-  pointer-events: none;
-  opacity: 0.5;
-  filter: brightness(0.5);
-  box-shadow: none !important;
+  pointer-events:none;
+  opacity:0.75;
+  filter:brightness(0.75);
+  box-shadow:none !important;
 }
 
 /* 🔴 红色锁定文字 */
@@ -152,10 +151,18 @@ html, body{
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  color: red;
-  font-size: 18px;
-  font-weight: bold;
-  text-shadow: 0 0 10px red, 0 0 20px red;
+  
+  color:#ff3333;
+  font-size:26px;
+  font-weight:bold;
+  letter-spacing:2px;
+
+  text-shadow:
+    0 0 8px #ff0000,
+    0 0 18px #ff0000,
+    0 0 50px rgba(255,0,0,1);
+
+  z-index:10;
 }
 </style>
   
@@ -307,19 +314,32 @@ flex-wrap:wrap;
 ">
 
   <!-- 筹码 -->
-  <div style="display:flex;gap:10px;">
-    <div id="chip10" onclick="selectChip(10)" class="chip">10</div>
-    <div id="chip50" onclick="selectChip(50)" class="chip">50</div>
-    <div id="chip100" onclick="selectChip(100)" class="chip">100</div>
-  </div>
+ <div style="
+display:flex;
+gap:15px;
+justify-content:center;
+align-items:center;
+margin-bottom:20px;
+">
+  <div id="chip10" class="chip">10</div>
+  <div id="chip50" class="chip">50</div>
+  <div id="chip100" class="chip">100</div>
+</div>
 
   <!-- 下注 -->
-  <div style="display:flex;gap:10px;">
+  <div style="
+display:flex;
+gap:18px;
+justify-content:center;
+align-items:center;
+flex-wrap:nowrap;
+">
 
     <!-- 闲 -->
    <div id="areaP" onclick="bet('P')" style="
 position:relative;
-width:220px;height:130px;
+width:210px;
+height:115px;
 font-size:20px;
 background:linear-gradient(145deg,#0044ff,#00aaff);
 border-radius:20px;
@@ -332,7 +352,8 @@ transition:0.2s;
     <!-- 和 -->
     <div id="areaT" onclick="bet('T')" style="
       position:relative;
-width:220px;height:130px;
+width:210px;
+height:115px;
 font-size:20px;
 background:linear-gradient(145deg,#00c853,#64dd17);
 border-radius:20px;
@@ -345,7 +366,8 @@ transition:0.2s;
     <!-- 庄 -->
     <div id="areaB" onclick="bet('B')" style="
       position:relative;
-width:220px;height:130px;
+width:210px;
+height:115px;
 font-size:20px;
 background:linear-gradient(145deg,#d50000,#ff1744);
 border-radius:20px;
@@ -363,7 +385,7 @@ transition:0.2s;
   
   <div id="progressBar" style="
   width:100%;
-  height:10px;
+  height:14px;
   background:#333;
   border-radius:10px;
   overflow:hidden;

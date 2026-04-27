@@ -250,6 +250,50 @@ opacity:0.8;
 
   z-index:10;
 }
+
+  .bottom-tools{
+display:flex;
+justify-content:space-between;
+gap:10px;
+width:92%;
+margin:8px auto 6px auto;
+}
+
+.tool-btn{
+flex:1;
+border:none;
+height:38px;
+border-radius:14px;
+font-size:14px;
+font-weight:bold;
+color:#fff;
+cursor:pointer;
+}
+
+.road-btn{
+background:linear-gradient(180deg,#004cff,#001b66);
+box-shadow:0 0 10px #0066ff;
+}
+
+.line-btn{
+background:linear-gradient(180deg,#00c853,#007a30);
+box-shadow:0 0 10px #00ff66;
+}
+
+@media(max-width:768px){
+
+.bottom-tools{
+width:94% !important;
+margin:6px auto !important;
+}
+
+.tool-btn{
+height:36px !important;
+font-size:13px !important;
+}
+
+}
+  
 </style>
   
 </head>
@@ -323,47 +367,28 @@ object-fit:cover;
 ">
 </iframe>
 
-<div style="
+<!-- 路单弹窗 -->
+<div id="roadBox" style="
+display:none;
 position:absolute;
-top:10px;
-right:10px;
-background:rgba(0,0,0,0.6);
+top:50px;
+left:10px;
+background:rgba(0,0,0,0.88);
 padding:10px;
-border-radius:20px;
-font-size:12px;
-display:flex;
-flex-wrap:wrap;
-max-width:200px;
+border-radius:14px;
+z-index:99;
+min-width:120px;
+box-shadow:0 0 15px gold;
 ">
-
-  <div style="width:100%;margin-bottom:5px;color:gold">📊 สถิติ</div>
-
-  <div id="history" style="
-    display:flex;
-    flex-wrap:wrap;
-    gap:4px;
-  "></div>
-
+<div style="color:gold;font-size:12px;margin-bottom:6px;">📊 路单走势</div>
+<div id="history"></div>
 </div>
-  
-  <!-- 标题浮在视频上 -->
-  <div style="
-    position:absolute;
-    top:10px;
-    left:10px;
-    font-size:24px;
-    font-weight:bold;
-    background:rgba(0,0,0,0.6);
-    padding:5px 10px;
-    border-radius:20px;
-  ">
-    🎰 百家乐系统
-  </div>
-
+ 
+ 
 </div>
   
 <div class="bottom" style="
-padding:20px 0;
+padding:8px 0;
 ">
 
 <div style="
@@ -397,10 +422,10 @@ letter-spacing:1px;
 <!-- 筹码 -->
 <div class="chips">
 
-  <div id="chip10" class="chip">10</div>
   <div id="chip50" class="chip">50</div>
-  <div id="chip100" class="chip">100</div>
-
+<div id="chip100" class="chip">100</div>
+<div id="chip500" class="chip">500</div>
+<div id="chip1000" class="chip">1000</div>
 </div>
 
 <!-- 下注按钮 -->
@@ -533,9 +558,32 @@ letter-spacing:1px;
 </button>
 
 </div>
-  
-  <div id="progressBar" style="
-  width:100%;
+
+  <div class="bottom-tools">
+
+<button onclick="toggleRoad()" class="tool-btn road-btn">
+📊 สถิติไพ่
+</button>
+
+<button onclick="openLine()" class="tool-btn line-btn">
+💬 แอดมินไลน์
+</button>
+
+</div>
+
+<div style="
+color:#ffd700;
+font-size:13px;
+font-weight:bold;
+margin-top:4px;
+margin-bottom:4px;
+">
+⏳ เวลารับเดิมพัน
+</div>
+
+<div id="progressBar" style="
+  width:94%;
+  margin:6px auto;
   height:14px;
   background:#333;
   border-radius:20px;
@@ -552,10 +600,7 @@ transition: width 1s linear, background 0.3s;
 </div>
   
 
-
 </div>
-
-
 
 
 </div>
@@ -998,6 +1043,16 @@ function showWin(amount){
     el.style.opacity = 0;
     el.style.transform = "translate(-50%,-50%) scale(0.5)";
   }, 1500);
+}
+
+  function toggleRoad(){
+const box = document.getElementById("roadBox");
+box.style.display =
+box.style.display === "none" ? "block" : "none";
+}
+
+function openLine(){
+window.open("https://line.me/", "_blank");
 }
   
 </script>

@@ -33,13 +33,13 @@ html, body{
 }
 
 .top{
-  height:75vh;
+  height:48vh;
   position:relative;
   overflow:hidden;
 }
 
 .bottom{
-  height:18vh;
+  height:52vh;
   background:linear-gradient(to top,#000,#111,#000);
   box-shadow:0 -10px 40px rgba(255,215,0,0.25);
   padding:8px 0;
@@ -70,13 +70,12 @@ html, body{
   
 /* 📱 手机适配（就在这里加👇） */
 @media (max-width: 768px){
-
   .top{
-    flex:6;
+    height:48vh;
   }
 
   .bottom{
-    flex:4;
+    height:52vh;
   }
 
  #chip10,#chip50,#chip100{
@@ -93,12 +92,6 @@ html, body{
   margin:0 !important;
   padding:0 !important;
 }
-
-  #areaT{
-    width:110px !important;
-    height:70px !important;
-    font-size:16px !important;
-  }
 
   h3{
     font-size:14px;
@@ -330,21 +323,21 @@ width:100%;
 
 <!-- 下注按钮 -->
 <div style="
-display:flex;
-justify-content:space-between;
-align-items:center;
-gap:6px;
+display:grid;
+grid-template-columns:1fr 1fr 1fr;
+gap:10px;
 width:100%;
-padding:0 8px;
+padding:0 10px;
 box-sizing:border-box;
+margin-top:12px;
 ">
 
  <!-- 闲 -->
 <div id="areaP" onclick="bet('P')" style="
 position:relative;
-width:180px;
-height:88px;
-font-size:24px;
+width:100%;
+height:92px;
+font-size:26px;
 background:linear-gradient(145deg,#0044ff,#00aaff);
 border-radius:20px;
 display:flex;
@@ -364,9 +357,9 @@ transition:0.2s;
 <!-- 和 -->
 <div id="areaT" onclick="bet('T')" style="
 position:relative;
-width:180px;
-height:88px;
-font-size:24px;
+width:100%;
+height:92px;
+font-size:26px;
 background:linear-gradient(145deg,#00c853,#64dd17);
 border-radius:20px;
 display:flex;
@@ -386,9 +379,9 @@ transition:0.2s;
 <!-- 庄 -->
 <div id="areaB" onclick="bet('B')" style="
 position:relative;
-width:180px;
-height:88px;
-font-size:24px;
+width:100%;
+height:92px;
+font-size:26px;;
 background:linear-gradient(145deg,#d50000,#ff1744);
 border-radius:20px;
 display:flex;

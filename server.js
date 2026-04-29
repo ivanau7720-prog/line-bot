@@ -40,6 +40,7 @@ let GAME = {
 };
 
 let playersCache = {};
+let betCooldown = {};
 
 // ===== 获取用户 =====
 async function getUser(userId) {
@@ -120,29 +121,83 @@ app.post("/bet", async (req, res) => {
   try {
     const { userId, side, amount } = req.body;
 
+    const betAmount = Number(amount);
+
     if (!GAME.isBetting) {
-      return res.json({ success: false, msg: "已停止下注" });
+      return res.json({
+        success:false,
+        msg:"已停止下注"
+      });
     }
 
-    if (!["B", "P", "T"].includes(side)) {
-      return res.json({ success: false });
+    if (!["B","P","T"].includes(side)) {
+      return res.json({
+        success:false,
+        msg:"下注区域错误"
+      });
     }
+
+    if (betAmount < 50 || betAmount > 50000) {
+      return res.json({
+        success:false,
+        msg:"下注范围 50 - 50000"
+      });
+    }
+
+    const now = Date.now();
+
+    if (
+      betCooldown[userId] &&
+      now - betCooldown[userId] < 3000
+    ) {
+      return res.json({
+        success:false,
+        msg:"请3秒后再下注"
+      });
+    }
+
+    betCooldown[userId] = now;
 
     const user = await getUser(userId);
-    if (!user) return res.json({ success: false });
 
-    if (user.balance < amount) {
-      return res.json({ success: false, msg: "余额不足" });
+    if (!user) {
+      return res.json({
+        success:false
+      });
     }
 
-    await changeBalance(userId, -amount);
+    if (Number(user.balance) < betAmount) {
+      return res.json({
+        success:false,
+        msg:"余额不足"
+      });
+    }
 
-    GAME.bets[userId] = { side, amount };
+    await changeBalance(userId, -betAmount);
 
-    res.json({ success: true });
+    if (GAME.bets[userId]) {
+
+      GAME.bets[userId].amount += betAmount;
+      GAME.bets[userId].side = side;
+
+    } else {
+
+      GAME.bets[userId] = {
+        side: side,
+        amount: betAmount
+      };
+
+    }
+
+    res.json({
+      success:true
+    });
+
   } catch (err) {
     console.error(err);
-    res.status(500).json({ success: false });
+    res.status(500).json({
+      success:false
+    });
   }
 });
 

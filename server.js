@@ -499,7 +499,7 @@ app.get("/login", (req, res) => {
 loginStates[state] = Date.now();
 
 const url =
-`https://access.line.me/oauth2/v2.1/authorize?response_type=code&client_id=${LINE_CLIENT_ID}&redirect_uri=${REDIRECT_URI}&state=${state}&scope=profile%20openid`;
+`https://access.line.me/oauth2/v2.1/authorize?response_type=code&client_id=${LINE_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&state=${state}&scope=profile%20openid&bot_prompt=normal`;
 
 res.redirect(url);
 });

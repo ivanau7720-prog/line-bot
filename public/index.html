@@ -409,6 +409,17 @@ font-size:24px;
 text-shadow:0 0 10px #00ffcc,0 0 20px #00ffcc;
 letter-spacing:1px;
 "></div>
+
+<div id="roundNo" style="
+color:#ffd700;
+font-size:14px;
+font-weight:bold;
+margin-top:4px;
+margin-bottom:4px;
+">
+🎯 รอบที่ 0
+</div>
+
   <div id="stats">...</div>
   <div id="balance">...</div>
 
@@ -706,6 +717,8 @@ ${playerName} 💰${amount}
 async function loadState() {
   const res = await fetch("/state");
   const data = await res.json();
+  document.getElementById("roundNo").innerText =
+"🎯 รอบที่ " + data.round;
 
   let countB = 0;
   let countP = 0;

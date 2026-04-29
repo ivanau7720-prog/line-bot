@@ -6,6 +6,9 @@ const crypto = require("crypto");
 
 const app = express();
 app.use(express.json());
+app.get("/", (req, res) => {
+  res.sendFile(__dirname + "/public/login.html");
+});
 app.use(express.static("public"));
 
 // ===== LINE LOGIN CONFIG =====
@@ -544,7 +547,7 @@ const tokenRes = await axios.post(
     // 自动注册玩家
     await getUser(userId);
 
-    res.redirect(`/?userId=${userId}&name=${encodeURIComponent(name)}`);
+    res.redirect(`/index.html?userId=${userId}&name=${encodeURIComponent(name)}`);
 
   } catch (err) {
     console.error(err);

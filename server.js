@@ -310,6 +310,36 @@ app.get("/admin/transactions", async (req, res) => {
 });
 
 // ===== 盈利统计 =====
+app.get("/admin/bets", async (req,res)=>{
+
+try{
+
+let list = [];
+
+for(const uid in GAME.bets){
+
+const bet = GAME.bets[uid];
+
+const user = await getUser(uid);
+
+list.push({
+userId: uid,
+name: user?.name || "玩家",
+side: bet.side,
+amount: bet.amount
+});
+
+}
+
+res.json(list);
+
+}catch(err){
+console.error(err);
+res.json([]);
+}
+
+});
+
 app.get("/admin/profit", async (req, res) => {
   try {
     const { data } = await supabase

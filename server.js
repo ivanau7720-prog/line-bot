@@ -2,6 +2,7 @@ const express = require("express");
 const { createClient } = require("@supabase/supabase-js");
 const axios = require("axios");
 const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
 
 const app = express();
 app.use(express.json());
@@ -41,6 +42,7 @@ let GAME = {
 
 let playersCache = {};
 let betCooldown = {};
+let loginStates = {};
 
 // ===== 获取用户 =====
 async function getUser(userId) {
@@ -207,8 +209,12 @@ app.post("/result", async (req, res) => {
    const { result } = req.body;
     
     if (!GAME.roundActive) {
-      return res.json({ msg: "没有进行中的局" });
-    }
+  return res.json({ msg: "没有进行中的局" });
+}
+
+// 先锁局，防重复开奖
+GAME.roundActive = false;
+GAME.isBetting = false;
 // 👉 写入局记录（现在位置正确）
 const { data: roundData } = await supabase
   .from("rounds")
@@ -238,22 +244,30 @@ const roundId = roundData.id;
       let lose = Number(data.total_lose || 0);
 
       // 🎯 赢
-      if (bet.side === result) {
+      let payout = 0;
 
-        let payout = bet.amount * 2;
+if (bet.side === result) {
 
-        // 👉 庄抽5%
-        if (result === "B") {
-          payout = bet.amount * 1.95;
-        }
+  payout = bet.amount * 2;
 
-        balance += payout;
-        win += bet.amount;
+  // 庄抽水5%
+  if (result === "B") {
+    payout = bet.amount * 1.95;
+  }
 
-      } else {
-        // 🎯 输
-        lose += bet.amount;
-      }
+  // 和局8倍
+  if (result === "T") {
+    payout = bet.amount * 8;
+  }
+
+  balance += payout;
+  win += bet.amount;
+
+} else {
+
+  lose += bet.amount;
+
+}
 
       await supabase
   .from("players")
@@ -271,15 +285,13 @@ await supabase.from("transactions").insert([
     amount: bet.amount,
     bet_side: bet.side,
     result: result,
-    win_amount: bet.side === result ? bet.amount : 0,
+    win_amount: bet.side === result ? payout : 0,
     type: bet.side === result ? "win" : "lose",
     round_id: roundId
   }
 ]);
 }      
-
-GAME.roundActive = false;
-GAME.isBetting = false; 
+ 
 GAME.bets = {};
 
 res.json({ msg: "结算完成" });
@@ -436,7 +448,15 @@ app.post("/admin/add", async (req, res) => {
 
     await changeBalance(userId, amount);
 
-    res.json({ success: true });
+await supabase.from("transactions").insert([
+{
+  user_id: userId,
+  amount: Number(amount),
+  type: "admin_add"
+}
+]);
+
+res.json({ success: true });
 
   } catch (err) {
     console.error(err);
@@ -451,7 +471,15 @@ app.post("/admin/minus", async (req, res) => {
 
     await changeBalance(userId, -amount);
 
-    res.json({ success: true });
+await supabase.from("transactions").insert([
+{
+  user_id: userId,
+  amount: Number(amount),
+  type: "admin_minus"
+}
+]);
+
+res.json({ success: true });
 
   } catch (err) {
     console.error(err);
@@ -461,16 +489,30 @@ app.post("/admin/minus", async (req, res) => {
 
 // ===== LINE 登录 =====
 app.get("/login", (req, res) => {
-  const url = `https://access.line.me/oauth2/v2.1/authorize?response_type=code&client_id=${LINE_CLIENT_ID}&redirect_uri=${REDIRECT_URI}&state=abc123&scope=profile%20openid`;
-  res.redirect(url);
-});
+ const state = crypto.randomBytes(16).toString("hex");
 
+loginStates[state] = Date.now();
+
+const url =
+`https://access.line.me/oauth2/v2.1/authorize?response_type=code&client_id=${LINE_CLIENT_ID}&redirect_uri=${REDIRECT_URI}&state=${state}&scope=profile%20openid`;
+
+res.redirect(url);
+});
 // ===== LINE 回调 =====
 app.get("/callback", async (req, res) => {
   const code = req.query.code;
+  const state = req.query.state;
 
   try {
-  // 👉 防止没有 code
+
+// 👉 先验证 state
+if (!state || !loginStates[state]) {
+  return res.send("❌ state 错误");
+}
+
+delete loginStates[state];
+
+// 👉 再检查 code
 if (!code) {
   return res.send("❌ 没有 code");
 }

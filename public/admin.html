@@ -219,6 +219,14 @@ let totalB = 0;
 let totalP = 0;
 let totalT = 0;
 
+let payB = 0;
+let payP = 0;
+let payT = 0;
+
+let profitB = 0;
+let profitP = 0;
+let profitT = 0;  
+
   if(data.length === 0){
 
     html = "暂无下注";
@@ -231,16 +239,19 @@ let totalT = 0;
      if(b.side === "B"){
 side = "庄";
 totalB += Number(b.amount);
+payB += Number(b.amount) * 1.95;
 }
 
 if(b.side === "P"){
 side = "闲";
 totalP += Number(b.amount);
+payP += Number(b.amount) * 2;
 }
 
 if(b.side === "T"){
 side = "和";
 totalT += Number(b.amount);
+payT += Number(b.amount) * 8;
 }
 
       html += `
@@ -250,10 +261,12 @@ totalT += Number(b.amount);
       `;
 
     });
-
+profitB = (totalP + totalT) - payB;
+profitP = (totalB + totalT) - payP;
+profitT = (totalB + totalP) - payT;
   }
 
- html += `
+html += `
 <div style="
 margin-top:10px;
 padding-top:10px;
@@ -266,47 +279,68 @@ color:gold;
 <div>🔵 闲总额：${totalP}</div>
 <div>🟢 和总额：${totalT}</div>
 
+<div style="margin-top:8px;color:#ffcc00;">
+💸 若开庄赔付：${payB}
+</div>
+
+<div style="color:#ffcc00;">
+💸 若开闲赔付：${payP}
+</div>
+
+<div style="color:#ffcc00;">
+💸 若开和赔付：${payT}
+</div>
+
+<div style="margin-top:8px;color:#00ff99;">
+💵 若开庄净赚：${profitB}
+</div>
+
+<div style="color:#00ff99;">
+💵 若开闲净赚：${profitP}
+</div>
+
+<div style="color:#00ff99;">
+💵 若开和净赚：${profitT}
+</div>
+
 </div>
 `;
 
 let warning = "";
 
-if(totalB > totalP * 1.5 && totalB >= 1000){
+let maxProfit = Math.max(profitB, profitP, profitT);
+
+if(maxProfit === profitB){
 
 warning = `
-<div style="color:#ff4444;margin-top:8px;">
-⚠ 庄压力过高
-</div>
-
-<div style="color:#00ff99;">
-💡 建议开闲
+<div style="color:#00ff99;margin-top:10px;font-weight:bold;">
+🔥 建议开庄（赚最多）
 </div>
 `;
 
-}else if(totalP > totalB * 1.5 && totalP >= 1000){
+}
+
+else if(maxProfit === profitP){
 
 warning = `
-<div style="color:#44aaff;margin-top:8px;">
-⚠ 闲压力过高
-</div>
-
-<div style="color:#00ff99;">
-💡 建议开庄
+<div style="color:#00ff99;margin-top:10px;font-weight:bold;">
+🔥 建议开闲（赚最多）
 </div>
 `;
 
-}else{
+}
+
+else{
 
 warning = `
-<div style="color:gold;margin-top:8px;">
-✔ 当前投注平衡
+<div style="color:#00ff99;margin-top:10px;font-weight:bold;">
+🔥 建议开和（赚最多）
 </div>
 `;
 
 }
 
 html += warning;
-
 document.getElementById("betList").innerHTML = html;
 }
   

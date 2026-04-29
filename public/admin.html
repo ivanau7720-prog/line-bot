@@ -50,7 +50,8 @@ h2,h3{
 /* 列表 */
 #players div,
 #rounds div,
-#tx div{
+#tx div,
+#betList div{
   padding:6px;
   border-bottom:1px solid rgba(255,255,255,0.1);
 }
@@ -67,6 +68,7 @@ h2,h3{
   <div id="profitToday">今日盈利：--</div>
   <div id="profitTotal">总盈利：--</div>
 </div>
+  
 <div class="card">
   <h3>🎰 游戏控制</h3>
 
@@ -75,13 +77,16 @@ h2,h3{
 
   <br><br>
 
-  <input id="resultInput" placeholder="输入 B / P / T" 
-    style="padding:8px;border-radius:6px;border:none;">
+  <input id="resultInput" placeholder="输入 B / P / T">
 
   <button onclick="setResult()">🏁 开奖</button>
 </div>
-  
 
+<!-- 👇👇👇 新增这里 -->
+<div class="card">
+  <h3>📋 当前下注记录</h3>
+  <div id="betList">暂无下注</div>
+</div>
 
 <div class="card">
 <h3>💰 玩家资金</h3>
@@ -203,13 +208,116 @@ async function loadProfit(){
   document.getElementById("profitTotal").innerText =
     "总盈利：" + data.total;
 }
+async function loadBets(){
+
+  const res = await fetch("/admin/bets");
+  const data = await res.json();
+
+  let html = "";
+
+let totalB = 0;
+let totalP = 0;
+let totalT = 0;
+
+  if(data.length === 0){
+
+    html = "暂无下注";
+
+  }else{
+
+    data.forEach(b=>{
+
+      let side = "";
+     if(b.side === "B"){
+side = "庄";
+totalB += Number(b.amount);
+}
+
+if(b.side === "P"){
+side = "闲";
+totalP += Number(b.amount);
+}
+
+if(b.side === "T"){
+side = "和";
+totalT += Number(b.amount);
+}
+
+      html += `
+        <div style="padding:6px;border-bottom:1px solid rgba(255,255,255,0.1)">
+          ${b.name} ｜ ${side} ｜ 💰${b.amount}
+        </div>
+      `;
+
+    });
+
+  }
+
+ html += `
+<div style="
+margin-top:10px;
+padding-top:10px;
+border-top:1px solid gold;
+font-weight:bold;
+color:gold;
+">
+
+<div>🔴 庄总额：${totalB}</div>
+<div>🔵 闲总额：${totalP}</div>
+<div>🟢 和总额：${totalT}</div>
+
+</div>
+`;
+
+let warning = "";
+
+if(totalB > totalP * 1.5 && totalB >= 1000){
+
+warning = `
+<div style="color:#ff4444;margin-top:8px;">
+⚠ 庄压力过高
+</div>
+
+<div style="color:#00ff99;">
+💡 建议开闲
+</div>
+`;
+
+}else if(totalP > totalB * 1.5 && totalP >= 1000){
+
+warning = `
+<div style="color:#44aaff;margin-top:8px;">
+⚠ 闲压力过高
+</div>
+
+<div style="color:#00ff99;">
+💡 建议开庄
+</div>
+`;
+
+}else{
+
+warning = `
+<div style="color:gold;margin-top:8px;">
+✔ 当前投注平衡
+</div>
+`;
+
+}
+
+html += warning;
+
+document.getElementById("betList").innerHTML = html;
+}
   
 setInterval(()=>{
   loadPlayers();
   loadRounds();
   loadTx();
-  loadProfit();   // 👈 加这一行
+  loadProfit();
+  loadBets();
 },2000);
+  loadBets();
   
 </script>
 

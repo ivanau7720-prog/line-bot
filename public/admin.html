@@ -179,7 +179,13 @@ async function loadRounds(){
   let html = "";
 
   data.forEach(r=>{
-    html += `<div>🎯 ${r.result}</div>`;
+   let result = r.result;
+
+if(result === "B") result = "庄";
+if(result === "P") result = "闲";
+if(result === "T") result = "和";
+
+html += `<div>🎯 第${r.id}局 ｜ ${result}</div>`;
   });
 
   document.getElementById("rounds").innerHTML = html;

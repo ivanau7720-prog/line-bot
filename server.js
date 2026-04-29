@@ -98,6 +98,7 @@ app.post("/start", (req, res) => {
     if (GAME.roundActive) return res.json({ msg: "已在进行中" });
 
     GAME.roundActive = true;
+    GAME.currentRound = (GAME.currentRound || 0) + 1;
     GAME.isBetting = true;
     GAME.bets = {};
     GAME.timeLeft = 60;
@@ -306,10 +307,11 @@ res.json({ msg: "结算完成" });
 // ===== 状态 =====
 app.get("/state", (req, res) => {
   res.json({
-    isBetting: GAME.isBetting,
-    timeLeft: GAME.timeLeft,
-    total: GAME.bets
-  });
+  isBetting: GAME.isBetting,
+  timeLeft: GAME.timeLeft,
+  total: GAME.bets,
+  round: GAME.currentRound || 0
+});
 });
 
 // ===== 获取余额 =====

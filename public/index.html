@@ -473,17 +473,36 @@ cursor:pointer;
 
 </div>
 
-
-</div>  
-<div class="bet-area">
-
-  <div id="status" style="
-color:#00ffcc;
+<!-- 新状态栏 -->
+<div id="infoBar" style="
+width:96%;
+height:34px;
+margin:0 auto 8px auto;
+background:rgba(0,0,0,.35);
+border:1px solid gold;
+border-radius:12px;
+display:flex;
+align-items:center;
+justify-content:space-between;
+padding:0 12px;
+box-sizing:border-box;
+font-size:14px;
 font-weight:bold;
-font-size:24px;
-text-shadow:0 0 10px #00ffcc,0 0 20px #00ffcc;
-letter-spacing:1px;
-"></div>
+color:#ffd700;
+">
+
+<div id="status">🔴 ปิดรับเดิมพัน</div>
+
+<div>
+💰 เลือก :
+<span id="selected">0</span>
+</div>
+
+</div>
+
+</div>
+
+<div class="bet-area">
 
 <div id="roundNo" style="
 color:#ffd700;
@@ -499,10 +518,6 @@ margin-bottom:4px;
 
 </div>
 
-  <!-- 已选 -->
-  <div style="color:gold;font-size:18px;">
-    เลือก：<span id="selected">0</span>
-  </div>
 
 <!-- 筹码 -->
 <div class="chips">
@@ -658,7 +673,22 @@ letter-spacing:1px;
 </button>
 
 </div>
+<div id="liveStats" style="
+width:100%;
+text-align:center;
+margin:8px 0 4px 0;
+font-size:16px;
+font-weight:bold;
+letter-spacing:1px;
+">
 
+<span style="color:#ff3333;">🔴12</span>
+
+<span style="margin:0 16px;color:#33aaff;">🔵9</span>
+
+<span style="color:#00ff66;">🟢1</span>
+
+</div>
 
 
 </div>
@@ -970,9 +1000,12 @@ async function loadStats() {
   const res = await fetch("/stats");
   const data = await res.json();
 
-  document.getElementById("stats").innerText =
-    `庄：${data.B} | 闲：${data.P} | 和：${data.T}`; 
-}
+document.getElementById("liveStats").innerHTML =
+`
+<span style="color:#ff3333;">🔴${data.B}</span>
+<span style="margin:0 16px;color:#33aaff;">🔵${data.P}</span>
+<span style="color:#00ff66;">🟢${data.T}</span>
+`;
   
 // 自动刷新
 setInterval(() => {

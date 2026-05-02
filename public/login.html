@@ -2,9 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>LINE Login</title>
-
-<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<title>Member Login</title>
 
 <style>
 body{
@@ -19,29 +17,60 @@ color:white;
 }
 
 .box{
-text-align:center;
+width:340px;
 background:rgba(255,255,255,0.05);
-padding:40px;
-border-radius:20px;
-box-shadow:0 0 20px rgba(0,255,255,.3);
-width:320px;
+padding:30px;
+border-radius:18px;
+box-shadow:0 0 20px rgba(255,215,0,.3);
+text-align:center;
 }
 
 h1{
-color:#ffd700;
-margin-bottom:30px;
+color:gold;
+margin-bottom:25px;
+}
+
+input{
+width:100%;
+padding:14px;
+margin:8px 0;
+border:none;
+border-radius:10px;
+font-size:16px;
+box-sizing:border-box;
 }
 
 button{
 width:100%;
-padding:15px;
+padding:14px;
+margin-top:10px;
 border:none;
-border-radius:12px;
-background:#06c755;
-color:white;
-font-size:18px;
+border-radius:10px;
+font-size:16px;
 font-weight:bold;
 cursor:pointer;
+}
+
+.loginBtn{
+background:gold;
+color:black;
+}
+
+.regBtn{
+background:#06c755;
+color:white;
+}
+
+.small{
+margin-top:15px;
+font-size:14px;
+color:#ccc;
+}
+
+#msg{
+margin-top:15px;
+color:#ff8080;
+min-height:20px;
 }
 </style>
 </head>
@@ -49,69 +78,89 @@ cursor:pointer;
 <body>
 
 <div class="box">
-<h1>🎰 บาคาร่า</h1>
 
-<button onclick="startLogin()">
-💬 เข้าสู่ระบบด้วย LINE
+<h1>🎰 MEMBER LOGIN</h1>
+
+<input id="username" placeholder="Player ID">
+<input id="password" type="password" placeholder="Password">
+
+<button class="loginBtn" onclick="login()">
+LOGIN
 </button>
+
+<button class="regBtn" onclick="register()">
+REGISTER
+</button>
+
+<div class="small">
+Forgot password? Contact Customer Service
+</div>
+
+<div id="msg"></div>
+
 </div>
 
 <script>
 
-window.onload = async function(){
+async function login(){
 
-try{
+const username =
+document.getElementById("username").value.trim();
 
-await liff.init({
-liffId:"2009844440-ReRexgWo"
+const password =
+document.getElementById("password").value.trim();
+
+const res = await fetch("/member-login",{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+username,password
+})
 });
 
-if(liff.isLoggedIn()){
+const data = await res.json();
 
-const profile = await liff.getProfile();
+if(data.success){
 
 location.href =
 "/index.html?userId=" +
-profile.userId +
+data.userId +
 "&name=" +
-encodeURIComponent(profile.displayName);
+encodeURIComponent(data.name);
+
+}else{
+
+document.getElementById("msg").innerText =
+data.msg;
 
 }
 
-}catch(e){}
-
 }
 
-async function startLogin(){
+async function register(){
 
-try{
+const username =
+document.getElementById("username").value.trim();
 
-await liff.init({
-liffId:"2009844440-ReRexgWo"
+const password =
+document.getElementById("password").value.trim();
+
+const res = await fetch("/register",{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+username,password
+})
 });
 
-if(!liff.isLoggedIn()){
+const data = await res.json();
 
-liff.login({
-redirectUri:"https://line-bot-production-dabe.up.railway.app/"
-});
-
-return;
-}
-
-const profile = await liff.getProfile();
-
-location.href =
-"/index.html?userId=" +
-profile.userId +
-"&name=" +
-encodeURIComponent(profile.displayName);
-
-}catch(e){
-
-alert("Login Error");
-
-}
+document.getElementById("msg").innerText =
+data.msg || "Success";
 
 }
 

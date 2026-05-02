@@ -399,7 +399,49 @@ display:flex;
 flex-direction:column;
 align-items:center;
 ">
-  
+<!-- 会员栏 -->
+<div id="topBar" style="
+width:96%;
+height:36px;
+margin:4px auto 8px auto;
+background:rgba(0,0,0,0.45);
+border:1px solid gold;
+border-radius:12px;
+display:flex;
+align-items:center;
+justify-content:space-between;
+padding:0 10px;
+font-size:13px;
+color:#fff;
+box-sizing:border-box;
+">
+
+<div id="memberName">👤 --</div>
+
+<div style="
+display:flex;
+align-items:center;
+gap:8px;
+">
+
+<div id="memberBalance">💰0</div>
+
+<button onclick="logout()" style="
+height:24px;
+border:none;
+border-radius:8px;
+padding:0 8px;
+background:#ff3333;
+color:white;
+font-size:12px;
+font-weight:bold;
+cursor:pointer;
+">
+🚪
+</button>
+
+</div>
+</div>  
 <div class="bet-area">
 
   <div id="status" style="
@@ -916,6 +958,8 @@ async function loadBalance() {
 
   document.getElementById("balance").innerText =
     "เครดิต：" + data.balance;
+  document.getElementById("memberBalance").innerText =
+"💰" + data.balance;
 }
 
 // ===== 统计 =====
@@ -1002,7 +1046,8 @@ return;
 
 // 已登录
 currentUserId = userId;
-
+document.getElementById("memberName").innerText =
+"👤 " + name;
 };
 function showResult(result) {
 

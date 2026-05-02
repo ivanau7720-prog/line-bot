@@ -495,7 +495,6 @@ margin-bottom:4px;
 🎯 รอบที่ 0
 </div>
 
-  <div id="stats">...</div>
   <div id="balance">...</div>
 
 </div>
@@ -660,18 +659,6 @@ letter-spacing:1px;
 
 </div>
 
-<div style="
-color:#ffd700;
-font-size:13px;
-font-weight:bold;
-margin-top:4px;
-margin-bottom:4px;
-">
-⏳ เวลารับเดิมพัน
-</div>
-
-
-</div>
 
 
 </div>
@@ -974,8 +961,6 @@ async function loadBalance() {
   const res = await fetch("/balance/" + userId);
   const data = await res.json();
 
-  document.getElementById("balance").innerText =
-    "เครดิต：" + data.balance;
   document.getElementById("memberBalance").innerText =
 "💰" + data.balance;
 }

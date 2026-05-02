@@ -1,8 +1,6 @@
 const express = require("express");
 const { createClient } = require("@supabase/supabase-js");
-const axios = require("axios");
-const jwt = require("jsonwebtoken");
-const crypto = require("crypto");
+
 
 const app = express();
 app.use(express.json());
@@ -11,29 +9,28 @@ app.get("/", (req, res) => {
 });
 app.use(express.static("public"));
 
-// ===== LINE LOGIN CONFIG =====
-const LINE_CLIENT_ID = process.env.LINE_CLIENT_ID;
-const LINE_CLIENT_SECRET = process.env.LINE_CLIENT_SECRET;
-const REDIRECT_URI = "https://line-bot-production-dabe.up.railway.app/callback";
-
-// ===== LINE 环境检查 =====
-if (!LINE_CLIENT_ID || !LINE_CLIENT_SECRET) {
-  console.error("❌ 缺少 LINE 环境变量");
-  process.exit(1);
-}
-
-// ===== 环境检查 =====
-if (!process.env.SUPABASE_URL || !process.env.SUPABASE_KEY) {
-  console.error("❌ 缺少 SUPABASE 环境变量");
-  process.exit(1);
-}
 
 // ===== DB =====
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_KEY
 );
+// ===== 初始化玩家字段 =====
+async function initDB(){
 
+await supabase.rpc("exec_sql", {
+sql: `
+ALTER TABLE players
+ADD COLUMN IF NOT EXISTS username TEXT UNIQUE;
+
+ALTER TABLE players
+ADD COLUMN IF NOT EXISTS password TEXT;
+`
+}).catch(()=>{});
+
+}
+
+initDB();
 // ===== 游戏状态 =====
 let GAME = {
   isBetting: false,
@@ -45,7 +42,6 @@ let GAME = {
 
 let playersCache = {};
 let betCooldown = {};
-let loginStates = {};
 
 // ===== 获取用户 =====
 async function getUser(userId) {
@@ -492,71 +488,66 @@ res.json({ success: true });
   }
 });
 
-// ===== LINE 登录 =====
-app.get("/login", (req, res) => {
- const state = crypto.randomBytes(16).toString("hex");
+// ===== 注册 =====
+app.post("/register", async (req,res)=>{
 
-loginStates[state] = Date.now();
+const { username, password } = req.body;
 
-const nonce = crypto.randomBytes(16).toString("hex");
-
-const url =
-`https://access.line.me/oauth2/v2.1/authorize?response_type=code&client_id=${LINE_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&state=${state}&scope=profile%20openid&nonce=${nonce}&bot_prompt=normal`;
-
-res.redirect(url);
-});
-// ===== LINE 回调 =====
-app.get("/callback", async (req, res) => {
-  const code = req.query.code;
-  const state = req.query.state;
-
-  try {
-
-// 👉 先验证 state
-if (!state || !loginStates[state]) {
-  return res.send("❌ state 错误");
+if(!/^[a-zA-Z0-9]{4,12}$/.test(username)){
+return res.json({success:false,msg:"ID限英文数字4-12"});
 }
 
-delete loginStates[state];
-
-// 👉 再检查 code
-if (!code) {
-  return res.send("❌ 没有 code");
+if(!password || password.length < 4){
+return res.json({success:false,msg:"密码至少4位"});
 }
 
-const tokenRes = await axios.post(
-  "https://api.line.me/oauth2/v2.1/token",
-  new URLSearchParams({
-    grant_type: "authorization_code",
-    code: code,
-    redirect_uri: REDIRECT_URI,
-    client_id: LINE_CLIENT_ID,
-    client_secret: LINE_CLIENT_SECRET
-  }),
-  {
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded"
-    }
-  }
-);
+const { data: old } = await supabase
+.from("players")
+.select("*")
+.eq("username", username)
+.maybeSingle();
 
-    const id_token = tokenRes.data.id_token;
+if(old){
+return res.json({success:false,msg:"ID已存在"});
+}
 
-    const decoded = jwt.decode(id_token);
-    const userId = decoded.sub;
-    const name = decoded.name;
+const userId = "P" + Date.now();
 
-    // 自动注册玩家
-    await getUser(userId);
+await supabase.from("players").insert([{
+user_id:userId,
+username,
+password,
+name:username,
+balance:1000
+}]);
 
-    res.redirect(`/index.html?userId=${userId}&name=${encodeURIComponent(name)}`);
+res.json({success:true});
 
-  } catch (err) {
-    console.error(err);
-    res.send("登录失败");
-  }
 });
 
+// ===== 登录 =====
+app.post("/member-login", async (req,res)=>{
+
+const { username,password } = req.body;
+
+const { data } = await supabase
+.from("players")
+.select("*")
+.eq("username",username)
+.eq("password",password)
+.maybeSingle();
+
+if(!data){
+return res.json({success:false,msg:"账号或密码错误"});
+}
+
+res.json({
+success:true,
+userId:data.user_id,
+name:data.username
+});
+
+});
 // ===== 启动 =====
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

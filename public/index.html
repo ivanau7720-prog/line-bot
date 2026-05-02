@@ -473,25 +473,29 @@ cursor:pointer;
 
 </div>
 
-<!-- 新状态栏 -->
 <div id="infoBar" style="
 width:96%;
-height:34px;
 margin:0 auto 8px auto;
-background:rgba(0,0,0,.35);
-border:1px solid gold;
-border-radius:12px;
-display:flex;
-align-items:center;
-justify-content:space-between;
-padding:0 12px;
 box-sizing:border-box;
-font-size:14px;
-font-weight:bold;
-color:#ffd700;
 ">
 
-<div id="status">🔴 ปิดรับเดิมพัน</div>
+<!-- 第一排 -->
+<div style="
+height:32px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:0 10px;
+border:1px solid gold;
+border-radius:12px;
+background:rgba(0,0,0,.35);
+font-size:15px;
+font-weight:bold;
+color:#ffd700;
+margin-bottom:6px;
+">
+
+<div id="roundNo">🎯 รอบที่ 0</div>
 
 <div>
 💰 เลือก :
@@ -500,18 +504,23 @@ color:#ffd700;
 
 </div>
 
+<!-- 第二排 -->
+<div id="status" style="
+height:34px;
+display:flex;
+align-items:center;
+justify-content:center;
+border:1px solid gold;
+border-radius:12px;
+background:rgba(0,0,0,.35);
+font-size:22px;
+font-weight:bold;
+color:#ff3333;
+text-shadow:0 0 8px #ff0000;
+">
+🔴 ปิดรับเดิมพัน
 </div>
 
-<div class="bet-area">
-
-<div id="roundNo" style="
-color:#ffd700;
-font-size:14px;
-font-weight:bold;
-margin-top:4px;
-margin-bottom:4px;
-">
-🎯 รอบที่ 0
 </div>
 
   <div id="balance">...</div>
@@ -675,9 +684,11 @@ letter-spacing:1px;
 </div>
 <div id="liveStats" style="
 width:100%;
-text-align:center;
-margin:8px 0 4px 0;
-font-size:16px;
+display:flex;
+justify-content:space-around;
+align-items:center;
+margin:4px 0 8px 0;
+font-size:22px;
 font-weight:bold;
 letter-spacing:1px;
 ">
@@ -1002,9 +1013,11 @@ async function loadStats() {
 
 document.getElementById("liveStats").innerHTML =
 `
-<span style="color:#ff3333;">🔴${data.B}</span>
-<span style="margin:0 16px;color:#33aaff;">🔵${data.P}</span>
-<span style="color:#00ff66;">🟢${data.T}</span>
+<span style="color:#ff3333;text-shadow:0 0 8px #ff0000;">🔴 ${data.B}</span>
+
+<span style="color:#33aaff;text-shadow:0 0 8px #00aaff;">🔵 ${data.P}</span>
+
+<span style="color:#00ff66;text-shadow:0 0 8px #00ff00;">🟢 ${data.T}</span>
 `;
   
 // 自动刷新

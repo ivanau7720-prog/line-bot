@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <title>LINE Login</title>
 
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+
 <style>
 body{
 margin:0;
@@ -30,19 +32,16 @@ color:#ffd700;
 margin-bottom:30px;
 }
 
-a{
-display:block;
+button{
+width:100%;
 padding:15px;
+border:none;
 border-radius:12px;
-text-decoration:none;
 background:#06c755;
 color:white;
-font-weight:bold;
 font-size:18px;
-}
-
-a:hover{
-transform:scale(1.05);
+font-weight:bold;
+cursor:pointer;
 }
 </style>
 </head>
@@ -52,11 +51,35 @@ transform:scale(1.05);
 <div class="box">
 <h1>🎰 บาคาร่า</h1>
 
-<a href="/login">
+<button onclick="startLogin()">
 💬 เข้าสู่ระบบด้วย LINE
-</a>
-
+</button>
 </div>
+
+<script>
+
+async function startLogin(){
+
+await liff.init({
+liffId:"2009844440-ReRexgWo"
+});
+
+if(!liff.isLoggedIn()){
+liff.login();
+return;
+}
+
+const profile = await liff.getProfile();
+
+location.href =
+"/index.html?userId=" +
+profile.userId +
+"&name=" +
+encodeURIComponent(profile.displayName);
+
+}
+
+</script>
 
 </body>
 </html>

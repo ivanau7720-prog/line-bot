@@ -62,7 +62,7 @@ async function getUser(userId) {
       const newUser = {
         user_id: userId,
         balance: 1000,
-        name: "玩家"
+        name: username
       };
       await supabase.from("players").insert([newUser]);
       return newUser;

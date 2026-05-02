@@ -985,18 +985,26 @@ target.appendChild(clone);
 }
   
 // ===== 自动读取 LINE 登录 =====
+// ===== 登录保护系统 =====
 window.onload = function () {
-  const params = new URLSearchParams(window.location.search);
 
-  const userId = params.get("userId");
-  const name = params.get("name");
+const params = new URLSearchParams(window.location.search);
 
- if (userId) {
-  currentUserId = userId; 
+const userId = params.get("userId");
+const name = params.get("name");
+
+// 没登录直接踢回登录页
+if(!userId || !name){
+
+location.href = "/login.html";
+return;
+
 }
 
-};
+// 已登录
+currentUserId = userId;
 
+};
 function showResult(result) {
 
   const B = document.getElementById("areaB");

@@ -18,6 +18,8 @@ const supabase = createClient(
 // ===== 初始化玩家字段 =====
 async function initDB(){
 
+try{
+
 await supabase.rpc("exec_sql", {
 sql: `
 ALTER TABLE players
@@ -26,7 +28,11 @@ ADD COLUMN IF NOT EXISTS username TEXT UNIQUE;
 ALTER TABLE players
 ADD COLUMN IF NOT EXISTS password TEXT;
 `
-}).catch(()=>{});
+});
+
+}catch(err){
+console.log("DB init skip");
+}
 
 }
 

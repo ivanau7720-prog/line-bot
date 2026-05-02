@@ -58,14 +58,44 @@ cursor:pointer;
 
 <script>
 
+window.onload = async function(){
+
+try{
+
+await liff.init({
+liffId:"2009844440-ReRexgWo"
+});
+
+if(liff.isLoggedIn()){
+
+const profile = await liff.getProfile();
+
+location.href =
+"/index.html?userId=" +
+profile.userId +
+"&name=" +
+encodeURIComponent(profile.displayName);
+
+}
+
+}catch(e){}
+
+}
+
 async function startLogin(){
+
+try{
 
 await liff.init({
 liffId:"2009844440-ReRexgWo"
 });
 
 if(!liff.isLoggedIn()){
-liff.login();
+
+liff.login({
+redirectUri:"https://line-bot-production-dabe.up.railway.app/"
+});
+
 return;
 }
 
@@ -76,6 +106,12 @@ location.href =
 profile.userId +
 "&name=" +
 encodeURIComponent(profile.displayName);
+
+}catch(e){
+
+alert("Login Error");
+
+}
 
 }
 

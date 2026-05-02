@@ -986,14 +986,13 @@ target.appendChild(clone);
   
 // ===== 自动读取 LINE 登录 =====
 // ===== 登录保护系统 =====
-window.onload = function () {
+// ===== 登录保护系统（专业版） =====
+window.onload = function(){
 
-const params = new URLSearchParams(window.location.search);
+const userId = localStorage.getItem("userId");
+const name = localStorage.getItem("name");
 
-const userId = params.get("userId");
-const name = params.get("name");
-
-// 没登录直接踢回登录页
+// 没登录
 if(!userId || !name){
 
 location.href = "/login.html";
@@ -1075,7 +1074,13 @@ box.style.display === "none" ? "block" : "none";
 function openLine(){
 window.open("https://line.me/", "_blank");
 }
-  
+
+  function logout(){
+
+localStorage.clear();
+location.href = "/login.html";
+
+}
 </script>
 </body>
 </html>

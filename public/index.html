@@ -33,7 +33,7 @@ html, body{
 }
 
 .top{
-  height:48vh;
+  height:34vh;
   position:relative;
   overflow:hidden;
 }
@@ -402,37 +402,68 @@ align-items:center;
 <!-- 会员栏 -->
 <div id="topBar" style="
 width:96%;
-height:36px;
-margin:4px auto 8px auto;
-background:rgba(0,0,0,0.45);
+height:42px;
+margin:4px auto 6px auto;
+background:linear-gradient(90deg,#180024,#2a003d,#180024);
 border:1px solid gold;
-border-radius:12px;
+border-radius:14px;
 display:flex;
 align-items:center;
-justify-content:space-between;
-padding:0 10px;
+padding:0 8px;
+gap:8px;
+box-sizing:border-box;
+box-shadow:0 0 12px rgba(255,215,0,.35);
+">
+
+<!-- 玩家 -->
+<div id="memberName" style="
+width:28%;
 font-size:13px;
 color:#fff;
-box-sizing:border-box;
+white-space:nowrap;
+overflow:hidden;
+text-overflow:ellipsis;
+text-align:left;
 ">
+👤 --
+</div>
 
-<div id="memberName">👤 --</div>
+<!-- 余额 -->
+<div id="memberBalance" style="
+width:18%;
+font-size:13px;
+color:#ffd700;
+font-weight:bold;
+text-align:center;
+">
+💰0
+</div>
 
+<!-- 时间条 -->
 <div style="
-display:flex;
-align-items:center;
-gap:8px;
+width:42%;
+height:10px;
+background:#222;
+border-radius:20px;
+overflow:hidden;
 ">
+<div id="progressInner" style="
+height:100%;
+width:100%;
+background:linear-gradient(90deg,#00ff99,#ffd700,#ff0000);
+box-shadow:0 0 10px lime;
+transition:1s linear;
+"></div>
+</div>
 
-<div id="memberBalance">💰0</div>
-
+<!-- 登出 -->
 <button onclick="logout()" style="
-height:24px;
+width:12%;
+height:28px;
 border:none;
 border-radius:8px;
-padding:0 8px;
 background:#ff3333;
-color:white;
+color:#fff;
 font-size:12px;
 font-weight:bold;
 cursor:pointer;
@@ -441,6 +472,8 @@ cursor:pointer;
 </button>
 
 </div>
+
+
 </div>  
 <div class="bet-area">
 
@@ -475,10 +508,13 @@ margin-bottom:4px;
 <!-- 筹码 -->
 <div class="chips">
 
-  <div id="chip50" class="chip">50</div>
-<div id="chip100" class="chip">100</div>
-<div id="chip500" class="chip">500</div>
-<div id="chip1000" class="chip">1000</div>
+ <div id="chip50" class="chip" onclick="selectChip(50)">50</div>
+
+<div id="chip100" class="chip" onclick="selectChip(100)">100</div>
+
+<div id="chip500" class="chip" onclick="selectChip(500)">500</div>
+
+<div id="chip1000" class="chip" onclick="selectChip(1000)">1000</div>
 </div>
 
 <!-- 下注按钮 -->
@@ -634,24 +670,6 @@ margin-bottom:4px;
 ⏳ เวลารับเดิมพัน
 </div>
 
-<div id="progressBar" style="
-  width:94%;
-  margin:6px auto;
-  height:14px;
-  background:#333;
-  border-radius:20px;
-  overflow:hidden;
-  margin-top:5px;
-">
-  <div id="progressInner" style="
-    height:100%;
-    width:100%;
-    background:linear-gradient(90deg, #00ff99, #ffff00, #ff0000);
-box-shadow: 0 0 15px lime, 0 0 25px red;
-transition: width 1s linear, background 0.3s;
-  "></div>
-</div>
-  
 
 </div>
 

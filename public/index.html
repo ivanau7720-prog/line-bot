@@ -977,7 +977,7 @@ async function loadBalance() {
   const res = await fetch("/balance/" + userId);
   const data = await res.json();
 
-  let money = data.balance;
+  let money = data.total_topup;
 
   document.getElementById("memberBalance").innerText =
   "💰" + money;

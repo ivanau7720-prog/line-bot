@@ -475,8 +475,8 @@ align-items:center;
 
 <!-- 第一格 -->
 <div class="vip-row">
-<div id="memberName">👤 test888</div>
-<div id="vipLevel">👑 VIP8 Silver</div>
+<div id="memberName">👤 Loading...</div>
+<div id="vipLevel">👑 VIP10 Rookie 🌱</div>
 <div id="memberBalance">💰1000</div>
 </div>
 
@@ -982,39 +982,81 @@ async function loadBalance() {
   document.getElementById("memberBalance").innerText =
   "💰" + money;
 
-  let vip = "VIP1 Bronze";
+  let vip = "VIP10 Rookie 🌱";
 
-  if (money >= 3000) vip = "VIP3 Silver";
-  if (money >= 8000) vip = "VIP5 Gold";
-  if (money >= 20000) vip = "VIP8 Diamond";
-  if (money >= 50000) vip = "VIP10 Black Card";
+if (money >= 4001) vip = "VIP9 Member 🔹";
+if (money >= 8001) vip = "VIP8 Bronze 🟤";
+if (money >= 16001) vip = "VIP7 Silver 🥈";
+if (money >= 32001) vip = "VIP6 Gold 🥇";
+if (money >= 64001) vip = "VIP5 Platinum ✨";
+if (money >= 128001) vip = "VIP4 Diamond 🔷";
+if (money >= 256001) vip = "VIP3 Black Card ⚫";
+if (money >= 512001) vip = "VIP2 Royal 💎";
+if (money >= 1024001) vip = "VIP1 Supreme 👑";
 
  const vipBox = document.getElementById("vipLevel");
 
 vipBox.innerText = "👑 " + vip;
 
-vipBox.style.color = "#cd7f32";
-vipBox.style.textShadow = "none";
+vipBox.style.color = "#00ff66";
+vipBox.style.textShadow = "0 0 8px #00ff66";
 
+/* VIP9 */
+if (vip.includes("Member")) {
+  vipBox.style.color = "#33ccff";
+  vipBox.style.textShadow = "0 0 8px #33ccff";
+}
+
+/* VIP8 */
+if (vip.includes("Bronze")) {
+  vipBox.style.color = "#cd7f32";
+  vipBox.style.textShadow = "0 0 8px #cd7f32";
+}
+
+/* VIP7 */
 if (vip.includes("Silver")) {
   vipBox.style.color = "#ffffff";
-  vipBox.style.textShadow = "0 0 8px #ffffff";
+  vipBox.style.textShadow = "0 0 10px #ffffff";
 }
 
+/* VIP6 */
 if (vip.includes("Gold")) {
   vipBox.style.color = "#ffd700";
-  vipBox.style.textShadow = "0 0 10px gold";
+  vipBox.style.textShadow = "0 0 12px gold";
 }
 
+/* VIP5 */
+if (vip.includes("Platinum")) {
+  vipBox.style.color = "#e5e4e2";
+  vipBox.style.textShadow = "0 0 12px #ffffff";
+}
+
+/* VIP4 */
 if (vip.includes("Diamond")) {
   vipBox.style.color = "#33ccff";
-  vipBox.style.textShadow = "0 0 12px #00ccff";
+  vipBox.style.textShadow =
+  "0 0 10px #33ccff, 0 0 20px white";
 }
 
-if (vip.includes("Black")) {
+/* VIP3 */
+if (vip.includes("Black Card")) {
   vipBox.style.color = "#ffd700";
   vipBox.style.textShadow =
-  "0 0 8px gold, 0 0 18px #ffffff, 0 0 28px gold";
+  "0 0 8px gold,0 0 18px black,0 0 30px gold";
+}
+
+/* VIP2 */
+if (vip.includes("Royal")) {
+  vipBox.style.color = "#66ccff";
+  vipBox.style.textShadow =
+  "0 0 10px #00aaff,0 0 22px white";
+}
+
+/* VIP1 */
+if (vip.includes("Supreme")) {
+  vipBox.style.color = "#ffd700";
+  vipBox.style.textShadow =
+  "0 0 10px gold,0 0 25px black,0 0 40px gold";
 }
 }
 

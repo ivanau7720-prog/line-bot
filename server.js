@@ -330,13 +330,19 @@ app.get("/balance/:userId", async (req, res) => {
       .eq("user_id", userId)
       .single();
 
-    res.json({ balance: data?.balance || 0 });
+   res.json({
+  balance: data?.balance || 0,
+  total_topup: data?.total_topup || 0
+});
 
   } catch (err) {
     console.error(err);
-    res.json({ balance: 0 });
-  }
+res.json({
+  balance: 0,
+  total_topup: 0
 });
+}
+});    
 
 // ===== 管理员：玩家列表 =====
 app.get("/admin/players", async (req, res) => {
@@ -355,7 +361,7 @@ app.get("/admin/players", async (req, res) => {
 
     res.json(list);
 
-  } catch (err) {
+} catch (err) {
     console.error(err);
     res.json([]);
   }
@@ -453,7 +459,26 @@ app.post("/admin/add", async (req, res) => {
   try {
     const { userId, amount } = req.body;
 
-    await changeBalance(userId, amount);
+    const addMoney = Number(amount);
+
+/* 先查玩家资料 */
+const { data } = await supabase
+  .from("players")
+  .select("*")
+  .eq("user_id", userId)
+  .single();
+
+let newBalance = Number(data.balance || 0) + addMoney;
+let newTopup = Number(data.total_topup || 0) + addMoney;
+
+/* 更新余额 + 累计充值 */
+await supabase
+  .from("players")
+  .update({
+    balance: newBalance,
+    total_topup: newTopup
+  })
+  .eq("user_id", userId);
 
 await supabase.from("transactions").insert([
 {

@@ -293,7 +293,78 @@ font-size:13px !important;
 }
 
 }
-  
+#vipTopWrap{
+width:96%;
+margin:auto;
+display:flex;
+flex-direction:column;
+gap:6px;
+}
+
+.vip-row{
+height:38px;
+background:linear-gradient(90deg,#12001f,#2b003f,#12001f);
+border:1px solid gold;
+border-radius:12px;
+display:flex;
+align-items:center;
+justify-content:space-between;
+padding:0 10px;
+font-size:14px;
+font-weight:bold;
+color:#fff;
+box-shadow:0 0 10px rgba(255,215,0,.25);
+}
+
+#vipLevel{
+color:gold;
+display:flex;
+align-items:center;
+gap:4px;
+animation:vipGlow 1.2s infinite alternate;
+}
+#memberBalance{
+color:#00ff88;
+}
+
+.progress-box{
+width:34%;
+height:10px;
+background:#222;
+border-radius:20px;
+overflow:hidden;
+}
+
+#progressInner{
+height:100%;
+width:100%;
+background:linear-gradient(90deg,#00ff99,#ffd700,#ff0000);
+transition:1s linear;
+}
+
+#status{
+height:38px;
+background:#1a0000;
+border:1px solid #ff4444;
+border-radius:12px;
+display:flex;
+justify-content:center;
+align-items:center;
+font-size:18px;
+font-weight:bold;
+color:#ff4444;
+text-shadow:0 0 8px red;
+}  
+@keyframes vipGlow{
+0%{
+transform:rotate(-3deg) scale(1);
+filter:brightness(1);
+}
+100%{
+transform:rotate(3deg) scale(1.06);
+filter:brightness(1.35);
+}
+}  
 </style>
   
 </head>
@@ -399,133 +470,37 @@ display:flex;
 flex-direction:column;
 align-items:center;
 ">
-<!-- 会员栏 -->
-<div id="topBar" style="
-width:96%;
-height:42px;
-margin:4px auto 6px auto;
-background:linear-gradient(90deg,#180024,#2a003d,#180024);
-border:1px solid gold;
-border-radius:14px;
-display:flex;
-align-items:center;
-padding:0 8px;
-gap:8px;
-box-sizing:border-box;
-box-shadow:0 0 12px rgba(255,215,0,.35);
-">
+<!-- 新顶部栏 -->
+<div id="vipTopWrap">
 
-<!-- 玩家 -->
-<div id="memberName" style="
-width:28%;
-font-size:13px;
-color:#fff;
-white-space:nowrap;
-overflow:hidden;
-text-overflow:ellipsis;
-text-align:left;
-">
-👤 --
+<!-- 第一格 -->
+<div class="vip-row">
+<div id="memberName">👤 test888</div>
+<div id="vipLevel">👑 VIP8 Silver</div>
+<div id="memberBalance">💰1000</div>
 </div>
 
-<!-- 余额 -->
-<div id="memberBalance" style="
-width:18%;
-font-size:13px;
-color:#ffd700;
-font-weight:bold;
-text-align:center;
-">
-💰0
-</div>
-
-<!-- 时间条 -->
-<div style="
-width:42%;
-height:10px;
-background:#222;
-border-radius:20px;
-overflow:hidden;
-">
-<div id="progressInner" style="
-height:100%;
-width:100%;
-background:linear-gradient(90deg,#00ff99,#ffd700,#ff0000);
-box-shadow:0 0 10px lime;
-transition:1s linear;
-"></div>
-</div>
-
-<!-- 登出 -->
-<button onclick="logout()" style="
-width:12%;
-height:28px;
-border:none;
-border-radius:8px;
-background:#ff3333;
-color:#fff;
-font-size:12px;
-font-weight:bold;
-cursor:pointer;
-">
-🚪
-</button>
-
-</div>
-
-<div id="infoBar" style="
-width:96%;
-margin:0 auto 8px auto;
-box-sizing:border-box;
-">
-
-<!-- 第一排 -->
-<div style="
-height:32px;
-display:flex;
-justify-content:space-between;
-align-items:center;
-padding:0 10px;
-border:1px solid gold;
-border-radius:12px;
-background:rgba(0,0,0,.35);
-font-size:15px;
-font-weight:bold;
-color:#ffd700;
-margin-bottom:6px;
-">
-
+<!-- 第二格 -->
+<div class="vip-row">
 <div id="roundNo">🎯 รอบที่ 0</div>
 
+<div class="progress-box">
+<div id="progressInner"></div>
+</div>
+
 <div>
-💰 เลือก :
-<span id="selected">0</span>
+💰 เลือก : <span id="selected">0</span>
+</div>
 </div>
 
-</div>
-
-<!-- 第二排 -->
-<div id="status" style="
-height:34px;
-display:flex;
-align-items:center;
-justify-content:center;
-border:1px solid gold;
-border-radius:12px;
-background:rgba(0,0,0,.35);
-font-size:22px;
-font-weight:bold;
-color:#ff3333;
-text-shadow:0 0 8px #ff0000;
-">
+<!-- 第三格 -->
+<div id="status">
 🔴 ปิดรับเดิมพัน
 </div>
 
 </div>
-
-  <div id="balance">...</div>
-
 </div>
+
 
 
 <!-- 筹码 -->
@@ -1002,8 +977,45 @@ async function loadBalance() {
   const res = await fetch("/balance/" + userId);
   const data = await res.json();
 
+  let money = data.balance;
+
   document.getElementById("memberBalance").innerText =
-"💰" + data.balance;
+  "💰" + money;
+
+  let vip = "VIP1 Bronze";
+
+  if (money >= 3000) vip = "VIP3 Silver";
+  if (money >= 8000) vip = "VIP5 Gold";
+  if (money >= 20000) vip = "VIP8 Diamond";
+  if (money >= 50000) vip = "VIP10 Black Card";
+
+ const vipBox = document.getElementById("vipLevel");
+
+vipBox.innerText = "👑 " + vip;
+
+vipBox.style.color = "#cd7f32";
+vipBox.style.textShadow = "none";
+
+if (vip.includes("Silver")) {
+  vipBox.style.color = "#ffffff";
+  vipBox.style.textShadow = "0 0 8px #ffffff";
+}
+
+if (vip.includes("Gold")) {
+  vipBox.style.color = "#ffd700";
+  vipBox.style.textShadow = "0 0 10px gold";
+}
+
+if (vip.includes("Diamond")) {
+  vipBox.style.color = "#33ccff";
+  vipBox.style.textShadow = "0 0 12px #00ccff";
+}
+
+if (vip.includes("Black")) {
+  vipBox.style.color = "#ffd700";
+  vipBox.style.textShadow =
+  "0 0 8px gold, 0 0 18px #ffffff, 0 0 28px gold";
+}
 }
 
 // ===== 统计 =====
@@ -1017,16 +1029,15 @@ document.getElementById("liveStats").innerHTML =
 
 <span style="color:#33aaff;text-shadow:0 0 8px #00aaff;">🔵 ${data.P}</span>
 
-<span style="color:#00ff66;text-shadow:0 0 8px #00ff00;">🟢 ${data.T}</span>
+<span style="color:#00ff66;">🟢 ${data.T}</span>
 `;
-  
-// 自动刷新
+}
 setInterval(() => {
   loadState();
   loadHistory();
-  loadBalance(); // 新
-  loadStats();   // 新
-}, 1000);
+  loadBalance();
+  loadStats();
+},1000);
 
 
 let currentUserId = "";

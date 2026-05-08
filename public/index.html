@@ -425,18 +425,26 @@ box-shadow:0 0 40px gold inset;
 background:radial-gradient(circle,#0b3d2e,#000);
 ">
 
-<iframe 
-src="https://www.youtube.com/embed/h9fSJYh11QA"
+<video
+id="liveVideo"
+controls
+autoplay
+muted
+playsinline
 style="
 position:absolute;
 top:0;
 left:0;
 width:100%;
 height:100%;
-border:none;
 object-fit:cover;
-">
-</iframe>
+background:black;
+"
+>
+<source
+src="http://84.247.145.74:8080/hls/stream.m3u8"
+type="application/x-mpegURL">
+</video>
 
 <!-- 路单弹窗 -->
 <div id="roadBox" style="

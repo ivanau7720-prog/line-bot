@@ -427,11 +427,14 @@ background:radial-gradient(circle,#0b3d2e,#000);
 
 <video
 id="liveVideo"
-controls
 autoplay
 muted
 playsinline
 webkit-playsinline
+x5-playsinline
+x-webkit-airplay="allow"
+preload="auto"
+controlsList="nodownload noplaybackrate"
 style="
 position:absolute;
 top:0;
@@ -456,16 +459,30 @@ if (video.canPlayType('application/vnd.apple.mpegurl')) {
 } else if (Hls.isSupported()) {
 
   const hls = new Hls({
-    lowLatencyMode: true,
-    liveSyncDurationCount: 3
-  });
+  lowLatencyMode: true,
+  liveSyncDurationCount: 1,
+  maxLiveSyncPlaybackRate: 1.5,
+  maxBufferLength: 5,
+  backBufferLength: 0
+});
 
   hls.loadSource(videoSrc);
   hls.attachMedia(video);
 
-  hls.on(Hls.Events.MANIFEST_PARSED, function () {
-    video.play();
+ hls.on(Hls.Events.MANIFEST_PARSED, function () {
+
+  video.play().catch(() => {
+
+    console.log("Autoplay blocked");
+
+    // 用户第一次点击页面后强制播放
+    document.body.addEventListener("click", () => {
+      video.play();
+    }, { once:true });
+
   });
+
+});
 
 } else {
 

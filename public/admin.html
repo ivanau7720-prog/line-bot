@@ -97,6 +97,18 @@ h2,h3{
 <button onclick="add()">➕ 加钱</button>
 <button onclick="minus()">➖ 扣钱</button>
 </div>
+
+<div class="card">
+  <h3>🤝 代理管理</h3>
+
+  <input id="agentCode" placeholder="代理编号，例如 AG001">
+  <input id="agentName" placeholder="代理名字">
+
+  <button onclick="createAgent()">➕ 新增代理</button>
+
+  <h3>📊 代理流水</h3>
+  <div id="agents">暂无代理资料</div>
+</div>
   
 <!-- 👇👇👇 这里是你新加的 -->
 <div class="card">
@@ -116,6 +128,45 @@ h2,h3{
 
 <script>
 
+async function createAgent(){
+  const agentCode = document.getElementById("agentCode").value;
+  const agentName = document.getElementById("agentName").value;
+
+  await fetch("/admin/create-agent",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({agentCode, agentName})
+  });
+
+  alert("代理已新增");
+  loadAgents();
+}
+
+async function loadAgents(){
+  const res = await fetch("/admin/agents");
+  const data = await res.json();
+
+  let html = "";
+
+  if(data.length === 0){
+    html = "暂无代理资料";
+  }
+
+  data.forEach(a=>{
+    html += `
+      <div style="padding:8px;border-bottom:1px solid rgba(255,255,255,0.15)">
+        🤝 ${a.agent_code} ｜ ${a.agent_name}
+        <br>
+        👥 玩家数：${a.player_count}
+        <br>
+        💧 总流水：${a.total_turnover}
+      </div>
+    `;
+  });
+
+  document.getElementById("agents").innerHTML = html;
+}
+  
 async function loadPlayers(){
   const res = await fetch("/admin/players");
   const data = await res.json();
@@ -356,8 +407,10 @@ setInterval(()=>{
   loadTx();
   loadProfit();
   loadBets();
+  loadAgents();
 },2000);
   loadBets();
+loadAgents();
   
 </script>
 

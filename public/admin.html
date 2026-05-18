@@ -174,11 +174,16 @@ async function loadPlayers(){
   let html = "";
 
   data.forEach(p=>{
-    html += `
-      <div style="margin:5px 0">
-        🆔 ${p.id} | 💰${p.balance} | 赢:${p.win} | 输:${p.lose}
-      </div>
-    `;
+   html += `
+  <div style="margin:5px 0">
+    🆔 ${p.id}
+    | 👤 ${p.username}
+    | 🤝代理:${p.agent_code}
+    | 💰${p.balance}
+    | 赢:${p.win}
+    | 输:${p.lose}
+  </div>
+`;
   });
 
   document.getElementById("players").innerHTML = html;

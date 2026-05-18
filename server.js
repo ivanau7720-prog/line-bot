@@ -59,11 +59,11 @@ async function getUser(userId) {
       .single();
 
     if (!data) {
-      const newUser = {
-        user_id: userId,
-        balance: 1000,
-        name: username
-      };
+     const newUser = {
+  user_id: userId,
+  balance: 0,
+  name: userId
+};
       await supabase.from("players").insert([newUser]);
       return newUser;
     }

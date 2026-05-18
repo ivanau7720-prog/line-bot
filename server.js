@@ -27,6 +27,9 @@ ADD COLUMN IF NOT EXISTS username TEXT UNIQUE;
 
 ALTER TABLE players
 ADD COLUMN IF NOT EXISTS password TEXT;
+
+ALTER TABLE players
+ADD COLUMN IF NOT EXISTS agent_code TEXT;
 `
 });
 
@@ -182,7 +185,15 @@ app.post("/bet", async (req, res) => {
     }
 
     await changeBalance(userId, -betAmount);
-
+await supabase.from("turnover_records").insert([
+  {
+    user_id: userId,
+    agent_code: user.agent_code || null,
+    amount: betAmount,
+    bet_side: side,
+    type: "bet"
+  }
+]);
     if (GAME.bets[userId]) {
 
       GAME.bets[userId].amount += betAmount;
@@ -343,6 +354,72 @@ res.json({
 });
 }
 });    
+
+// ===== 管理员：新增代理 =====
+app.post("/admin/create-agent", async (req, res) => {
+  try {
+    const { agentCode, agentName } = req.body;
+
+    if (!agentCode || !agentName) {
+      return res.json({ success:false, msg:"资料不完整" });
+    }
+
+    await supabase.from("agents").insert([
+      {
+        agent_code: agentCode,
+        agent_name: agentName
+      }
+    ]);
+
+    res.json({ success:true });
+
+  } catch (err) {
+    console.error(err);
+    res.json({ success:false });
+  }
+});
+
+// ===== 管理员：代理列表 + 流水 =====
+app.get("/admin/agents", async (req, res) => {
+  try {
+    const { data: agents } = await supabase
+      .from("agents")
+      .select("*");
+
+    let list = [];
+
+    for (const a of agents || []) {
+      const { data: players } = await supabase
+        .from("players")
+        .select("*")
+        .eq("agent_code", a.agent_code);
+
+      const { data: turnover } = await supabase
+        .from("turnover_records")
+        .select("*")
+        .eq("agent_code", a.agent_code);
+
+      let totalTurnover = 0;
+
+      (turnover || []).forEach(t => {
+        totalTurnover += Number(t.amount || 0);
+      });
+
+      list.push({
+        agent_code: a.agent_code,
+        agent_name: a.agent_name,
+        player_count: players ? players.length : 0,
+        total_turnover: totalTurnover
+      });
+    }
+
+    res.json(list);
+
+  } catch (err) {
+    console.error(err);
+    res.json([]);
+  }
+});
 
 // ===== 管理员：玩家列表 =====
 app.get("/admin/players", async (req, res) => {
@@ -522,7 +599,7 @@ res.json({ success: true });
 // ===== 注册 =====
 app.post("/register", async (req,res)=>{
 
-const { username, password } = req.body;
+const { username, password, agentCode } = req.body;
 
 if(!/^[a-zA-Z0-9]{4,12}$/.test(username)){
 return res.json({success:false,msg:"ID限英文数字4-12"});
@@ -545,11 +622,12 @@ return res.json({success:false,msg:"ID已存在"});
 const userId = "P" + Date.now();
 
 await supabase.from("players").insert([{
-user_id:userId,
-username,
-password,
-name:username,
-balance:1000
+  user_id:userId,
+  username,
+  password,
+  name:username,
+  balance:1000,
+  agent_code: agentCode || null
 }]);
 
 res.json({success:true});

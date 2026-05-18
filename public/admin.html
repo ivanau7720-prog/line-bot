@@ -253,9 +253,35 @@ html += `<div>🎯 第${r.id}局 ｜ ${result}</div>`;
 
   let html = "";
 
-  data.forEach(t=>{
-    html += `<div>${t.user_id} | ${t.bet_side} | ${t.amount} | ${t.type}</div>`;
-  });
+data.forEach(t=>{
+  let side = t.bet_side;
+
+  if(side === "B") side = "庄";
+  if(side === "P") side = "闲";
+  if(side === "T") side = "和";
+
+  html += `
+    <div style="padding:8px;border-bottom:1px solid rgba(255,255,255,0.15)">
+      👤 ${t.username}
+      <br>
+      🆔 ${t.user_id}
+      <br>
+      🤝 代理：${t.agent_code}
+      <br>
+      🎯 下注：${side}
+      <br>
+      💰 金额：${t.amount}
+      <br>
+      📈 类型：${t.type}
+      <br>
+      🏁 结果：${t.result}
+      <br>
+      💵 赢取：${t.win_amount}
+      <br>
+      🕒 ${t.created_at}
+    </div>
+  `;
+});
 
   document.getElementById("tx").innerHTML = html;
 }

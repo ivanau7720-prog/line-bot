@@ -456,20 +456,34 @@ app.get("/admin/rounds", async (req, res) => {
   res.json(data || []);
 });
 
-// ===== 管理员：玩家流水记录 =====
+// ===== 管理员：玩家流水记录 + 筛选 =====
 app.get("/admin/transactions", async (req, res) => {
   try {
-    const { data: tx } = await supabase
+    const { userId, agentCode, date } = req.query;
+
+    let query = supabase
       .from("transactions")
       .select("*")
       .order("id", { ascending: false })
-      .limit(50);
+      .limit(100);
+
+    if (userId) {
+      query = query.eq("user_id", userId);
+    }
+
+    if (date) {
+      const start = date + "T00:00:00";
+      const end = date + "T23:59:59";
+      query = query.gte("created_at", start).lte("created_at", end);
+    }
+
+    const { data: tx } = await query;
 
     const { data: players } = await supabase
       .from("players")
       .select("*");
 
-    const list = (tx || []).map(t => {
+    let list = (tx || []).map(t => {
       const player = (players || []).find(p => p.user_id === t.user_id);
 
       return {
@@ -485,6 +499,10 @@ app.get("/admin/transactions", async (req, res) => {
       };
     });
 
+    if (agentCode) {
+      list = list.filter(t => t.agent_code === agentCode);
+    }
+
     res.json(list);
 
   } catch (err) {
@@ -492,6 +510,7 @@ app.get("/admin/transactions", async (req, res) => {
     res.json([]);
   }
 });
+
 
 // ===== 盈利统计 =====
 app.get("/admin/bets", async (req,res)=>{

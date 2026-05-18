@@ -122,7 +122,17 @@ h2,h3{
   </div>
 
 <div class="card">
-  <h3>💰 交易记录</h3>
+  <h3>📜 玩家流水记录</h3>
+
+  <input id="filterUserId" placeholder="玩家ID">
+  <input id="filterAgentCode" placeholder="代理编号，例如 AG001">
+  <input id="filterDate" type="date">
+
+  <button onclick="loadTx()">🔍 搜索</button>
+  <button onclick="clearTxFilter()">❌ 清除</button>
+
+  <br><br>
+
   <div id="tx"></div>
 </div>
 
@@ -247,43 +257,63 @@ html += `<div>🎯 第${r.id}局 ｜ ${result}</div>`;
   document.getElementById("rounds").innerHTML = html;
 }
 
-  async function loadTx(){
-  const res = await fetch("/admin/transactions");
+async function loadTx(){
+  const userId = document.getElementById("filterUserId").value.trim();
+  const agentCode = document.getElementById("filterAgentCode").value.trim();
+  const date = document.getElementById("filterDate").value;
+
+  let url = "/admin/transactions?";
+  if(userId) url += "userId=" + encodeURIComponent(userId) + "&";
+  if(agentCode) url += "agentCode=" + encodeURIComponent(agentCode) + "&";
+  if(date) url += "date=" + encodeURIComponent(date) + "&";
+
+  const res = await fetch(url);
   const data = await res.json();
 
   let html = "";
 
-data.forEach(t=>{
-  let side = t.bet_side;
+  if(data.length === 0){
+    html = "没有找到流水记录";
+  }
 
-  if(side === "B") side = "庄";
-  if(side === "P") side = "闲";
-  if(side === "T") side = "和";
+  data.forEach(t=>{
+    let side = t.bet_side;
 
-  html += `
-    <div style="padding:8px;border-bottom:1px solid rgba(255,255,255,0.15)">
-      👤 ${t.username}
-      <br>
-      🆔 ${t.user_id}
-      <br>
-      🤝 代理：${t.agent_code}
-      <br>
-      🎯 下注：${side}
-      <br>
-      💰 金额：${t.amount}
-      <br>
-      📈 类型：${t.type}
-      <br>
-      🏁 结果：${t.result}
-      <br>
-      💵 赢取：${t.win_amount}
-      <br>
-      🕒 ${t.created_at}
-    </div>
-  `;
-});
+    if(side === "B") side = "庄";
+    if(side === "P") side = "闲";
+    if(side === "T") side = "和";
+
+    html += `
+      <div style="padding:8px;border-bottom:1px solid rgba(255,255,255,0.15)">
+        👤 ${t.username}
+        <br>
+        🆔 ${t.user_id}
+        <br>
+        🤝 代理：${t.agent_code}
+        <br>
+        🎯 下注：${side}
+        <br>
+        💰 金额：${t.amount}
+        <br>
+        📈 类型：${t.type}
+        <br>
+        🏁 结果：${t.result}
+        <br>
+        💵 赢取：${t.win_amount}
+        <br>
+        🕒 ${t.created_at}
+      </div>
+    `;
+  });
 
   document.getElementById("tx").innerHTML = html;
+}
+
+function clearTxFilter(){
+  document.getElementById("filterUserId").value = "";
+  document.getElementById("filterAgentCode").value = "";
+  document.getElementById("filterDate").value = "";
+  loadTx();
 }
   
 async function loadProfit(){

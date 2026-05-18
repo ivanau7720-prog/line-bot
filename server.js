@@ -456,15 +456,41 @@ app.get("/admin/rounds", async (req, res) => {
   res.json(data || []);
 });
 
-// ===== 管理员：交易记录 =====
+// ===== 管理员：玩家流水记录 =====
 app.get("/admin/transactions", async (req, res) => {
-  const { data } = await supabase
-    .from("transactions")
-    .select("*")
-    .order("id", { ascending: false })
-    .limit(50);
+  try {
+    const { data: tx } = await supabase
+      .from("transactions")
+      .select("*")
+      .order("id", { ascending: false })
+      .limit(50);
 
-  res.json(data || []);
+    const { data: players } = await supabase
+      .from("players")
+      .select("*");
+
+    const list = (tx || []).map(t => {
+      const player = (players || []).find(p => p.user_id === t.user_id);
+
+      return {
+        user_id: t.user_id,
+        username: player?.username || player?.name || "-",
+        agent_code: player?.agent_code || "-",
+        bet_side: t.bet_side || "-",
+        amount: t.amount || 0,
+        type: t.type || "-",
+        result: t.result || "-",
+        win_amount: t.win_amount || 0,
+        created_at: t.created_at || ""
+      };
+    });
+
+    res.json(list);
+
+  } catch (err) {
+    console.error(err);
+    res.json([]);
+  }
 });
 
 // ===== 盈利统计 =====

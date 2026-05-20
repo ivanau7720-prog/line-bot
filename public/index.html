@@ -440,26 +440,26 @@ box-shadow:0 0 30px gold;
 color:white;
 ">
 
-<h2 style="color:gold;">💼 资金中心</h2>
+<h2 style="color:gold;">💼 ฝาก-ถอนเงิน</h2>
 
 <button onclick="requestRecharge()" class="tool-btn line-btn" style="width:100%;margin:8px 0;">
-💳 申请充值
+💳 แจ้งฝากเงิน
 </button>
 
 <button onclick="requestWithdraw()" class="tool-btn road-btn" style="width:100%;margin:8px 0;">
-🏧 申请提款
+🏧 แจ้งถอนเงิน
 </button>
 
 <hr style="border:1px solid #333;margin:15px 0;">
 
-<h3 style="color:gold;font-size:16px;">我的充值记录</h3>
+<h3 style="color:gold;font-size:16px;">ประวัติการฝากเงิน</h3>
 <div id="myRechargeList" style="font-size:12px;text-align:left;max-height:130px;overflow:auto;">
-暂无充值记录
+ยังไม่มีประวัติการฝาก
 </div>
 
-<h3 style="color:gold;font-size:16px;">我的提款记录</h3>
+<h3 style="color:gold;font-size:16px;">ประวัติการถอนเงิน</h3>
 <div id="myWithdrawList" style="font-size:12px;text-align:left;max-height:130px;overflow:auto;">
-暂无提款记录
+ยังไม่มีประวัติการถอน
 </div>
 
 <button onclick="closeWalletCenter()" class="tool-btn" style="
@@ -467,7 +467,7 @@ width:100%;
 margin-top:12px;
 background:#333;
 ">
-关闭
+ปิด
 </button>
 
 </div>
@@ -756,7 +756,7 @@ letter-spacing:1px;
 <div class="bottom-tools">
 
 <button onclick="openWalletCenter()" class="tool-btn line-btn">
-💼 资金中心
+💼 ฝาก-ถอน
 </button>
 
 </div>
@@ -1428,16 +1428,10 @@ function closeWalletCenter(){
   document.getElementById("walletModal").style.display = "none";
 }  
 async function requestRecharge(){
- const amount = prompt("请输入充值金额");
-if(!amount) return;
-
-const paymentMethod = prompt("请输入转账银行 / 钱包");
-if(!paymentMethod) return;
-
-const payerName = prompt("请输入付款人名字");
-if(!payerName) return;
-
-const note = prompt("备注（可留空）") || "";
+ const amount = prompt("กรุณากรอกจำนวนเงินฝาก");
+const paymentMethod = prompt("กรุณากรอกธนาคาร / วอเลทที่โอน");
+const payerName = prompt("กรุณากรอกชื่อผู้โอน");
+const note = prompt("หมายเหตุ（ถ้ามี）") || "";
 
 await fetch("/request-recharge",{
   method:"POST",
@@ -1453,21 +1447,16 @@ await fetch("/request-recharge",{
 });
 
 alert(
-`充值申请已提交
+`ส่งคำขอฝากเงินเรียบร้อยแล้ว
 
-请把充值截图发送给客服 LINE 审核`
+กรุณาส่งสลิปโอนเงินให้แอดมิน LINE เพื่อตรวจสอบ`
 );
 }
 
 async function requestWithdraw(){
-  const amount = prompt("请输入提款金额");
-  if(!amount) return;
-
-  const bankName = prompt("请输入银行名称");
-  if(!bankName) return;
-
-  const bankAccount = prompt("请输入银行账号");
-  if(!bankAccount) return;
+  const amount = prompt("กรุณากรอกจำนวนเงินถอน");
+const bankName = prompt("กรุณากรอกชื่อธนาคาร");
+const bankAccount = prompt("กรุณากรอกเลขบัญชี");
 
   await fetch("/request-withdraw",{
     method:"POST",
@@ -1478,17 +1467,17 @@ async function requestWithdraw(){
       amount: Number(amount),
       bankName,
       bankAccount,
-      note: "玩家提交提款申请"
+      note: "ลูกค้าส่งคำขอถอนเงิน"
     })
   });
 
-  alert("提款申请已提交，请等待客服审核");
+ alert("ส่งคำขอถอนเงินเรียบร้อยแล้ว กรุณารอแอดมินตรวจสอบ");
 }
 
   function showStatus(status){
-  if(status === "pending") return "⏳ 审核中";
-  if(status === "approved") return "✅ 已批准";
-  if(status === "rejected") return "❌ 已拒绝";
+ if(status === "pending") return "⏳ รอตรวจสอบ";
+if(status === "approved") return "✅ อนุมัติแล้ว";
+if(status === "rejected") return "❌ ปฏิเสธแล้ว";
   return status || "-";
 }
 
@@ -1506,17 +1495,17 @@ async function loadMyRechargeRecords(){
   const box = document.getElementById("myRechargeList");
 
   if(!list || list.length === 0){
-    box.innerHTML = "暂无充值记录";
+    box.innerHTML = "ยังไม่มีประวัติการฝาก";
     return;
   }
 
   box.innerHTML = list.map(r => `
     <div style="border:1px solid #555;padding:8px;margin:6px 0;border-radius:8px;background:#111;">
-      金额：RM ${r.amount}<br>
-      方式：${r.payment_method || "-"}<br>
-      付款人：${r.payer_name || "-"}<br>
-      状态：${showStatus(r.status)}<br>
-      时间：${formatTime(r.created_at)}
+      ยอดฝาก：$ ${r.amount}<br>
+ช่องทาง：${r.payment_method || "-"}<br>
+ชื่อผู้โอน：${r.payer_name || "-"}<br>
+สถานะ：${showStatus(r.status)}<br>
+เวลา：${formatTime(r.created_at)}
     </div>
   `).join("");
 }
@@ -1530,17 +1519,17 @@ async function loadMyWithdrawRecords(){
   const box = document.getElementById("myWithdrawList");
 
   if(!list || list.length === 0){
-    box.innerHTML = "暂无提款记录";
+    box.innerHTML = "ยังไม่มีประวัติการถอน";
     return;
   }
 
   box.innerHTML = list.map(r => `
     <div style="border:1px solid #555;padding:8px;margin:6px 0;border-radius:8px;background:#111;">
-      金额：RM ${r.amount}<br>
-      银行：${r.bank_name || "-"}<br>
-      账号：${r.bank_account || "-"}<br>
-      状态：${showStatus(r.status)}<br>
-      时间：${formatTime(r.created_at)}
+      ยอดถอน：$ ${r.amount}<br>
+ธนาคาร：${r.bank_name || "-"}<br>
+เลขบัญชี：${r.bank_account || "-"}<br>
+สถานะ：${showStatus(r.status)}<br>
+เวลา：${formatTime(r.created_at)}
     </div>
   `).join("");
 }

@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<meta charset="UTF-8">
+<title>SIAMBET88 ADMIN</title>
+
+<style>
+
+body{
+margin:0;
+height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+
+background:
+linear-gradient(rgba(0,0,0,.75),rgba(0,0,0,.75)),
+url('https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=1600');
+
+background-size:cover;
+background-position:center;
+font-family:sans-serif;
+overflow:hidden;
+}
+
+.box{
+width:340px;
+padding:35px;
+
+background:rgba(0,0,0,0.55);
+
+backdrop-filter:blur(10px);
+
+border:1px solid rgba(255,215,0,.4);
+
+border-radius:20px;
+
+box-shadow:
+0 0 30px rgba(255,215,0,.25);
+
+text-align:center;
+
+animation:fade 1s ease;
+}
+
+@keyframes fade{
+from{
+opacity:0;
+transform:translateY(20px);
+}
+to{
+opacity:1;
+transform:translateY(0);
+}
+}
+
+.logo{
+width:120px;
+margin-bottom:10px;
+
+filter:
+drop-shadow(0 0 15px gold)
+drop-shadow(0 0 25px gold);
+}
+
+.title{
+color:gold;
+font-size:28px;
+font-weight:bold;
+letter-spacing:2px;
+
+text-shadow:
+0 0 10px gold,
+0 0 20px gold;
+
+margin-bottom:5px;
+}
+
+.subtitle{
+color:#ddd;
+font-size:13px;
+margin-bottom:25px;
+}
+
+input{
+width:100%;
+padding:14px;
+margin-bottom:15px;
+
+border:none;
+outline:none;
+
+border-radius:12px;
+
+background:rgba(255,255,255,.08);
+
+color:white;
+font-size:15px;
+
+box-sizing:border-box;
+}
+
+input::placeholder{
+color:#aaa;
+}
+
+button{
+width:100%;
+padding:14px;
+
+border:none;
+border-radius:12px;
+
+background:
+linear-gradient(45deg,#ffd700,#ff9900);
+
+color:black;
+font-size:16px;
+font-weight:bold;
+
+cursor:pointer;
+
+transition:.3s;
+}
+
+button:hover{
+transform:scale(1.03);
+
+box-shadow:
+0 0 20px gold;
+}
+
+#msg{
+margin-top:15px;
+color:#ff6666;
+font-size:14px;
+}
+
+.footer{
+margin-top:20px;
+font-size:12px;
+color:#999;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="box">
+
+<img src="https://cdn-icons-png.flaticon.com/512/2583/2583344.png" class="logo">
+
+<div class="title">
+SIAMBET88
+</div>
+
+<div class="subtitle">
+ADMIN CONTROL PANEL
+</div>
+
+<input
+id="pass"
+type="password"
+placeholder="请输入后台密码">
+
+<button onclick="login()">
+🔐 登录后台
+</button>
+
+<div id="msg"></div>
+
+<div class="footer">
+© SIAMBET88 ADMIN SYSTEM
+</div>
+
+</div>
+
+<script>
+
+async function login(){
+
+const password =
+document.getElementById("pass").value;
+
+const res = await fetch("/admin-login",{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({password})
+});
+
+const data = await res.json();
+
+if(data.success){
+
+localStorage.setItem(
+"adminToken",
+data.token
+);
+
+location.href =
+"/admin-panel.html";
+
+}else{
+
+document.getElementById("msg").innerText =
+"密码错误";
+
+}
+
+}
+
+</script>
+
+</body>
+</html>

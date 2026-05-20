@@ -771,6 +771,24 @@ letter-spacing:1px;
 </button>
 
 </div>
+  <div id="fakeActivityBox" style="
+width:94%;
+margin:6px auto;
+height:32px;
+overflow:hidden;
+background:linear-gradient(90deg,#12001f,#003b1f,#12001f);
+border:1px solid gold;
+border-radius:16px;
+box-shadow:0 0 12px rgba(255,215,0,.35);
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:12px;
+color:#ffd700;
+font-weight:bold;
+">
+🔥 ระบบกำลังอัปเดต...
+</div>
 <div id="liveStats" style="
 width:100%;
 display:flex;
@@ -1199,6 +1217,70 @@ setInterval(() => {
 let currentUserId = "";
 let selectedAmount = 0;
 
+ const activityNames = [
+  "SOMCHAI","NONG88","JACK88","VIP7","MALI","TONY99",
+  "AEK456","PLOY88","BANK007","NEW MEMBER"
+];
+
+function randomMoney(min,max){
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+const activityTypes = [
+
+  () => `เข้าเดิมพัน BANKER ฿${randomMoney(100,5000)}`,
+
+  () => `เข้าเดิมพัน PLAYER ฿${randomMoney(100,5000)}`,
+
+  () => `ชนะรางวัล +฿${randomMoney(500,15000)}`,
+
+  () => `ได้รับโบนัส VIP ฿${randomMoney(50,3000)}`,
+
+  () => `สมัครสมาชิกสำเร็จ`,
+
+  () => `กำลังเล่น บาคาร่า`,
+
+  () => `เข้าเดิมพัน TIE ฿${randomMoney(50,1000)}`,
+
+  () => `ได้รับเครดิตฟรี ฿${randomMoney(20,500)}`,
+
+  () => `อัปเกรดระดับ VIP`,
+
+  () => `กำลังติดต่อแอดมิน`
+
+];
+
+function showFakeActivity(){
+
+  const name =
+  activityNames[Math.floor(Math.random() * activityNames.length)];
+
+  const msg =
+activityTypes[Math.floor(Math.random() * activityTypes.length)]();
+
+  const box = document.getElementById("fakeActivityBox");
+
+  if(!box) return;
+
+  box.innerHTML = `🔥 👤 ${name} ${msg}`;
+
+  box.animate([
+    {
+      opacity:0,
+      transform:"translateY(10px)"
+    },
+    {
+      opacity:1,
+      transform:"translateY(0)"
+    }
+  ],{
+    duration:400,
+    easing:"ease-out"
+  });
+
+}
+
+setInterval(showFakeActivity, 2500); 
 // 选择筹码
 function selectChip(amount) {
   selectedAmount = amount;

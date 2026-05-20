@@ -63,7 +63,33 @@ h2,h3{
 <body>
 
 <h2>🎮 管理员面板</h2>
+<div class="card" style="border:2px solid red;">
+  <h3>🔔 审核提醒</h3>
 
+  <button onclick="loadRechargeRequests()">
+    💳 充值申请
+    <span id="rechargeBadge" style="
+      background:red;
+      color:white;
+      border-radius:50%;
+      padding:3px 8px;
+      margin-left:5px;
+      display:none;
+    ">0</span>
+  </button>
+
+  <button onclick="loadWithdrawRequests()">
+    🏧 提款申请
+    <span id="withdrawBadge" style="
+      background:red;
+      color:white;
+      border-radius:50%;
+      padding:3px 8px;
+      margin-left:5px;
+      display:none;
+    ">0</span>
+  </button>
+</div>
 <button onclick="logoutAdmin()">🚪 退出登录</button>
 <div class="card">
   <h3>📊 盈利统计</h3>
@@ -350,7 +376,31 @@ async function loadTx(){
 
   document.getElementById("tx").innerHTML = html;
 }
+async function loadReviewBadges(){
+  const rechargeRes = await fetch("/admin/recharge-requests",{
+    headers: adminGetHeaders()
+  });
 
+  const rechargeData = await rechargeRes.json();
+
+  const withdrawRes = await fetch("/admin/withdraw-requests",{
+    headers: adminGetHeaders()
+  });
+
+  const withdrawData = await withdrawRes.json();
+
+  const rechargePending = rechargeData.filter(r => r.status === "pending").length;
+  const withdrawPending = withdrawData.filter(w => w.status === "pending").length;
+
+  const rechargeBadge = document.getElementById("rechargeBadge");
+  const withdrawBadge = document.getElementById("withdrawBadge");
+
+  rechargeBadge.innerText = rechargePending;
+  withdrawBadge.innerText = withdrawPending;
+
+  rechargeBadge.style.display = rechargePending > 0 ? "inline-block" : "none";
+  withdrawBadge.style.display = withdrawPending > 0 ? "inline-block" : "none";
+}
 function clearTxFilter(){
   document.getElementById("filterUserId").value = "";
   document.getElementById("filterAgentCode").value = "";
@@ -479,8 +529,9 @@ async function approveRecharge(id){
     body: JSON.stringify({id})
   });
 
-  loadRechargeRequests();
+    loadRechargeRequests();
   loadPlayers();
+  loadReviewBadges();
 }
 
 async function rejectRecharge(id){
@@ -490,7 +541,8 @@ async function rejectRecharge(id){
     body: JSON.stringify({id})
   });
 
-  loadRechargeRequests();
+    loadRechargeRequests();
+  loadReviewBadges();
 }
 
 async function approveWithdraw(id){
@@ -500,8 +552,9 @@ async function approveWithdraw(id){
     body: JSON.stringify({id})
   });
 
-  loadWithdrawRequests();
+      loadWithdrawRequests();
   loadPlayers();
+  loadReviewBadges();
 }
 
 async function rejectWithdraw(id){
@@ -511,7 +564,8 @@ async function rejectWithdraw(id){
     body: JSON.stringify({id})
   });
 
-  loadWithdrawRequests();
+    loadWithdrawRequests();
+  loadReviewBadges();
 }  
 async function loadProfit(){
   const res = await fetch("/admin/profit",{
@@ -672,6 +726,7 @@ setInterval(()=>{
   loadAgents();
   loadRechargeRequests();
   loadWithdrawRequests();
+  loadReviewBadges();
 },2000);
   loadBets();
 loadAgents();
@@ -681,6 +736,7 @@ loadProfit();
 loadRounds();
 loadRechargeRequests();
 loadWithdrawRequests();
+loadReviewBadges();
 </script>
 
 </body>

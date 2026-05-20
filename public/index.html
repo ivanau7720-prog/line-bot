@@ -698,7 +698,17 @@ letter-spacing:1px;
 </button>
 
 </div>
+<div class="bottom-tools">
 
+<button onclick="requestRecharge()" class="tool-btn line-btn">
+💳 充值
+</button>
+
+<button onclick="requestWithdraw()" class="tool-btn road-btn">
+🏧 提款
+</button>
+
+</div>
   <div class="bottom-tools">
 
 <button onclick="toggleRoad()" class="tool-btn road-btn">
@@ -1274,7 +1284,50 @@ box.style.display === "none" ? "block" : "none";
 function openLine(){
 window.open("https://line.me/", "_blank");
 }
+async function requestRecharge(){
+  const amount = prompt("请输入充值金额");
 
+  if(!amount) return;
+
+  await fetch("/request-recharge",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      userId: currentUserId,
+      username: localStorage.getItem("name"),
+      amount: Number(amount),
+      note: "玩家提交充值申请"
+    })
+  });
+
+  alert("充值申请已提交，请等待客服审核");
+}
+
+async function requestWithdraw(){
+  const amount = prompt("请输入提款金额");
+  if(!amount) return;
+
+  const bankName = prompt("请输入银行名称");
+  if(!bankName) return;
+
+  const bankAccount = prompt("请输入银行账号");
+  if(!bankAccount) return;
+
+  await fetch("/request-withdraw",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      userId: currentUserId,
+      username: localStorage.getItem("name"),
+      amount: Number(amount),
+      bankName,
+      bankAccount,
+      note: "玩家提交提款申请"
+    })
+  });
+
+  alert("提款申请已提交，请等待客服审核");
+}
   function logout(){
 
 localStorage.clear();

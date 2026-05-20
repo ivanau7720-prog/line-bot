@@ -63,6 +63,8 @@ h2,h3{
 <body>
 
 <h2>🎮 管理员面板</h2>
+
+<button onclick="logoutAdmin()">🚪 退出登录</button>
 <div class="card">
   <h3>📊 盈利统计</h3>
   <div id="profitToday">今日盈利：--</div>
@@ -156,7 +158,10 @@ function adminGetHeaders(){
     "x-admin-token": adminToken
   };
 }  
-  
+function logoutAdmin(){
+  localStorage.removeItem("adminToken");
+  location.href = "/admin-login.html";
+}  
 async function createAgent(){
   const agentCode = document.getElementById("agentCode").value;
   const agentName = document.getElementById("agentName").value;

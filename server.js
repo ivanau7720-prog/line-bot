@@ -775,6 +775,147 @@ app.get("/admin/withdraw-requests", checkAdmin, async (req, res) => {
     res.json([]);
   }
 });
+
+// ===== 管理员：批准充值 =====
+app.post("/admin/approve-recharge", checkAdmin, async (req, res) => {
+  try {
+    const { id } = req.body;
+
+    const { data: request } = await supabase
+      .from("recharge_requests")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (!request || request.status !== "pending") {
+      return res.json({ success:false, msg:"申请不存在或已处理" });
+    }
+
+    const { data: player } = await supabase
+      .from("players")
+      .select("*")
+      .eq("user_id", request.user_id)
+      .single();
+
+    const newBalance = Number(player.balance || 0) + Number(request.amount);
+    const newTopup = Number(player.total_topup || 0) + Number(request.amount);
+
+    await supabase
+      .from("players")
+      .update({
+        balance: newBalance,
+        total_topup: newTopup
+      })
+      .eq("user_id", request.user_id);
+
+    await supabase
+      .from("recharge_requests")
+      .update({ status:"approved" })
+      .eq("id", id);
+
+    await supabase.from("transactions").insert([{
+      user_id: request.user_id,
+      amount: Number(request.amount),
+      type: "recharge_approved"
+    }]);
+
+    res.json({ success:true });
+
+  } catch (err) {
+    console.error(err);
+    res.json({ success:false });
+  }
+});
+
+
+// ===== 管理员：拒绝充值 =====
+app.post("/admin/reject-recharge", checkAdmin, async (req, res) => {
+  try {
+    const { id } = req.body;
+
+    await supabase
+      .from("recharge_requests")
+      .update({ status:"rejected" })
+      .eq("id", id);
+
+    res.json({ success:true });
+
+  } catch (err) {
+    console.error(err);
+    res.json({ success:false });
+  }
+});
+
+
+// ===== 管理员：批准提款 =====
+app.post("/admin/approve-withdraw", checkAdmin, async (req, res) => {
+  try {
+    const { id } = req.body;
+
+    const { data: request } = await supabase
+      .from("withdraw_requests")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (!request || request.status !== "pending") {
+      return res.json({ success:false, msg:"申请不存在或已处理" });
+    }
+
+    const { data: player } = await supabase
+      .from("players")
+      .select("*")
+      .eq("user_id", request.user_id)
+      .single();
+
+    if (Number(player.balance || 0) < Number(request.amount)) {
+      return res.json({ success:false, msg:"玩家余额不足" });
+    }
+
+    const newBalance = Number(player.balance || 0) - Number(request.amount);
+
+    await supabase
+      .from("players")
+      .update({ balance: newBalance })
+      .eq("user_id", request.user_id);
+
+    await supabase
+      .from("withdraw_requests")
+      .update({ status:"approved" })
+      .eq("id", id);
+
+    await supabase.from("transactions").insert([{
+      user_id: request.user_id,
+      amount: Number(request.amount),
+      type: "withdraw_approved"
+    }]);
+
+    res.json({ success:true });
+
+  } catch (err) {
+    console.error(err);
+    res.json({ success:false });
+  }
+});
+
+
+// ===== 管理员：拒绝提款 =====
+app.post("/admin/reject-withdraw", checkAdmin, async (req, res) => {
+  try {
+    const { id } = req.body;
+
+    await supabase
+      .from("withdraw_requests")
+      .update({ status:"rejected" })
+      .eq("id", id);
+
+    res.json({ success:true });
+
+  } catch (err) {
+    console.error(err);
+    res.json({ success:false });
+  }
+});
 // ===== 玩家申请充值 =====
 app.post("/request-recharge", async (req, res) => {
 

@@ -1285,22 +1285,35 @@ function openLine(){
 window.open("https://line.me/", "_blank");
 }
 async function requestRecharge(){
-  const amount = prompt("请输入充值金额");
+ const amount = prompt("请输入充值金额");
+if(!amount) return;
 
-  if(!amount) return;
+const paymentMethod = prompt("请输入转账银行 / 钱包");
+if(!paymentMethod) return;
 
-  await fetch("/request-recharge",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({
-      userId: currentUserId,
-      username: localStorage.getItem("name"),
-      amount: Number(amount),
-      note: "玩家提交充值申请"
-    })
-  });
+const payerName = prompt("请输入付款人名字");
+if(!payerName) return;
 
-  alert("充值申请已提交，请等待客服审核");
+const note = prompt("备注（可留空）") || "";
+
+await fetch("/request-recharge",{
+  method:"POST",
+  headers:{"Content-Type":"application/json"},
+  body:JSON.stringify({
+    userId: currentUserId,
+    username: localStorage.getItem("name"),
+    amount: Number(amount),
+    paymentMethod,
+    payerName,
+    note
+  })
+});
+
+alert(
+`充值申请已提交
+
+请把充值截图发送给客服 LINE 审核`
+);
 }
 
 async function requestWithdraw(){

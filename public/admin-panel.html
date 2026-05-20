@@ -371,21 +371,39 @@ async function loadRechargeRequests(){
   }
 
   data.forEach(r=>{
-    html += `
-      <div style="padding:8px;border-bottom:1px solid rgba(255,255,255,0.15)">
-        👤 ${r.username || "-"}
-        <br>
-        🆔 ${r.user_id}
-        <br>
-        💰 充值金额：${r.amount}
-        <br>
-        📌 状态：${r.status}
-        <br>
-        📝 备注：${r.note || "-"}
-        <br>
-        🕒 ${r.created_at}
-      </div>
-    `;
+ html += `
+  <div style="padding:8px;border-bottom:1px solid rgba(255,255,255,0.15)">
+    👤 ${r.username || "-"}
+    <br>
+    🆔 ${r.user_id}
+    <br>
+    💰 充值金额：${r.amount}
+    <br>
+    📌 状态：${r.status}
+    <br>
+    📝 备注：${r.note || "-"}
+    <br>
+    🕒 ${r.created_at}
+    <br><br>
+
+    ${
+      r.status === "pending"
+      ?
+      `
+      <button onclick="approveRecharge('${r.id}')">
+        ✅ 批准
+      </button>
+
+      <button onclick="rejectRecharge('${r.id}')">
+        ❌ 拒绝
+      </button>
+      `
+      :
+      ""
+    }
+
+  </div>
+`;
   });
 
   document.getElementById("rechargeRequests").innerHTML = html;
@@ -406,28 +424,88 @@ async function loadWithdrawRequests(){
   }
 
   data.forEach(w=>{
-    html += `
-      <div style="padding:8px;border-bottom:1px solid rgba(255,255,255,0.15)">
-        👤 ${w.username || "-"}
-        <br>
-        🆔 ${w.user_id}
-        <br>
-        💰 提款金额：${w.amount}
-        <br>
-        🏦 银行：${w.bank_name || "-"}
-        <br>
-        💳 账号：${w.bank_account || "-"}
-        <br>
-        📌 状态：${w.status}
-        <br>
-        📝 备注：${w.note || "-"}
-        <br>
-        🕒 ${w.created_at}
-      </div>
-    `;
+   html += `
+  <div style="padding:8px;border-bottom:1px solid rgba(255,255,255,0.15)">
+    👤 ${w.username || "-"}
+    <br>
+    🆔 ${w.user_id}
+    <br>
+    💰 提款金额：${w.amount}
+    <br>
+    🏦 银行：${w.bank_name || "-"}
+    <br>
+    💳 账号：${w.bank_account || "-"}
+    <br>
+    📌 状态：${w.status}
+    <br>
+    📝 备注：${w.note || "-"}
+    <br>
+    🕒 ${w.created_at}
+    <br><br>
+
+    ${
+      w.status === "pending"
+      ?
+      `
+      <button onclick="approveWithdraw('${w.id}')">
+        ✅ 批准
+      </button>
+
+      <button onclick="rejectWithdraw('${w.id}')">
+        ❌ 拒绝
+      </button>
+      `
+      :
+      ""
+    }
+
+  </div>
+`;
   });
 
   document.getElementById("withdrawRequests").innerHTML = html;
+}  
+
+async function approveRecharge(id){
+  await fetch("/admin/approve-recharge",{
+    method:"POST",
+    headers: adminHeaders(),
+    body: JSON.stringify({id})
+  });
+
+  loadRechargeRequests();
+  loadPlayers();
+}
+
+async function rejectRecharge(id){
+  await fetch("/admin/reject-recharge",{
+    method:"POST",
+    headers: adminHeaders(),
+    body: JSON.stringify({id})
+  });
+
+  loadRechargeRequests();
+}
+
+async function approveWithdraw(id){
+  await fetch("/admin/approve-withdraw",{
+    method:"POST",
+    headers: adminHeaders(),
+    body: JSON.stringify({id})
+  });
+
+  loadWithdrawRequests();
+  loadPlayers();
+}
+
+async function rejectWithdraw(id){
+  await fetch("/admin/reject-withdraw",{
+    method:"POST",
+    headers: adminHeaders(),
+    body: JSON.stringify({id})
+  });
+
+  loadWithdrawRequests();
 }  
 async function loadProfit(){
   const res = await fetch("/admin/profit",{

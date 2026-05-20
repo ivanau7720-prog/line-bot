@@ -745,6 +745,104 @@ name:data.username
 });
 
 });
+// ===== 玩家申请充值 =====
+app.post("/request-recharge", async (req, res) => {
+
+  try{
+
+    const {
+      userId,
+      username,
+      amount,
+      note
+    } = req.body;
+
+    const { error } = await supabase
+      .from("recharge_requests")
+      .insert([{
+        user_id:userId,
+        username,
+        amount,
+        note,
+        status:"pending"
+      }]);
+
+    if(error){
+      console.log(error);
+
+      return res.status(500).json({
+        success:false
+      });
+    }
+
+    res.json({
+      success:true
+    });
+
+  }catch(err){
+
+    console.log(err);
+
+    res.status(500).json({
+      success:false
+    });
+
+  }
+
+});
+
+
+// ===== 玩家申请提款 =====
+app.post("/request-withdraw", async (req, res) => {
+
+  try{
+
+    const {
+      userId,
+      username,
+      amount,
+      bankName,
+      bankAccount,
+      note
+    } = req.body;
+
+    const { error } = await supabase
+      .from("withdraw_requests")
+      .insert([{
+        user_id:userId,
+        username,
+        amount,
+        bank_name:bankName,
+        bank_account:bankAccount,
+        note,
+        status:"pending"
+      }]);
+
+    if(error){
+
+      console.log(error);
+
+      return res.status(500).json({
+        success:false
+      });
+
+    }
+
+    res.json({
+      success:true
+    });
+
+  }catch(err){
+
+    console.log(err);
+
+    res.status(500).json({
+      success:false
+    });
+
+  }
+
+});
 // ===== 启动 =====
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

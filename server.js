@@ -263,7 +263,7 @@ await supabase.from("turnover_records").insert([
 });
 
 // ===== 结算 =====
-app.post("/result", async (req, res) => {
+app.post("/result", checkAdmin, async (req, res) => {
   try { 
    const { result } = req.body;
     

@@ -124,6 +124,16 @@ h2,h3{
   </div>
 
 <div class="card">
+  <h3>💳 充值申请</h3>
+  <div id="rechargeRequests">暂无充值申请</div>
+</div>
+
+<div class="card">
+  <h3>🏧 提款申请</h3>
+  <div id="withdrawRequests">暂无提款申请</div>
+</div>
+  
+<div class="card">
   <h3>📜 玩家流水记录</h3>
 
   <input id="filterUserId" placeholder="玩家ID">
@@ -240,7 +250,7 @@ async function setResult(){
 
  await fetch("/result",{
   method:"POST",
-  headers:{"Content-Type":"application/json"},
+  headers: adminHeaders(),
   body: JSON.stringify({result})
 });
 }
@@ -347,7 +357,78 @@ function clearTxFilter(){
   document.getElementById("filterDate").value = "";
   loadTx();
 }
-  
+async function loadRechargeRequests(){
+  const res = await fetch("/admin/recharge-requests",{
+    headers: adminGetHeaders()
+  });
+
+  const data = await res.json();
+
+  let html = "";
+
+  if(data.length === 0){
+    html = "暂无充值申请";
+  }
+
+  data.forEach(r=>{
+    html += `
+      <div style="padding:8px;border-bottom:1px solid rgba(255,255,255,0.15)">
+        👤 ${r.username || "-"}
+        <br>
+        🆔 ${r.user_id}
+        <br>
+        💰 充值金额：${r.amount}
+        <br>
+        📌 状态：${r.status}
+        <br>
+        📝 备注：${r.note || "-"}
+        <br>
+        🕒 ${r.created_at}
+      </div>
+    `;
+  });
+
+  document.getElementById("rechargeRequests").innerHTML = html;
+}
+
+
+async function loadWithdrawRequests(){
+  const res = await fetch("/admin/withdraw-requests",{
+    headers: adminGetHeaders()
+  });
+
+  const data = await res.json();
+
+  let html = "";
+
+  if(data.length === 0){
+    html = "暂无提款申请";
+  }
+
+  data.forEach(w=>{
+    html += `
+      <div style="padding:8px;border-bottom:1px solid rgba(255,255,255,0.15)">
+        👤 ${w.username || "-"}
+        <br>
+        🆔 ${w.user_id}
+        <br>
+        💰 提款金额：${w.amount}
+        <br>
+        🏦 银行：${w.bank_name || "-"}
+        <br>
+        💳 账号：${w.bank_account || "-"}
+        <br>
+        📌 状态：${w.status}
+        <br>
+        📝 备注：${w.note || "-"}
+        <br>
+        🕒 ${w.created_at}
+      </div>
+    `;
+  });
+
+  document.getElementById("withdrawRequests").innerHTML = html;
+}  
 async function loadProfit(){
   const res = await fetch("/admin/profit",{
   headers: adminGetHeaders()
@@ -505,13 +586,17 @@ setInterval(()=>{
   loadProfit();
   loadBets();
   loadAgents();
+  loadRechargeRequests();
+  loadWithdrawRequests();
 },2000);
   loadBets();
 loadAgents();
-  loadTx();
+loadTx();
 loadPlayers();
 loadProfit();
 loadRounds();
+loadRechargeRequests();
+loadWithdrawRequests();
 </script>
 
 </body>

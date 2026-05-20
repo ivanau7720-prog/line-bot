@@ -1428,37 +1428,67 @@ function closeWalletCenter(){
   document.getElementById("walletModal").style.display = "none";
 }  
 async function requestRecharge(){
- const amount = prompt("กรุณากรอกจำนวนเงินฝาก");
-const paymentMethod = prompt("กรุณากรอกธนาคาร / วอเลทที่โอน");
-const payerName = prompt("กรุณากรอกชื่อผู้โอน");
-const note = prompt("หมายเหตุ（ถ้ามี）") || "";
+  const amount = prompt("กรุณากรอกจำนวนเงินฝาก");
+  if(!amount) return;
 
-await fetch("/request-recharge",{
-  method:"POST",
-  headers:{"Content-Type":"application/json"},
-  body:JSON.stringify({
-    userId: currentUserId,
-    username: localStorage.getItem("name"),
-    amount: Number(amount),
-    paymentMethod,
-    payerName,
-    note
-  })
-});
+  if(isNaN(Number(amount)) || Number(amount) <= 0){
+    alert("กรุณากรอกจำนวนเงินฝากให้ถูกต้อง");
+    return;
+  }
 
-alert(
+  const paymentMethod = prompt("กรุณากรอกธนาคาร / วอเลทที่โอน");
+  if(!paymentMethod) return;
+
+  const payerName = prompt("กรุณากรอกชื่อผู้โอน");
+  if(!payerName) return;
+
+  const note = prompt("หมายเหตุ（ถ้ามี）") || "";
+
+  const res = await fetch("/request-recharge",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      userId: currentUserId,
+      username: localStorage.getItem("name"),
+      amount: Number(amount),
+      paymentMethod,
+      payerName,
+      note
+    })
+  });
+
+  const data = await res.json();
+
+  if(!data.success){
+    alert(data.msg || "ส่งคำขอฝากไม่สำเร็จ");
+    return;
+  }
+
+  alert(
 `ส่งคำขอฝากเงินเรียบร้อยแล้ว
 
 กรุณาส่งสลิปโอนเงินให้แอดมิน LINE เพื่อตรวจสอบ`
-);
+  );
+
+  loadMyRechargeRecords();
 }
 
 async function requestWithdraw(){
   const amount = prompt("กรุณากรอกจำนวนเงินถอน");
-const bankName = prompt("กรุณากรอกชื่อธนาคาร");
-const bankAccount = prompt("กรุณากรอกเลขบัญชี");
+  if(!amount) return;
 
-  await fetch("/request-withdraw",{
+  if(isNaN(Number(amount)) || Number(amount) <= 0){
+    alert("กรุณากรอกจำนวนเงินถอนให้ถูกต้อง");
+    return;
+  }
+
+  const bankName = prompt("กรุณากรอกชื่อธนาคาร");
+  if(!bankName) return;
+
+  const bankAccount = prompt("กรุณากรอกเลขบัญชี");
+  if(!bankAccount) return;
+
+  const res = await fetch("/request-withdraw",{
     method:"POST",
     headers:{"Content-Type":"application/json"},
     body:JSON.stringify({
@@ -1471,9 +1501,17 @@ const bankAccount = prompt("กรุณากรอกเลขบัญชี"
     })
   });
 
- alert("ส่งคำขอถอนเงินเรียบร้อยแล้ว กรุณารอแอดมินตรวจสอบ");
-}
+  const data = await res.json();
 
+  if(!data.success){
+    alert(data.msg || "ส่งคำขอถอนไม่สำเร็จ");
+    return;
+  }
+
+  alert("ส่งคำขอถอนเงินเรียบร้อยแล้ว กรุณารอแอดมินตรวจสอบ");
+
+  loadMyWithdrawRecords();
+}
   function showStatus(status){
  if(status === "pending") return "⏳ รอตรวจสอบ";
 if(status === "approved") return "✅ อนุมัติแล้ว";

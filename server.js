@@ -916,6 +916,45 @@ app.post("/admin/reject-withdraw", checkAdmin, async (req, res) => {
     res.json({ success:false });
   }
 });
+
+// ===== 玩家：我的充值记录 =====
+app.get("/my-recharge-requests/:userId", async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const { data } = await supabase
+      .from("recharge_requests")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending:false });
+
+    res.json(data || []);
+
+  } catch (err) {
+    console.error(err);
+    res.json([]);
+  }
+});
+
+
+// ===== 玩家：我的提款记录 =====
+app.get("/my-withdraw-requests/:userId", async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const { data } = await supabase
+      .from("withdraw_requests")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending:false });
+
+    res.json(data || []);
+
+  } catch (err) {
+    console.error(err);
+    res.json([]);
+  }
+});
 // ===== 玩家申请充值 =====
 app.post("/request-recharge", async (req, res) => {
 

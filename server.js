@@ -745,6 +745,36 @@ name:data.username
 });
 
 });
+// ===== 管理员：查看充值申请 =====
+app.get("/admin/recharge-requests", checkAdmin, async (req, res) => {
+  try {
+    const { data } = await supabase
+      .from("recharge_requests")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    res.json(data || []);
+  } catch (err) {
+    console.error(err);
+    res.json([]);
+  }
+});
+
+
+// ===== 管理员：查看提款申请 =====
+app.get("/admin/withdraw-requests", checkAdmin, async (req, res) => {
+  try {
+    const { data } = await supabase
+      .from("withdraw_requests")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    res.json(data || []);
+  } catch (err) {
+    console.error(err);
+    res.json([]);
+  }
+});
 // ===== 玩家申请充值 =====
 app.post("/request-recharge", async (req, res) => {
 

@@ -138,22 +138,43 @@ h2,h3{
 
 <script>
 
+const adminToken = localStorage.getItem("adminToken");
+
+if(!adminToken){
+  location.href = "/admin-login.html";
+}
+
+function adminHeaders(){
+  return {
+    "Content-Type":"application/json",
+    "x-admin-token": adminToken
+  };
+}
+
+function adminGetHeaders(){
+  return {
+    "x-admin-token": adminToken
+  };
+}  
+  
 async function createAgent(){
   const agentCode = document.getElementById("agentCode").value;
   const agentName = document.getElementById("agentName").value;
 
-  await fetch("/admin/create-agent",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body: JSON.stringify({agentCode, agentName})
-  });
+ await fetch("/admin/create-agent",{
+  method:"POST",
+  headers: adminHeaders(),
+  body: JSON.stringify({agentCode, agentName})
+});
 
   alert("代理已新增");
   loadAgents();
 }
 
 async function loadAgents(){
-  const res = await fetch("/admin/agents");
+  const res = await fetch("/admin/agents",{
+  headers: adminGetHeaders()
+});
   const data = await res.json();
 
   let html = "";
@@ -178,7 +199,9 @@ async function loadAgents(){
 }
   
 async function loadPlayers(){
-  const res = await fetch("/admin/players");
+  const res = await fetch("/admin/players",{
+  headers: adminGetHeaders()
+});
   const data = await res.json();
 
   let html = "";
@@ -210,36 +233,38 @@ async function stopGame(){
 async function setResult(){
   const result = document.getElementById("resultInput").value;
 
-  await fetch("/result",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body: JSON.stringify({result})
-  });
+ await fetch("/result",{
+  method:"POST",
+  headers:{"Content-Type":"application/json"},
+  body: JSON.stringify({result})
+});
 }
 
 async function add(){
   const userId = document.getElementById("uid").value;
   const amount = Number(document.getElementById("amt").value);
 
-  await fetch("/admin/add",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body: JSON.stringify({userId,amount})
-  });
+ await fetch("/admin/add",{
+  method:"POST",
+  headers: adminHeaders(),
+  body: JSON.stringify({userId,amount})
+});
 }
 
 async function minus(){
   const userId = document.getElementById("uid").value;
   const amount = Number(document.getElementById("amt").value);
 
-  await fetch("/admin/minus",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body: JSON.stringify({userId,amount})
-  });
+ await fetch("/admin/minus",{
+  method:"POST",
+  headers: adminHeaders(),
+  body: JSON.stringify({userId,amount})
+});
 }
 async function loadRounds(){
-  const res = await fetch("/admin/rounds");
+  const res = await fetch("/admin/rounds",{
+  headers: adminGetHeaders()
+});
   const data = await res.json();
 
   let html = "";
@@ -267,7 +292,9 @@ async function loadTx(){
   if(agentCode) url += "agentCode=" + encodeURIComponent(agentCode) + "&";
   if(date) url += "date=" + encodeURIComponent(date) + "&";
 
-  const res = await fetch(url);
+  const res = await fetch(url,{
+  headers: adminGetHeaders()
+});
   const data = await res.json();
 
   let html = "";
@@ -317,7 +344,9 @@ function clearTxFilter(){
 }
   
 async function loadProfit(){
-  const res = await fetch("/admin/profit");
+  const res = await fetch("/admin/profit",{
+  headers: adminGetHeaders()
+});
   const data = await res.json();
 
   document.getElementById("profitToday").innerText =
@@ -328,7 +357,9 @@ async function loadProfit(){
 }
 async function loadBets(){
 
-  const res = await fetch("/admin/bets");
+  const res = await fetch("/admin/bets",{
+  headers: adminGetHeaders()
+});
   const data = await res.json();
 
   let html = "";

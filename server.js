@@ -93,7 +93,8 @@ let GAME = {
 
 let playersCache = {};
 let betCooldown = {};
-
+let rechargeCooldown = {};
+let withdrawCooldown = {};
 // ===== 获取用户 =====
 async function getUser(userId) {
   try {
@@ -361,6 +362,57 @@ res.json({ msg: "结算完成" });
 }
 });
 
+// ===== 前台：开奖记录 / 路单 =====
+app.get("/history", async (req, res) => {
+  try {
+    const { data } = await supabase
+      .from("rounds")
+      .select("*")
+      .eq("status", "done")
+      .order("id", { ascending: false })
+      .limit(50);
+
+    res.json((data || []).reverse());
+
+  } catch (err) {
+    console.error("history error:", err);
+    res.json([]);
+  }
+});
+
+// ===== 前台：庄闲和统计 =====
+app.get("/stats", async (req, res) => {
+  try {
+    const { data } = await supabase
+      .from("rounds")
+      .select("result")
+      .eq("status", "done")
+      .order("id", { ascending: false })
+      .limit(100);
+
+    let stats = {
+      B: 0,
+      P: 0,
+      T: 0
+    };
+
+    (data || []).forEach(r => {
+      if (r.result === "B") stats.B++;
+      if (r.result === "P") stats.P++;
+      if (r.result === "T") stats.T++;
+    });
+
+    res.json(stats);
+
+  } catch (err) {
+    console.error("stats error:", err);
+    res.json({
+      B: 0,
+      P: 0,
+      T: 0
+    });
+  }
+});
 
 // ===== 状态 =====
 app.get("/state", (req, res) => {
@@ -955,52 +1007,86 @@ app.get("/my-withdraw-requests/:userId", async (req, res) => {
     res.json([]);
   }
 });
+
 // ===== 玩家申请充值 =====
 app.post("/request-recharge", async (req, res) => {
 
   try{
 
     const {
-  userId,
-  username,
-  amount,
-  paymentMethod,
-  payerName,
-  note
-} = req.body;
+      userId,
+      username,
+      amount,
+      paymentMethod,
+      payerName,
+      note
+    } = req.body;
+
+    const rechargeAmount = Number(amount);
+
+    if (!userId || !username) {
+      return res.json({ success:false, msg:"ข้อมูลผู้เล่นไม่ถูกต้อง" });
+    }
+
+    if (!rechargeAmount || isNaN(rechargeAmount)) {
+      return res.json({ success:false, msg:"กรุณากรอกจำนวนเงินฝาก" });
+    }
+
+    if (rechargeAmount <= 0) {
+      return res.json({ success:false, msg:"จำนวนเงินฝากต้องมากกว่า 0" });
+    }
+
+    if (rechargeAmount > 1000000) {
+      return res.json({ success:false, msg:"จำนวนเงินฝากสูงเกินไป" });
+    }
+
+    if (!paymentMethod || !payerName) {
+      return res.json({ success:false, msg:"กรุณากรอกข้อมูลการโอนให้ครบ" });
+    }
+
+    const now = Date.now();
+
+    if (rechargeCooldown[userId] && now - rechargeCooldown[userId] < 10000) {
+      return res.json({ success:false, msg:"กรุณารอสักครู่ก่อนส่งคำขออีกครั้ง" });
+    }
+
+    rechargeCooldown[userId] = now;
+
+    const { data: pending } = await supabase
+      .from("recharge_requests")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("status", "pending");
+
+    if (pending && pending.length >= 3) {
+      return res.json({
+        success:false,
+        msg:"คุณมีรายการฝากที่รอตรวจสอบอยู่ กรุณารอแอดมิน"
+      });
+    }
 
     const { error } = await supabase
       .from("recharge_requests")
       .insert([{
-  user_id:userId,
-  username,
-  amount,
-  payment_method: paymentMethod,
-  payer_name: payerName,
-  note,
-  status:"pending"
-}]);
+        user_id:userId,
+        username,
+        amount: rechargeAmount,
+        payment_method: paymentMethod,
+        payer_name: payerName,
+        note,
+        status:"pending"
+      }]);
 
     if(error){
       console.log(error);
-
-      return res.status(500).json({
-        success:false
-      });
+      return res.status(500).json({ success:false, msg:"ส่งคำขอฝากไม่สำเร็จ" });
     }
 
-    res.json({
-      success:true
-    });
+    res.json({ success:true, msg:"ส่งคำขอฝากเงินเรียบร้อยแล้ว" });
 
   }catch(err){
-
     console.log(err);
-
-    res.status(500).json({
-      success:false
-    });
-
+    res.status(500).json({ success:false, msg:"ระบบผิดพลาด" });
   }
 
 });
@@ -1020,12 +1106,65 @@ app.post("/request-withdraw", async (req, res) => {
       note
     } = req.body;
 
+    const withdrawAmount = Number(amount);
+
+    if (!userId || !username) {
+      return res.json({ success:false, msg:"ข้อมูลผู้เล่นไม่ถูกต้อง" });
+    }
+
+    if (!withdrawAmount || isNaN(withdrawAmount)) {
+      return res.json({ success:false, msg:"กรุณากรอกจำนวนเงินถอน" });
+    }
+
+    if (withdrawAmount <= 0) {
+      return res.json({ success:false, msg:"จำนวนเงินถอนต้องมากกว่า 0" });
+    }
+
+    if (!bankName || !bankAccount) {
+      return res.json({ success:false, msg:"กรุณากรอกข้อมูลบัญชีธนาคารให้ครบ" });
+    }
+
+    const now = Date.now();
+
+    if (withdrawCooldown[userId] && now - withdrawCooldown[userId] < 10000) {
+      return res.json({ success:false, msg:"กรุณารอสักครู่ก่อนส่งคำขออีกครั้ง" });
+    }
+
+    withdrawCooldown[userId] = now;
+
+    const { data: player } = await supabase
+      .from("players")
+      .select("*")
+      .eq("user_id", userId)
+      .single();
+
+    if (!player) {
+      return res.json({ success:false, msg:"ไม่พบบัญชีผู้เล่น" });
+    }
+
+    if (Number(player.balance || 0) < withdrawAmount) {
+      return res.json({ success:false, msg:"ยอดเงินไม่เพียงพอ" });
+    }
+
+    const { data: pending } = await supabase
+      .from("withdraw_requests")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("status", "pending");
+
+    if (pending && pending.length >= 1) {
+      return res.json({
+        success:false,
+        msg:"คุณมีรายการถอนที่รอตรวจสอบอยู่ กรุณารอแอดมิน"
+      });
+    }
+
     const { error } = await supabase
       .from("withdraw_requests")
       .insert([{
         user_id:userId,
         username,
-        amount,
+        amount: withdrawAmount,
         bank_name:bankName,
         bank_account:bankAccount,
         note,
@@ -1033,31 +1172,19 @@ app.post("/request-withdraw", async (req, res) => {
       }]);
 
     if(error){
-
       console.log(error);
-
-      return res.status(500).json({
-        success:false
-      });
-
+      return res.status(500).json({ success:false, msg:"ส่งคำขอถอนไม่สำเร็จ" });
     }
 
-    res.json({
-      success:true
-    });
+    res.json({ success:true, msg:"ส่งคำขอถอนเงินเรียบร้อยแล้ว" });
 
   }catch(err){
-
     console.log(err);
-
-    res.status(500).json({
-      success:false
-    });
-
+    res.status(500).json({ success:false, msg:"ระบบผิดพลาด" });
   }
 
 });
-
+ 
 
 // ===== 启动 =====
 const PORT = process.env.PORT || 3000;

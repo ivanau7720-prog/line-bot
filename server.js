@@ -922,21 +922,25 @@ app.post("/request-recharge", async (req, res) => {
   try{
 
     const {
-      userId,
-      username,
-      amount,
-      note
-    } = req.body;
+  userId,
+  username,
+  amount,
+  paymentMethod,
+  payerName,
+  note
+} = req.body;
 
     const { error } = await supabase
       .from("recharge_requests")
       .insert([{
-        user_id:userId,
-        username,
-        amount,
-        note,
-        status:"pending"
-      }]);
+  user_id:userId,
+  username,
+  amount,
+  payment_method: paymentMethod,
+  payer_name: payerName,
+  note,
+  status:"pending"
+}]);
 
     if(error){
       console.log(error);

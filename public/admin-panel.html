@@ -378,10 +378,16 @@ async function loadRechargeRequests(){
     🆔 ${r.user_id}
     <br>
     💰 充值金额：${r.amount}
-    <br>
-    📌 状态：${r.status}
-    <br>
-    📝 备注：${r.note || "-"}
+<br>
+🏦 付款方式：${r.payment_method || "-"}
+<br>
+👤 付款人名字：${r.payer_name || "-"}
+<br>
+📝 备注：${r.note || "-"}
+<br>
+📷 截图：请到 LINE 客服查看
+<br>
+📌 状态：${r.status}
     <br>
     🕒 ${r.created_at}
     <br><br>

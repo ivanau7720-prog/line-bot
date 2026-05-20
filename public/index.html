@@ -450,6 +450,18 @@ color:white;
 🏧 申请提款
 </button>
 
+<hr style="border:1px solid #333;margin:15px 0;">
+
+<h3 style="color:gold;font-size:16px;">我的充值记录</h3>
+<div id="myRechargeList" style="font-size:12px;text-align:left;max-height:130px;overflow:auto;">
+暂无充值记录
+</div>
+
+<h3 style="color:gold;font-size:16px;">我的提款记录</h3>
+<div id="myWithdrawList" style="font-size:12px;text-align:left;max-height:130px;overflow:auto;">
+暂无提款记录
+</div>
+
 <button onclick="closeWalletCenter()" class="tool-btn" style="
 width:100%;
 margin-top:12px;
@@ -1326,6 +1338,8 @@ window.open("https://line.me/", "_blank");
 
 function openWalletCenter(){
   document.getElementById("walletModal").style.display = "flex";
+  loadMyRechargeRecords();
+  loadMyWithdrawRecords();
 }
 
 function closeWalletCenter(){
@@ -1388,6 +1402,67 @@ async function requestWithdraw(){
 
   alert("提款申请已提交，请等待客服审核");
 }
+
+  function showStatus(status){
+  if(status === "pending") return "⏳ 审核中";
+  if(status === "approved") return "✅ 已批准";
+  if(status === "rejected") return "❌ 已拒绝";
+  return status || "-";
+}
+
+function formatTime(t){
+  if(!t) return "-";
+  return new Date(t).toLocaleString();
+}
+
+async function loadMyRechargeRecords(){
+  const userId = currentUserId;
+
+  const res = await fetch("/my-recharge-requests/" + userId);
+  const list = await res.json();
+
+  const box = document.getElementById("myRechargeList");
+
+  if(!list || list.length === 0){
+    box.innerHTML = "暂无充值记录";
+    return;
+  }
+
+  box.innerHTML = list.map(r => `
+    <div style="border:1px solid #555;padding:8px;margin:6px 0;border-radius:8px;background:#111;">
+      金额：RM ${r.amount}<br>
+      方式：${r.payment_method || "-"}<br>
+      付款人：${r.payer_name || "-"}<br>
+      状态：${showStatus(r.status)}<br>
+      时间：${formatTime(r.created_at)}
+    </div>
+  `).join("");
+}
+
+async function loadMyWithdrawRecords(){
+  const userId = currentUserId;
+
+  const res = await fetch("/my-withdraw-requests/" + userId);
+  const list = await res.json();
+
+  const box = document.getElementById("myWithdrawList");
+
+  if(!list || list.length === 0){
+    box.innerHTML = "暂无提款记录";
+    return;
+  }
+
+  box.innerHTML = list.map(r => `
+    <div style="border:1px solid #555;padding:8px;margin:6px 0;border-radius:8px;background:#111;">
+      金额：RM ${r.amount}<br>
+      银行：${r.bank_name || "-"}<br>
+      账号：${r.bank_account || "-"}<br>
+      状态：${showStatus(r.status)}<br>
+      时间：${formatTime(r.created_at)}
+    </div>
+  `).join("");
+}
+  
   function logout(){
 
 localStorage.clear();

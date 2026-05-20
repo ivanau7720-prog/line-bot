@@ -4,11 +4,53 @@ const { createClient } = require("@supabase/supabase-js");
 
 const app = express();
 app.use(express.json());
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin888";
 app.get("/", (req, res) => {
   res.sendFile(__dirname + "/public/login.html");
 });
-app.use(express.static("public"));
 
+app.get("/admin.html", (req, res) => {
+  res.redirect("/admin-login.html");
+});
+
+app.use(express.static("public"));
+// ===== 管理员登录检查 =====
+function checkAdmin(req, res, next){
+
+  const token = req.headers["x-admin-token"];
+
+  if(token !== ADMIN_PASSWORD){
+
+    return res.status(403).json({
+      success:false,
+      msg:"Admin forbidden"
+    });
+
+  }
+
+  next();
+}
+
+// ===== 管理员登录 =====
+app.post("/admin-login", (req, res) => {
+
+  const { password } = req.body;
+
+  if(password === ADMIN_PASSWORD){
+
+    return res.json({
+      success:true,
+      token: ADMIN_PASSWORD
+    });
+
+  }
+
+  res.json({
+    success:false,
+    msg:"密码错误"
+  });
+
+});
 
 // ===== DB =====
 const supabase = createClient(
@@ -356,7 +398,7 @@ res.json({
 });    
 
 // ===== 管理员：新增代理 =====
-app.post("/admin/create-agent", async (req, res) => {
+app.post("/admin/create-agent", checkAdmin, async (req, res) => {
   try {
     const { agentCode, agentName } = req.body;
 
@@ -380,7 +422,7 @@ app.post("/admin/create-agent", async (req, res) => {
 });
 
 // ===== 管理员：代理列表 + 流水 =====
-app.get("/admin/agents", async (req, res) => {
+app.get("/admin/agents", checkAdmin, async (req, res) => {
   try {
     const { data: agents } = await supabase
       .from("agents")
@@ -422,7 +464,7 @@ app.get("/admin/agents", async (req, res) => {
 });
 
 // ===== 管理员：玩家列表 =====
-app.get("/admin/players", async (req, res) => {
+app.get("/admin/players", checkAdmin, async (req, res) => {
   try {
     const { data } = await supabase
       .from("players")
@@ -446,7 +488,7 @@ app.get("/admin/players", async (req, res) => {
 });
 
 // ===== 管理员：局记录 =====
-app.get("/admin/rounds", async (req, res) => {
+app.get("/admin/rounds", checkAdmin, async (req, res) => {
   const { data } = await supabase
     .from("rounds")
     .select("*")
@@ -457,7 +499,7 @@ app.get("/admin/rounds", async (req, res) => {
 });
 
 // ===== 管理员：玩家流水记录 + 筛选 =====
-app.get("/admin/transactions", async (req, res) => {
+app.get("/admin/transactions", checkAdmin, async (req, res) => {
   try {
     const { userId, agentCode, date } = req.query;
 
@@ -513,7 +555,7 @@ app.get("/admin/transactions", async (req, res) => {
 
 
 // ===== 盈利统计 =====
-app.get("/admin/bets", async (req,res)=>{
+app.get("/admin/bets", checkAdmin, async (req,res)=>{
 
 try{
 
@@ -543,7 +585,7 @@ res.json([]);
 
 });
 
-app.get("/admin/profit", async (req, res) => {
+app.get("/admin/profit", checkAdmin, async (req, res) => {
   try {
     const { data } = await supabase
       .from("transactions")
@@ -578,7 +620,7 @@ app.get("/admin/profit", async (req, res) => {
   }
 });
 // ===== 管理员：加钱 =====
-app.post("/admin/add", async (req, res) => {
+app.post("/admin/add", checkAdmin, async (req, res) => {
   try {
     const { userId, amount } = req.body;
 
@@ -620,7 +662,7 @@ res.json({ success: true });
 });
 
 // ===== 管理员：扣钱 =====
-app.post("/admin/minus", async (req, res) => {
+app.post("/admin/minus", checkAdmin, async (req, res) => {
   try {
     const { userId, amount } = req.body;
 

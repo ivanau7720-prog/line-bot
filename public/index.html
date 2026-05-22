@@ -84,7 +84,7 @@ linear-gradient(to bottom,
   border:3px solid #ffd700;
   position:relative;
   transform-style:preserve-3d;
-  animation:chipSpin 4s linear infinite;
+ animation:none;
   box-shadow:
     0 0 10px #ffd700,
     inset 0 0 10px rgba(255,255,255,0.3),
@@ -214,8 +214,8 @@ margin-top:8px !important;
 }
 
 #areaP, #areaT, #areaB{
-  animation: glow 2s infinite;
-}  
+  animation:none;
+} 
 
 /* 🔴 封盘效果升级 */
 .disabled{
@@ -1219,10 +1219,16 @@ document.getElementById("liveStats").innerHTML =
 }
 setInterval(() => {
   loadState();
-  loadHistory();
-  loadBalance();
-  loadStats();
 },1000);
+
+setInterval(() => {
+  loadHistory();
+  loadStats();
+},3000);
+
+setInterval(() => {
+  loadBalance();
+},5000);
 
 
 let currentUserId = "";

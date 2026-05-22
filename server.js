@@ -88,7 +88,7 @@ let GAME = {
   roundActive: false,
   bets: {},
   timer: null,
-  timeLeft: 60
+  timeLeft: 50
 };
 
 let playersCache = {};
@@ -152,7 +152,7 @@ app.post("/start", (req, res) => {
     GAME.currentRound = (GAME.currentRound || 0) + 1;
     GAME.isBetting = true;
     GAME.bets = {};
-    GAME.timeLeft = 60;
+    GAME.timeLeft = 50;
 
     GAME.timer = setInterval(() => {
       GAME.timeLeft -= 1;

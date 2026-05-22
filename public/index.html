@@ -515,15 +515,26 @@ if (video.canPlayType('application/vnd.apple.mpegurl')) {
 
  const hls = new Hls({
   lowLatencyMode: true,
-  liveSyncDuration: 1,
-  liveMaxLatencyDuration: 3,
-  maxBufferLength: 2,
-  backBufferLength: 0
+
+  liveSyncDuration: 0.8,
+  liveMaxLatencyDuration: 2,
+
+  maxBufferLength: 1,
+  maxMaxBufferLength: 2,
+  backBufferLength: 0,
+
+  enableWorker: true,
+
+  fragLoadingTimeOut: 2000,
+  manifestLoadingTimeOut: 2000
 });
 
   hls.loadSource(videoSrc);
   hls.attachMedia(video);
-
+video.addEventListener("loadedmetadata", () => {
+  video.currentTime = video.duration;
+  video.play().catch(()=>{});
+});
  hls.on(Hls.Events.MANIFEST_PARSED, function () {
 
   video.play().catch(() => {

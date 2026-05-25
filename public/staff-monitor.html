@@ -15,15 +15,42 @@ html,body{
   width:100%;
   height:100%;
   overflow:hidden;
-  background:#070b16;
+
+  background:
+    radial-gradient(circle at top left, rgba(0,180,255,0.16), transparent 35%),
+    radial-gradient(circle at bottom right, rgba(255,215,0,0.10), transparent 38%),
+    linear-gradient(135deg,#020617 0%,#07122a 35%,#081830 65%,#020617 100%);
+
   color:white;
   font-family:Arial, sans-serif;
 }
+body::before{
+  content:"";
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  pointer-events:none;
+  z-index:0;
 
+  background:
+    linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+
+  background-size:42px 42px;
+}
+  
 body{
   padding:10px;
+  position:relative;
 }
-
+.topbar,
+#loginBox,
+#monitorBox{
+  position:relative;
+  z-index:1;
+}
 .topbar{
   height:55px;
   display:flex;
@@ -52,6 +79,17 @@ h1{
 #loginBox{
   margin-top:120px;
   text-align:center;
+
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,215,0,.2);
+  backdrop-filter:blur(10px);
+
+  width:520px;
+  margin-left:auto;
+  margin-right:auto;
+
+  padding:40px;
+  border-radius:20px;
 }
 
 #adminPass{
@@ -91,7 +129,12 @@ h1{
 }
 
 .card{
-  background:#111827;
+  background:
+linear-gradient(
+  180deg,
+  rgba(20,30,55,.95),
+  rgba(10,15,30,.95)
+);
   border:1px solid rgba(255,215,0,.35);
   border-radius:16px;
   display:flex;
@@ -232,7 +275,7 @@ h1{
 
 <div class="topbar">
   <button class="langBtn" onclick="switchLang('zh')">中文</button>
-  <h1>📊 SIAMBET88 STAFF MONITOR</h1>
+  <h1>👑 SIAMBET88 CONTROL CENTER</h1>
   <button class="langBtn" onclick="switchLang('th')">ไทย</button>
 </div>
 

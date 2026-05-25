@@ -6,106 +6,222 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-body{
-  margin:0;
-  background:#0b1020;
-  color:white;
-  font-family:Arial, sans-serif;
-  padding:20px;
+*{
+  box-sizing:border-box;
 }
 
-h1{
-  text-align:center;
-  color:gold;
-  font-size:34px;
+html,body{
+  margin:0;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  background:#070b16;
+  color:white;
+  font-family:Arial, sans-serif;
+}
+
+body{
+  padding:10px;
 }
 
 .topbar{
+  height:55px;
   display:flex;
-  justify-content:space-between;
   align-items:center;
-  margin-bottom:20px;
+  justify-content:space-between;
 }
 
-button{
-  padding:10px 18px;
+h1{
+  margin:0;
+  color:gold;
+  font-size:34px;
+  text-align:center;
+  flex:1;
+}
+
+.langBtn{
+  width:80px;
+  height:38px;
   border:none;
   border-radius:10px;
   font-weight:bold;
+  font-size:16px;
   cursor:pointer;
 }
 
-.grid{
+#loginBox{
+  margin-top:120px;
+  text-align:center;
+}
+
+#adminPass{
+  font-size:26px;
+  padding:12px;
+  border-radius:10px;
+  border:none;
+}
+
+.loginBtn{
+  margin-top:15px;
+  padding:12px 30px;
+  font-size:20px;
+  border:none;
+  border-radius:10px;
+  cursor:pointer;
+  font-weight:bold;
+}
+
+.dashboard{
+  display:grid;
+  grid-template-columns:1.2fr 1fr;
+  gap:12px;
+  height:calc(100vh - 70px);
+}
+
+.left{
+  display:grid;
+  grid-template-rows:1fr 1fr 1fr;
+  gap:12px;
+}
+
+.grid3{
   display:grid;
   grid-template-columns:repeat(3,1fr);
-  gap:18px;
+  gap:12px;
 }
 
 .card{
   background:#111827;
-  border:1px solid #333;
-  border-radius:18px;
-  padding:25px;
-  text-align:center;
-  box-shadow:0 0 18px rgba(255,215,0,.15);
+  border:1px solid rgba(255,215,0,.35);
+  border-radius:16px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 0 12px rgba(255,215,0,.12);
+  min-height:120px;
 }
 
 .title{
-  font-size:24px;
-  margin-bottom:15px;
+  font-size:22px;
+  font-weight:bold;
+  margin-bottom:8px;
 }
 
 .value{
-  font-size:46px;
+  font-size:52px;
+  font-weight:bold;
+  line-height:1;
+}
+
+.smallValue{
+  font-size:44px;
   font-weight:bold;
 }
 
-.gold{color:gold;}
+.green{color:#00ff88;}
 .red{color:#ff4444;}
 .blue{color:#3399ff;}
-.green{color:#00ff88;}
+.gold{color:gold;}
+.white{color:white;}
+
+.right{
+  display:grid;
+  grid-template-rows:1.3fr .7fr .7fr;
+  gap:12px;
+}
 
 .alert{
-  margin-top:22px;
   background:#111827;
   border:2px solid gold;
-  border-radius:20px;
-  padding:25px;
+  border-radius:18px;
+  padding:18px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
 }
 
 .alert h2{
   color:gold;
-  text-align:center;
   font-size:30px;
+  text-align:center;
+  margin:0 0 16px 0;
 }
 
-.profit-row{
-  font-size:34px;
+.profitRow{
   display:flex;
   justify-content:space-between;
-  padding:12px 0;
+  align-items:center;
+  font-size:34px;
+  font-weight:bold;
+  padding:10px 0;
   border-bottom:1px solid #333;
 }
 
-.statusBox{
-  margin-top:22px;
-  background:#111827;
-  border-radius:20px;
-  padding:25px;
+.bestBox{
+  background:linear-gradient(135deg,#1a1200,#3a2a00,#111827);
+  border:2px solid gold;
+  border-radius:18px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
   text-align:center;
-  font-size:30px;
 }
 
-@media(max-width:768px){
-  .grid{
-    grid-template-columns:1fr;
+.bestTitle{
+  color:gold;
+  font-size:26px;
+  font-weight:bold;
+}
+
+.bestSide{
+  font-size:48px;
+  font-weight:bold;
+  margin-top:8px;
+}
+
+.statusBox{
+  background:#111827;
+  border:1px solid rgba(255,215,0,.35);
+  border-radius:18px;
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  align-items:center;
+  text-align:center;
+  gap:10px;
+  padding:10px;
+}
+
+.statusItem{
+  font-size:28px;
+  font-weight:bold;
+}
+
+@media(max-width:900px){
+  html,body{
+    overflow:auto;
   }
 
-  .value{
-    font-size:42px;
+  .dashboard{
+    display:block;
+    height:auto;
   }
 
-  .profit-row{
+  .left,.right,.grid3{
+    display:block;
+  }
+
+  .card,.alert,.bestBox,.statusBox{
+    margin-bottom:12px;
+    min-height:120px;
+  }
+
+  .statusBox{
+    display:block;
+  }
+
+  h1{
     font-size:24px;
   }
 }
@@ -115,99 +231,111 @@ button{
 <body>
 
 <div class="topbar">
-  <button onclick="switchLang('zh')">中文</button>
-  <button onclick="switchLang('th')">ไทย</button>
+  <button class="langBtn" onclick="switchLang('zh')">中文</button>
+  <h1>📊 SIAMBET88 STAFF MONITOR</h1>
+  <button class="langBtn" onclick="switchLang('th')">ไทย</button>
 </div>
 
-<h1>📊 SIAMBET88 STAFF MONITOR</h1>
-
-<div id="loginBox" style="text-align:center;margin-top:50px;">
+<div id="loginBox">
   <h2>请输入管理员密码</h2>
-  <input id="adminPass" type="password" style="font-size:24px;padding:12px;border-radius:10px;">
-  <br><br>
-  <button onclick="loginMonitor()">进入 Monitor</button>
+  <input id="adminPass" type="password" placeholder="Admin Password">
+  <br>
+  <button class="loginBtn" onclick="loginMonitor()">进入 Monitor</button>
 </div>
 
 <div id="monitorBox" style="display:none;">
 
-  <div class="grid">
-    <div class="card">
-      <div class="title" id="tOnline">🟢 在线会员</div>
-      <div class="value green" id="online">0</div>
+  <div class="dashboard">
+
+    <div class="left">
+
+      <div class="grid3">
+        <div class="card">
+          <div class="title" id="tOnline">🟢 在线会员</div>
+          <div class="value green" id="online">0</div>
+        </div>
+
+        <div class="card">
+          <div class="title" id="tWatching">👀 观看直播</div>
+          <div class="value blue" id="watching">0</div>
+        </div>
+
+        <div class="card">
+          <div class="title" id="tBetUsers">🎯 本局下注</div>
+          <div class="value gold" id="totalBetUsers">0</div>
+        </div>
+      </div>
+
+      <div class="grid3">
+        <div class="card">
+          <div class="title red">🔴 BANKER</div>
+          <div class="value red" id="bankerUsers">0</div>
+        </div>
+
+        <div class="card">
+          <div class="title blue">🔵 PLAYER</div>
+          <div class="value blue" id="playerUsers">0</div>
+        </div>
+
+        <div class="card">
+          <div class="title green">🟢 TIE</div>
+          <div class="value green" id="tieUsers">0</div>
+        </div>
+      </div>
+
+      <div class="grid3">
+        <div class="card">
+          <div class="title">💰 BANKER</div>
+          <div class="smallValue gold" id="bankerAmount">฿0</div>
+        </div>
+
+        <div class="card">
+          <div class="title">💰 PLAYER</div>
+          <div class="smallValue gold" id="playerAmount">฿0</div>
+        </div>
+
+        <div class="card">
+          <div class="title">💰 TIE</div>
+          <div class="smallValue gold" id="tieAmount">฿0</div>
+        </div>
+      </div>
+
     </div>
 
-    <div class="card">
-      <div class="title" id="tWatching">👀 观看直播</div>
-      <div class="value blue" id="watching">0</div>
+    <div class="right">
+
+      <div class="alert">
+        <h2 id="tProfit">🔔 平台盈利预测</h2>
+
+        <div class="profitRow">
+          <span>BANKER</span>
+          <span id="profitBanker">฿0</span>
+        </div>
+
+        <div class="profitRow">
+          <span>PLAYER</span>
+          <span id="profitPlayer">฿0</span>
+        </div>
+
+        <div class="profitRow">
+          <span>TIE</span>
+          <span id="profitTie">฿0</span>
+        </div>
+      </div>
+
+      <div class="bestBox">
+        <div class="bestTitle" id="tBest">🔥 建议结果</div>
+        <div class="bestSide" id="bestSide">-</div>
+      </div>
+
+      <div class="statusBox">
+        <div class="statusItem" id="round">🎯 #0</div>
+        <div class="statusItem" id="timeLeft">⏱ 0s</div>
+        <div class="statusItem" id="betStatus">🔴 停止下注</div>
+      </div>
+
     </div>
 
-    <div class="card">
-      <div class="title" id="tBetUsers">🎯 本局下注人数</div>
-      <div class="value gold" id="totalBetUsers">0</div>
-    </div>
-  </div>
-
-  <br>
-
-  <div class="grid">
-    <div class="card">
-      <div class="title red">🔴 BANKER</div>
-      <div class="value red" id="bankerUsers">0</div>
-    </div>
-
-    <div class="card">
-      <div class="title blue">🔵 PLAYER</div>
-      <div class="value blue" id="playerUsers">0</div>
-    </div>
-
-    <div class="card">
-      <div class="title green">🟢 TIE</div>
-      <div class="value green" id="tieUsers">0</div>
-    </div>
-  </div>
-
-  <br>
-
-  <div class="grid">
-    <div class="card">
-      <div class="title">💰 BANKER</div>
-      <div class="value gold" id="bankerAmount">฿0</div>
-    </div>
-
-    <div class="card">
-      <div class="title">💰 PLAYER</div>
-      <div class="value gold" id="playerAmount">฿0</div>
-    </div>
-
-    <div class="card">
-      <div class="title">💰 TIE</div>
-      <div class="value gold" id="tieAmount">฿0</div>
-    </div>
-  </div>
-
-  <div class="alert">
-    <h2 id="tProfit">🔔 平台盈利预测</h2>
-
-    <div class="profit-row">
-      <span>BANKER</span>
-      <span id="profitBanker">฿0</span>
-    </div>
-
-    <div class="profit-row">
-      <span>PLAYER</span>
-      <span id="profitPlayer">฿0</span>
-    </div>
-
-    <div class="profit-row">
-      <span>TIE</span>
-      <span id="profitTie">฿0</span>
-    </div>
-  </div>
-
-  <div class="statusBox">
-    <div id="round">🎯 ROUND #0</div>
-    <div id="timeLeft">⏱ 0 秒</div>
-    <div id="betStatus">🔴 停止下注</div>
   </div>
 
 </div>
@@ -225,13 +353,15 @@ function applyLang(){
   if(lang === "zh"){
     document.getElementById("tOnline").innerText = "🟢 在线会员";
     document.getElementById("tWatching").innerText = "👀 观看直播";
-    document.getElementById("tBetUsers").innerText = "🎯 本局下注人数";
+    document.getElementById("tBetUsers").innerText = "🎯 本局下注";
     document.getElementById("tProfit").innerText = "🔔 平台盈利预测";
+    document.getElementById("tBest").innerText = "🔥 建议结果";
   }else{
     document.getElementById("tOnline").innerText = "🟢 สมาชิกออนไลน์";
     document.getElementById("tWatching").innerText = "👀 กำลังดูไลฟ์";
     document.getElementById("tBetUsers").innerText = "🎯 ผู้เดิมพันรอบนี้";
-    document.getElementById("tProfit").innerText = "🔔 คาดการณ์กำไรแพลตฟอร์ม";
+    document.getElementById("tProfit").innerText = "🔔 คาดการณ์กำไร";
+    document.getElementById("tBest").innerText = "🔥 ผลที่แนะนำ";
   }
 }
 
@@ -247,11 +377,12 @@ async function loginMonitor(){
   const data = await res.json();
 
   if(!data.success){
-    alert("密码错误");
+    alert(lang === "zh" ? "密码错误" : "รหัสผ่านไม่ถูกต้อง");
     return;
   }
 
   adminToken = data.token;
+
   document.getElementById("loginBox").style.display = "none";
   document.getElementById("monitorBox").style.display = "block";
 
@@ -262,13 +393,38 @@ async function loginMonitor(){
 function money(n){
   n = Number(n || 0);
   const sign = n >= 0 ? "+" : "-";
-  return sign + "฿" + Math.abs(n).toLocaleString();
+  return sign + "฿" + Math.abs(Math.round(n)).toLocaleString();
 }
 
-function setProfit(id, value){
+function amount(n){
+  return "฿" + Number(n || 0).toLocaleString();
+}
+
+function setProfit(id,value){
   const el = document.getElementById(id);
   el.innerText = money(value);
   el.style.color = Number(value) >= 0 ? "#00ff88" : "#ff4444";
+}
+
+function updateBest(d){
+  const list = [
+    {side:"BANKER", profit:Number(d.profitIfBanker || 0)},
+    {side:"PLAYER", profit:Number(d.profitIfPlayer || 0)},
+    {side:"TIE", profit:Number(d.profitIfTie || 0)}
+  ];
+
+  list.sort((a,b)=>b.profit - a.profit);
+
+  const best = list[0];
+  const el = document.getElementById("bestSide");
+
+  el.innerText = best.side + "  " + money(best.profit);
+
+  if(best.profit >= 0){
+    el.style.color = "#00ff88";
+  }else{
+    el.style.color = "#ff4444";
+  }
 }
 
 async function loadMonitor(){
@@ -280,24 +436,27 @@ async function loadMonitor(){
 
   const d = await res.json();
 
-  document.getElementById("online").innerText = d.online;
-  document.getElementById("watching").innerText = d.watching;
-  document.getElementById("totalBetUsers").innerText = d.totalBetUsers;
+  document.getElementById("online").innerText = d.online || 0;
+  document.getElementById("watching").innerText = d.watching || 0;
+  document.getElementById("totalBetUsers").innerText = d.totalBetUsers || 0;
 
-  document.getElementById("bankerUsers").innerText = d.bankerUsers;
-  document.getElementById("playerUsers").innerText = d.playerUsers;
-  document.getElementById("tieUsers").innerText = d.tieUsers;
+  document.getElementById("bankerUsers").innerText = d.bankerUsers || 0;
+  document.getElementById("playerUsers").innerText = d.playerUsers || 0;
+  document.getElementById("tieUsers").innerText = d.tieUsers || 0;
 
-  document.getElementById("bankerAmount").innerText = "฿" + Number(d.bankerAmount || 0).toLocaleString();
-  document.getElementById("playerAmount").innerText = "฿" + Number(d.playerAmount || 0).toLocaleString();
-  document.getElementById("tieAmount").innerText = "฿" + Number(d.tieAmount || 0).toLocaleString();
+  document.getElementById("bankerAmount").innerText = amount(d.bankerAmount);
+  document.getElementById("playerAmount").innerText = amount(d.playerAmount);
+  document.getElementById("tieAmount").innerText = amount(d.tieAmount);
 
   setProfit("profitBanker", d.profitIfBanker);
   setProfit("profitPlayer", d.profitIfPlayer);
   setProfit("profitTie", d.profitIfTie);
 
-  document.getElementById("round").innerText = "🎯 ROUND #" + d.round;
-  document.getElementById("timeLeft").innerText = "⏱ " + d.timeLeft + (lang === "zh" ? " 秒" : " วินาที");
+  updateBest(d);
+
+  document.getElementById("round").innerText = "🎯 ROUND #" + (d.round || 0);
+  document.getElementById("timeLeft").innerText =
+    "⏱ " + (d.timeLeft || 0) + (lang === "zh" ? " 秒" : " วิ");
 
   document.getElementById("betStatus").innerText =
     d.isBetting

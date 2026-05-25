@@ -1343,8 +1343,6 @@ target.appendChild(clone);
 }, 500);
 }
   
-// ===== 自动读取 LINE 登录 =====
-// ===== 登录保护系统 =====
 // ===== 登录保护系统（专业版） =====
 window.onload = function(){
 
@@ -1363,7 +1361,31 @@ return;
 currentUserId = userId;
 document.getElementById("memberName").innerText =
 "👤 " + name;
+
+// ===== 发送在线心跳 =====
+sendHeartbeat();
+
+setInterval(()=>{
+  sendHeartbeat();
+},10000);
+
 };
+
+function sendHeartbeat(){
+  if(!currentUserId) return;
+
+  fetch("/heartbeat",{
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json"
+    },
+    body:JSON.stringify({
+      userId: currentUserId,
+      page: "live"
+    })
+  });
+}
+  
 function showResult(result) {
 
   const B = document.getElementById("areaB");

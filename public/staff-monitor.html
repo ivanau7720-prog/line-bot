@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>SIAMBET88 STAFF MONITOR</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{
+  margin:0;
+  background:#0b1020;
+  color:white;
+  font-family:Arial, sans-serif;
+  padding:20px;
+}
+
+h1{
+  text-align:center;
+  color:gold;
+  font-size:34px;
+}
+
+.topbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:20px;
+}
+
+button{
+  padding:10px 18px;
+  border:none;
+  border-radius:10px;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:18px;
+}
+
+.card{
+  background:#111827;
+  border:1px solid #333;
+  border-radius:18px;
+  padding:25px;
+  text-align:center;
+  box-shadow:0 0 18px rgba(255,215,0,.15);
+}
+
+.title{
+  font-size:24px;
+  margin-bottom:15px;
+}
+
+.value{
+  font-size:46px;
+  font-weight:bold;
+}
+
+.gold{color:gold;}
+.red{color:#ff4444;}
+.blue{color:#3399ff;}
+.green{color:#00ff88;}
+
+.alert{
+  margin-top:22px;
+  background:#111827;
+  border:2px solid gold;
+  border-radius:20px;
+  padding:25px;
+}
+
+.alert h2{
+  color:gold;
+  text-align:center;
+  font-size:30px;
+}
+
+.profit-row{
+  font-size:34px;
+  display:flex;
+  justify-content:space-between;
+  padding:12px 0;
+  border-bottom:1px solid #333;
+}
+
+.statusBox{
+  margin-top:22px;
+  background:#111827;
+  border-radius:20px;
+  padding:25px;
+  text-align:center;
+  font-size:30px;
+}
+
+@media(max-width:768px){
+  .grid{
+    grid-template-columns:1fr;
+  }
+
+  .value{
+    font-size:42px;
+  }
+
+  .profit-row{
+    font-size:24px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="topbar">
+  <button onclick="switchLang('zh')">中文</button>
+  <button onclick="switchLang('th')">ไทย</button>
+</div>
+
+<h1>📊 SIAMBET88 STAFF MONITOR</h1>
+
+<div id="loginBox" style="text-align:center;margin-top:50px;">
+  <h2>请输入管理员密码</h2>
+  <input id="adminPass" type="password" style="font-size:24px;padding:12px;border-radius:10px;">
+  <br><br>
+  <button onclick="loginMonitor()">进入 Monitor</button>
+</div>
+
+<div id="monitorBox" style="display:none;">
+
+  <div class="grid">
+    <div class="card">
+      <div class="title" id="tOnline">🟢 在线会员</div>
+      <div class="value green" id="online">0</div>
+    </div>
+
+    <div class="card">
+      <div class="title" id="tWatching">👀 观看直播</div>
+      <div class="value blue" id="watching">0</div>
+    </div>
+
+    <div class="card">
+      <div class="title" id="tBetUsers">🎯 本局下注人数</div>
+      <div class="value gold" id="totalBetUsers">0</div>
+    </div>
+  </div>
+
+  <br>
+
+  <div class="grid">
+    <div class="card">
+      <div class="title red">🔴 BANKER</div>
+      <div class="value red" id="bankerUsers">0</div>
+    </div>
+
+    <div class="card">
+      <div class="title blue">🔵 PLAYER</div>
+      <div class="value blue" id="playerUsers">0</div>
+    </div>
+
+    <div class="card">
+      <div class="title green">🟢 TIE</div>
+      <div class="value green" id="tieUsers">0</div>
+    </div>
+  </div>
+
+  <br>
+
+  <div class="grid">
+    <div class="card">
+      <div class="title">💰 BANKER</div>
+      <div class="value gold" id="bankerAmount">฿0</div>
+    </div>
+
+    <div class="card">
+      <div class="title">💰 PLAYER</div>
+      <div class="value gold" id="playerAmount">฿0</div>
+    </div>
+
+    <div class="card">
+      <div class="title">💰 TIE</div>
+      <div class="value gold" id="tieAmount">฿0</div>
+    </div>
+  </div>
+
+  <div class="alert">
+    <h2 id="tProfit">🔔 平台盈利预测</h2>
+
+    <div class="profit-row">
+      <span>BANKER</span>
+      <span id="profitBanker">฿0</span>
+    </div>
+
+    <div class="profit-row">
+      <span>PLAYER</span>
+      <span id="profitPlayer">฿0</span>
+    </div>
+
+    <div class="profit-row">
+      <span>TIE</span>
+      <span id="profitTie">฿0</span>
+    </div>
+  </div>
+
+  <div class="statusBox">
+    <div id="round">🎯 ROUND #0</div>
+    <div id="timeLeft">⏱ 0 秒</div>
+    <div id="betStatus">🔴 停止下注</div>
+  </div>
+
+</div>
+
+<script>
+let adminToken = "";
+let lang = "zh";
+
+function switchLang(l){
+  lang = l;
+  applyLang();
+}
+
+function applyLang(){
+  if(lang === "zh"){
+    document.getElementById("tOnline").innerText = "🟢 在线会员";
+    document.getElementById("tWatching").innerText = "👀 观看直播";
+    document.getElementById("tBetUsers").innerText = "🎯 本局下注人数";
+    document.getElementById("tProfit").innerText = "🔔 平台盈利预测";
+  }else{
+    document.getElementById("tOnline").innerText = "🟢 สมาชิกออนไลน์";
+    document.getElementById("tWatching").innerText = "👀 กำลังดูไลฟ์";
+    document.getElementById("tBetUsers").innerText = "🎯 ผู้เดิมพันรอบนี้";
+    document.getElementById("tProfit").innerText = "🔔 คาดการณ์กำไรแพลตฟอร์ม";
+  }
+}
+
+async function loginMonitor(){
+  const password = document.getElementById("adminPass").value;
+
+  const res = await fetch("/admin-login",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({password})
+  });
+
+  const data = await res.json();
+
+  if(!data.success){
+    alert("密码错误");
+    return;
+  }
+
+  adminToken = data.token;
+  document.getElementById("loginBox").style.display = "none";
+  document.getElementById("monitorBox").style.display = "block";
+
+  loadMonitor();
+  setInterval(loadMonitor,2000);
+}
+
+function money(n){
+  n = Number(n || 0);
+  const sign = n >= 0 ? "+" : "-";
+  return sign + "฿" + Math.abs(n).toLocaleString();
+}
+
+function setProfit(id, value){
+  const el = document.getElementById(id);
+  el.innerText = money(value);
+  el.style.color = Number(value) >= 0 ? "#00ff88" : "#ff4444";
+}
+
+async function loadMonitor(){
+  const res = await fetch("/admin/monitor-data",{
+    headers:{
+      "x-admin-token": adminToken
+    }
+  });
+
+  const d = await res.json();
+
+  document.getElementById("online").innerText = d.online;
+  document.getElementById("watching").innerText = d.watching;
+  document.getElementById("totalBetUsers").innerText = d.totalBetUsers;
+
+  document.getElementById("bankerUsers").innerText = d.bankerUsers;
+  document.getElementById("playerUsers").innerText = d.playerUsers;
+  document.getElementById("tieUsers").innerText = d.tieUsers;
+
+  document.getElementById("bankerAmount").innerText = "฿" + Number(d.bankerAmount || 0).toLocaleString();
+  document.getElementById("playerAmount").innerText = "฿" + Number(d.playerAmount || 0).toLocaleString();
+  document.getElementById("tieAmount").innerText = "฿" + Number(d.tieAmount || 0).toLocaleString();
+
+  setProfit("profitBanker", d.profitIfBanker);
+  setProfit("profitPlayer", d.profitIfPlayer);
+  setProfit("profitTie", d.profitIfTie);
+
+  document.getElementById("round").innerText = "🎯 ROUND #" + d.round;
+  document.getElementById("timeLeft").innerText = "⏱ " + d.timeLeft + (lang === "zh" ? " 秒" : " วินาที");
+
+  document.getElementById("betStatus").innerText =
+    d.isBetting
+    ? (lang === "zh" ? "🟢 开放下注" : "🟢 เปิดรับเดิมพัน")
+    : (lang === "zh" ? "🔴 停止下注" : "🔴 ปิดรับเดิมพัน");
+}
+
+applyLang();
+</script>
+
+</body>
+</html>

@@ -17,12 +17,13 @@ html,body{
   overflow:hidden;
 
   background:
-    radial-gradient(circle at top left, rgba(0,180,255,0.16), transparent 35%),
-    radial-gradient(circle at bottom right, rgba(255,215,0,0.10), transparent 38%),
-    linear-gradient(135deg,#020617 0%,#07122a 35%,#081830 65%,#020617 100%);
+    radial-gradient(circle at 20% 20%, rgba(255,215,0,.08), transparent 25%),
+    radial-gradient(circle at 80% 30%, rgba(0,180,255,.10), transparent 25%),
+    radial-gradient(circle at 50% 90%, rgba(255,215,0,.06), transparent 35%),
+    linear-gradient(135deg,#01040d 0%,#04142d 30%,#071d3f 60%,#01040d 100%);
 
   color:white;
-  font-family:Arial, sans-serif;
+  font-family:Arial,sans-serif;
 }
 body::before{
   content:"";
@@ -39,6 +40,53 @@ body::before{
     linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
 
   background-size:42px 42px;
+}
+body::after{
+  content:"♠ ♥ ♣ ♦";
+
+  position:fixed;
+
+  top:50%;
+  left:50%;
+
+  transform:
+    translate(-50%,-50%);
+
+  font-size:180px;
+
+  font-weight:bold;
+
+  letter-spacing:60px;
+
+ color:rgba(255,215,0,.08);
+
+  pointer-events:none;
+
+  z-index:0;
+}
+.glow-ring{
+  position:fixed;
+
+  top:50%;
+  left:50%;
+
+  width:700px;
+  height:700px;
+
+  transform:translate(-50%,-50%);
+
+  border-radius:50%;
+
+  background:
+  radial-gradient(
+    circle,
+    rgba(255,215,0,.12),
+    transparent 70%
+  );
+
+  pointer-events:none;
+
+  z-index:0;
 }
   
 body{
@@ -60,10 +108,21 @@ body{
 
 h1{
   margin:0;
-  color:gold;
-  font-size:34px;
+
+  color:#ffd700;
+
+  font-size:42px;
+
   text-align:center;
+
   flex:1;
+
+  letter-spacing:2px;
+
+  text-shadow:
+    0 0 10px rgba(255,215,0,.9),
+    0 0 20px rgba(255,215,0,.5),
+    0 0 35px rgba(255,215,0,.2);
 }
 
 .langBtn{
@@ -80,8 +139,15 @@ h1{
   margin-top:120px;
   text-align:center;
 
-  background:rgba(255,255,255,.04);
-  border:1px solid rgba(255,215,0,.2);
+  background:rgba(5,10,25,.75);
+
+border:1px solid rgba(255,215,0,.45);
+
+box-shadow:
+0 0 20px rgba(255,215,0,.15),
+0 0 40px rgba(255,215,0,.08);
+
+backdrop-filter:blur(12px);
   backdrop-filter:blur(10px);
 
   width:520px;
@@ -141,7 +207,9 @@ linear-gradient(
   flex-direction:column;
   align-items:center;
   justify-content:center;
-  box-shadow:0 0 12px rgba(255,215,0,.12);
+  box-shadow:
+0 0 12px rgba(255,215,0,.18),
+0 0 30px rgba(255,215,0,.05);
   min-height:120px;
 }
 
@@ -272,6 +340,8 @@ linear-gradient(
 </head>
 
 <body>
+
+<div class="glow-ring"></div>
 
 <div class="topbar">
   <button class="langBtn" onclick="switchLang('zh')">中文</button>

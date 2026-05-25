@@ -95,6 +95,7 @@ let playersCache = {};
 let betCooldown = {};
 let rechargeCooldown = {};
 let withdrawCooldown = {};
+let onlineUsers = {};
 // ===== 获取用户 =====
 async function getUser(userId) {
   try {
@@ -410,6 +411,128 @@ app.get("/stats", async (req, res) => {
       B: 0,
       P: 0,
       T: 0
+    });
+  }
+});
+
+// ===== 玩家在线心跳 =====
+app.post("/heartbeat", (req, res) => {
+  const { userId, page } = req.body;
+
+  if(userId){
+    onlineUsers[userId] = {
+      time: Date.now(),
+      page: page || "live"
+    };
+  }
+
+  res.json({ success:true });
+});
+
+
+// ===== Staff Monitor 真实数据 =====
+app.get("/admin/monitor-data", checkAdmin, async (req, res) => {
+  try{
+
+    const now = Date.now();
+
+    let online = 0;
+    let watching = 0;
+
+    Object.values(onlineUsers).forEach(u=>{
+      if(now - u.time < 60000){
+        online++;
+
+        if(u.page === "live"){
+          watching++;
+        }
+      }
+    });
+
+    let bankerUsers = 0;
+    let playerUsers = 0;
+    let tieUsers = 0;
+
+    let bankerAmount = 0;
+    let playerAmount = 0;
+    let tieAmount = 0;
+
+    for(const uid in GAME.bets){
+      const bet = GAME.bets[uid];
+
+      if(bet.side === "B"){
+        bankerUsers++;
+        bankerAmount += Number(bet.amount || 0);
+      }
+
+      if(bet.side === "P"){
+        playerUsers++;
+        playerAmount += Number(bet.amount || 0);
+      }
+
+      if(bet.side === "T"){
+        tieUsers++;
+        tieAmount += Number(bet.amount || 0);
+      }
+    }
+
+    const totalBet =
+      bankerAmount + playerAmount + tieAmount;
+
+    const profitIfBanker =
+      totalBet - (bankerAmount * 1.95);
+
+    const profitIfPlayer =
+      totalBet - (playerAmount * 2);
+
+    const profitIfTie =
+      totalBet - (tieAmount * 9);
+
+    res.json({
+      online,
+      watching,
+      totalBetUsers: bankerUsers + playerUsers + tieUsers,
+
+      bankerUsers,
+      playerUsers,
+      tieUsers,
+
+      bankerAmount,
+      playerAmount,
+      tieAmount,
+
+      profitIfBanker,
+      profitIfPlayer,
+      profitIfTie,
+
+      round: GAME.currentRound || 0,
+      timeLeft: GAME.timeLeft || 0,
+      isBetting: GAME.isBetting
+    });
+
+  }catch(err){
+    console.error("monitor-data error:", err);
+
+    res.json({
+      online:0,
+      watching:0,
+      totalBetUsers:0,
+
+      bankerUsers:0,
+      playerUsers:0,
+      tieUsers:0,
+
+      bankerAmount:0,
+      playerAmount:0,
+      tieAmount:0,
+
+      profitIfBanker:0,
+      profitIfPlayer:0,
+      profitIfTie:0,
+
+      round:0,
+      timeLeft:0,
+      isBetting:false
     });
   }
 });

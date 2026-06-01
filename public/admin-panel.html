@@ -200,48 +200,120 @@ onclick="minus()">
 </div>
 
 <div class="card">
-  <h3>🤝 代理管理</h3>
 
-  <input id="agentCode" placeholder="代理编号，例如 AG001">
-  <input id="agentName" placeholder="代理名字">
+<h3 id="agentTitle">
+🤝 代理管理
+</h3>
 
-  <button onclick="createAgent()">➕ 新增代理</button>
+<input
+id="agentCode"
+placeholder="代理编号，例如 AG001"
+>
 
-  <h3>📊 代理流水</h3>
-  <div id="agents">暂无代理资料</div>
+<input
+id="agentName"
+placeholder="代理名字"
+>
+
+<button
+id="createAgentBtn"
+onclick="createAgent()">
+
+➕ 新增代理
+
+</button>
+
+<h3 id="agentTurnoverTitle">
+📊 代理流水
+</h3>
+
+<div id="agents">
+暂无代理资料
+</div>
+
 </div>
   
 <!-- 👇👇👇 这里是你新加的 -->
 <div class="card">
-  <h3>👥 玩家列表</h3>
-  <div id="players"></div>
+
+<h3 id="playersTitle">
+👥 玩家列表
+</h3>
+
+<div id="players">
 </div>
 
- <div class="card">
- <h3>📜 游戏记录</h3>
- <div id="rounds"></div>
-  </div>
-
+</div>
 <div class="card">
-  <h3>💳 充值申请</h3>
-  <div id="rechargeRequests">暂无充值申请</div>
+
+<h3 id="roundsTitle">
+📜 游戏记录
+</h3>
+
+<div id="rounds">
+</div>
+
 </div>
 
 <div class="card">
-  <h3>🏧 提款申请</h3>
-  <div id="withdrawRequests">暂无提款申请</div>
+<h3 id="rechargeTitle">
+💳 充值申请
+</h3>
+
+<div id="rechargeRequests">
+暂无充值申请
+</div>
+
+</div>
+
+<div class="card">
+
+<h3 id="withdrawTitle">
+🏧 提款申请
+</h3>
+
+<div id="withdrawRequests">
+暂无提款申请
+</div>
+
 </div>
   
 <div class="card">
-  <h3>📜 玩家流水记录</h3>
 
-  <input id="filterUserId" placeholder="玩家ID">
-  <input id="filterAgentCode" placeholder="代理编号，例如 AG001">
-  <input id="filterDate" type="date">
+<h3 id="txTitle">
+📜 玩家流水记录
+</h3>
 
-  <button onclick="loadTx()">🔍 搜索</button>
-  <button onclick="clearTxFilter()">❌ 清除</button>
+<input
+id="filterUserId"
+placeholder="玩家ID"
+>
 
+<input
+id="filterAgentCode"
+placeholder="代理编号，例如 AG001"
+>
+
+<input
+id="filterDate"
+type="date"
+>
+
+<button
+id="searchBtn"
+onclick="loadTx()">
+
+🔍 搜索
+
+</button>
+
+<button
+id="clearBtn"
+onclick="clearTxFilter()">
+
+❌ 清除
+
+</button>
   <br><br>
 
   <div id="tx"></div>
@@ -268,7 +340,19 @@ fund:"💰 玩家资金",
 uid:"玩家ID",
 amount:"金额",
 add:"➕ 加钱",
-minus:"➖ 扣钱"
+minus:"➖ 扣钱",
+agent:"🤝 代理管理",
+agentCode:"代理编号，例如 AG001",
+agentName:"代理名字",
+createAgent:"➕ 新增代理",
+agentTurnover:"📊 代理流水",
+noAgent:"暂无代理资料",
+players:"👥 玩家列表",
+rounds:"📜 游戏记录",
+rechargeTitle:"💳 充值申请",
+noRecharge:"暂无充值申请",
+withdrawTitle:"🏧 提款申请",
+noWithdraw:"暂无提款申请"
 },
 
 th:{
@@ -289,7 +373,19 @@ fund:"💰 เงินผู้เล่น",
 uid:"รหัสผู้เล่น",
 amount:"จำนวนเงิน",
 add:"➕ เพิ่มเงิน",
-minus:"➖ หักเงิน"
+minus:"➖ หักเงิน",
+agent:"🤝 จัดการเอเย่นต์",
+agentCode:"รหัสเอเย่นต์ เช่น AG001",
+agentName:"ชื่อเอเย่นต์",
+createAgent:"➕ เพิ่มเอเย่นต์",
+agentTurnover:"📊 ยอดเทิร์นโอเวอร์เอเย่นต์",
+noAgent:"ยังไม่มีข้อมูลเอเย่นต์",
+players:"👥 รายชื่อผู้เล่น",
+rounds:"📜 ประวัติเกม",
+rechargeTitle:"💳 คำขอเติมเงิน",
+noRecharge:"ยังไม่มีคำขอเติมเงิน",
+withdrawTitle:"🏧 คำขอถอนเงิน",
+noWithdraw:"ยังไม่มีคำขอถอนเงิน"
 }
 
 };
@@ -335,6 +431,9 @@ document.getElementById("betList").innerText==="暂无下注"
 
 document.getElementById("betList").innerText=
 LANG[lang].noBet;
+
+}
+
 document.getElementById("fundTitle").innerText =
 LANG[lang].fund;
 
@@ -349,8 +448,47 @@ LANG[lang].add;
 
 document.getElementById("minusBtn").innerText =
 LANG[lang].minus;
-}
 
+document.getElementById("agentTitle").innerText =
+LANG[lang].agent;
+
+document.getElementById("agentCode").placeholder =
+LANG[lang].agentCode;
+
+document.getElementById("agentName").placeholder =
+LANG[lang].agentName;
+
+document.getElementById("createAgentBtn").innerText =
+LANG[lang].createAgent;
+
+document.getElementById("agentTurnoverTitle").innerText =
+LANG[lang].agentTurnover;
+
+document.getElementById("playersTitle").innerText =
+LANG[lang].players;
+document.getElementById("roundsTitle").innerText =
+LANG[lang].rounds;
+document.getElementById("rechargeTitle").innerText =
+LANG[lang].rechargeTitle;
+
+if(
+document.getElementById("rechargeRequests").innerText==="暂无充值申请"
+){
+
+document.getElementById("rechargeRequests").innerText =
+LANG[lang].noRecharge;
+}
+document.getElementById("withdrawTitle").innerText =
+LANG[lang].withdrawTitle;
+
+if(
+document.getElementById("withdrawRequests").innerText==="暂无提款申请"
+){
+
+document.getElementById("withdrawRequests").innerText =
+LANG[lang].noWithdraw;
+
+}
 localStorage.setItem(
 "adminLang",
 lang

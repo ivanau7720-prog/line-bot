@@ -88,10 +88,10 @@ margin-bottom:20px;
 </div>
 
 <div class="card" style="border:2px solid red;">
-  <h3>🔔 审核提醒</h3>
+  <h3 id="reviewTitle">🔔 审核提醒</h3>
 
   <button onclick="loadRechargeRequests()">
-    💳 充值申请
+    <span id="rechargeBtnText">💳 充值申请</span>
     <span id="rechargeBadge" style="
       background:red;
       color:white;
@@ -102,8 +102,8 @@ margin-bottom:20px;
     ">0</span>
   </button>
 
-  <button onclick="loadWithdrawRequests()">
-    🏧 提款申请
+<button onclick="loadWithdrawRequests()">
+    <span id="withdrawBtnText">🏧 提款申请</span>
     <span id="withdrawBadge" style="
       background:red;
       color:white;
@@ -114,40 +114,89 @@ margin-bottom:20px;
     ">0</span>
   </button>
 </div>
-<button onclick="logoutAdmin()">🚪 退出登录</button>
+<button id="logoutBtn" onclick="logoutAdmin()">
+🚪 退出登录
+</button>
 <div class="card">
-  <h3>📊 盈利统计</h3>
+  <h3 id="profitTitle">
+📊 盈利统计
+</h3>
   <div id="profitToday">今日盈利：--</div>
   <div id="profitTotal">总盈利：--</div>
 </div>
   
 <div class="card">
-  <h3>🎰 游戏控制</h3>
 
-  <button onclick="startGame()">▶ 开始下注</button>
-  <button onclick="stopGame()">⛔ 停止下注</button>
+<h3 id="gameTitle">
+🎰 游戏控制
+</h3>
 
-  <br><br>
+<button id="startBtn" onclick="startGame()">
+▶ 开始下注
+</button>
 
-  <input id="resultInput" placeholder="输入 B / P / T">
+<button id="stopBtn" onclick="stopGame()">
+⛔ 停止下注
+</button>
 
-  <button onclick="setResult()">🏁 开奖</button>
+<br><br>
+
+<input
+id="resultInput"
+placeholder="输入 B / P / T"
+>
+
+<button id="resultBtn" onclick="setResult()">
+🏁 开奖
+</button>
+
 </div>
 
 <!-- 👇👇👇 新增这里 -->
 <div class="card">
-  <h3>📋 当前下注记录</h3>
-  <div id="betList">暂无下注</div>
+
+<h3 id="betTitle">
+📋 当前下注记录
+</h3>
+
+<div id="betList">
+暂无下注
+</div>
+
 </div>
 
 <div class="card">
-<h3>💰 玩家资金</h3>
 
-<input id="uid" placeholder="玩家ID">
-<input id="amt" placeholder="金额">
+<h3 id="fundTitle">
+💰 玩家资金
+</h3>
 
-<button onclick="add()">➕ 加钱</button>
-<button onclick="minus()">➖ 扣钱</button>
+<input
+id="uid"
+placeholder="玩家ID"
+>
+
+<input
+id="amt"
+placeholder="金额"
+>
+
+<button
+id="addBtn"
+onclick="add()">
+
+➕ 加钱
+
+</button>
+
+<button
+id="minusBtn"
+onclick="minus()">
+
+➖ 扣钱
+
+</button>
+
 </div>
 
 <div class="card">
@@ -202,26 +251,111 @@ margin-bottom:20px;
 const LANG={
 
 zh:{
-title:"🎮 管理员面板"
+title:"🎮 管理员面板",
+review:"🔔 审核提醒",
+rechargeBtn:"💳 充值申请",
+withdrawBtn:"🏧 提款申请",
+logout:"🚪 退出登录",
+profit:"📊 盈利统计",
+game:"🎰 游戏控制",
+start:"▶ 开始下注",
+stop:"⛔ 停止下注",
+result:"🏁 开奖",
+input:"输入 B / P / T",
+bet:"📋 当前下注记录",
+noBet:"暂无下注",
+fund:"💰 玩家资金",
+uid:"玩家ID",
+amount:"金额",
+add:"➕ 加钱",
+minus:"➖ 扣钱"
 },
 
 th:{
-title:"🎮 แผงควบคุมผู้ดูแลระบบ"
+title:"🎮 แผงควบคุมผู้ดูแลระบบ",
+review:"🔔 แจ้งเตือนการตรวจสอบ",
+rechargeBtn:"💳 คำขอเติมเงิน",
+withdrawBtn:"🏧 คำขอถอนเงิน",
+logout:"🚪 ออกจากระบบ",
+profit:"📊 สถิติกำไร",
+game:"🎰 ควบคุมเกม",
+start:"▶ เปิดรับเดิมพัน",
+stop:"⛔ ปิดรับเดิมพัน",
+result:"🏁 ออกผล",
+input:"กรอก B / P / T",
+bet:"📋 รายการเดิมพันปัจจุบัน",
+noBet:"ยังไม่มีการเดิมพัน",
+fund:"💰 เงินผู้เล่น",
+uid:"รหัสผู้เล่น",
+amount:"จำนวนเงิน",
+add:"➕ เพิ่มเงิน",
+minus:"➖ หักเงิน"
 }
 
 };
 
 function switchLang(lang){
 
-document.getElementById("title")
-.innerText=
+document.getElementById("title").innerText =
 LANG[lang].title;
+
+document.getElementById("reviewTitle").innerText =
+LANG[lang].review;
+
+document.getElementById("rechargeBtnText").innerText =
+LANG[lang].rechargeBtn;
+
+document.getElementById("withdrawBtnText").innerText =
+LANG[lang].withdrawBtn;
+
+document.getElementById("logoutBtn").innerText =
+LANG[lang].logout;
+document.getElementById("profitTitle").innerText =
+LANG[lang].profit;
+document.getElementById("gameTitle").innerText =
+LANG[lang].game;
+
+document.getElementById("startBtn").innerText =
+LANG[lang].start;
+
+document.getElementById("stopBtn").innerText =
+LANG[lang].stop;
+
+document.getElementById("resultBtn").innerText =
+LANG[lang].result;
+
+document.getElementById("resultInput").placeholder =
+LANG[lang].input;
+document.getElementById("betTitle").innerText =
+LANG[lang].bet;
+
+if(
+document.getElementById("betList").innerText==="暂无下注"
+){
+
+document.getElementById("betList").innerText=
+LANG[lang].noBet;
+document.getElementById("fundTitle").innerText =
+LANG[lang].fund;
+
+document.getElementById("uid").placeholder =
+LANG[lang].uid;
+
+document.getElementById("amt").placeholder =
+LANG[lang].amount;
+
+document.getElementById("addBtn").innerText =
+LANG[lang].add;
+
+document.getElementById("minusBtn").innerText =
+LANG[lang].minus;
+}
 
 localStorage.setItem(
 "adminLang",
 lang
 );
-
+  
 }
 
 window.onload=()=>{

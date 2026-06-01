@@ -79,7 +79,17 @@ min-height:20px;
 
 <div class="box">
 
-<h1>🎰 MEMBER LOGIN</h1>
+<h1>👑 SIAMBET88</h1>
+
+<div style="
+color:#ffd700;
+font-size:14px;
+margin-top:-15px;
+margin-bottom:20px;
+letter-spacing:2px;
+">
+VIP MEMBER LOGIN
+</div>
 
 <input id="username" placeholder="Player ID">
 <input id="password" type="password" placeholder="Password">
@@ -88,8 +98,8 @@ min-height:20px;
 LOGIN
 </button>
 
-<button class="regBtn" onclick="register()">
-REGISTER
+<button class="regBtn" onclick="openRegisterBox()">
+CREATE ACCOUNT
 </button>
 
 <div class="small">
@@ -98,6 +108,62 @@ Forgot password? Contact Customer Service
 
 <div id="msg"></div>
 
+</div>
+
+<div id="registerBox" style="
+display:none;
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.85);
+justify-content:center;
+align-items:center;
+z-index:9999;
+">
+
+<div style="
+width:340px;
+background:linear-gradient(180deg,#111,#000);
+border:1px solid gold;
+border-radius:18px;
+padding:25px;
+box-shadow:0 0 30px gold;
+text-align:center;
+">
+
+<h1 style="color:gold;font-size:24px;">
+CREATE ACCOUNT
+</h1>
+
+<input id="regUsername" placeholder="Player ID 4-12 letters/numbers">
+
+<input id="regPassword" type="password" placeholder="Password">
+
+<input id="regConfirmPassword" type="password" placeholder="Confirm Password">
+
+<input id="regAgentCode" placeholder="Invite Code / Agent Code (optional)">
+
+<button class="regBtn" onclick="register()">
+CREATE NOW
+</button>
+
+<button onclick="closeRegisterBox()" style="
+background:#333;
+color:white;
+">
+CANCEL
+</button>
+
+<div id="regMsg" style="
+margin-top:12px;
+color:#ff8080;
+min-height:20px;
+font-size:14px;
+"></div>
+
+</div>
 </div>
 
 <script>
@@ -140,27 +206,94 @@ data.msg;
 async function register(){
 
 const username =
-document.getElementById("username").value.trim();
+document.getElementById("regUsername").value.trim();
 
 const password =
-document.getElementById("password").value.trim();
+document.getElementById("regPassword").value.trim();
 
-const res = await fetch("/register",{
+const confirm =
+document.getElementById("regConfirmPassword").value.trim();
+
+const agentCode =
+document.getElementById("regAgentCode").value.trim();
+
+if(password!==confirm){
+
+document.getElementById("regMsg").innerText=
+"Password not match";
+
+return;
+
+}
+
+const res =
+await fetch("/register",{
+
 method:"POST",
+
 headers:{
 "Content-Type":"application/json"
 },
+
 body:JSON.stringify({
-username,password
+
+username,
+password,
+agentCode
+
 })
+
 });
 
-const data = await res.json();
+const data =
+await res.json();
 
-document.getElementById("msg").innerText =
-data.msg || "Success";
+document.getElementById("regMsg").innerText=
+data.msg || "Account Created";
+
+if(data.success){
+
+document.getElementById("regMsg").innerText =
+"Account Created Successfully...";
+
+setTimeout(()=>{
+
+document.getElementById("username").value =
+username;
+
+document.getElementById("password").value =
+password;
+
+closeRegisterBox();
+
+login();
+
+},1200);
 
 }
+
+}
+
+function openRegisterBox(){
+
+document.getElementById(
+"registerBox"
+).style.display="flex";
+
+}
+
+function closeRegisterBox(){
+
+document.getElementById(
+"registerBox"
+).style.display="none";
+
+document.getElementById(
+"regMsg"
+).innerText="";
+
+}
+
 
 </script>
 

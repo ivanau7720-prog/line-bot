@@ -62,7 +62,31 @@ h2,h3{
 
 <body>
 
-<h2>🎮 管理员面板</h2>
+<div style="
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:20px;
+">
+
+<h2 id="title">
+🎮 管理员面板
+</h2>
+
+<div>
+
+<button onclick="switchLang('zh')">
+中文
+</button>
+
+<button onclick="switchLang('th')">
+ไทย
+</button>
+
+</div>
+
+</div>
+
 <div class="card" style="border:2px solid red;">
   <h3>🔔 审核提醒</h3>
 
@@ -175,6 +199,39 @@ h2,h3{
 </div>
 
 <script>
+const LANG={
+
+zh:{
+title:"🎮 管理员面板"
+},
+
+th:{
+title:"🎮 แผงควบคุมผู้ดูแลระบบ"
+}
+
+};
+
+function switchLang(lang){
+
+document.getElementById("title")
+.innerText=
+LANG[lang].title;
+
+localStorage.setItem(
+"adminLang",
+lang
+);
+
+}
+
+window.onload=()=>{
+
+switchLang(
+localStorage.getItem("adminLang")
+||"zh"
+);
+
+};
 
 const adminToken = localStorage.getItem("adminToken");
 

@@ -357,7 +357,37 @@ txTitle:"📜 玩家流水记录",
 filterUserId:"玩家ID",
 filterAgentCode:"代理编号，例如 AG001",
 search:"🔍 搜索",
-clear:"❌ 清除"
+clear:"❌ 清除",
+
+banker:"庄",
+player:"闲",
+tie:"和",
+
+betEmpty:"暂无下注",
+
+bankerTotal:"🔴 庄总额：",
+playerTotal:"🔵 闲总额：",
+tieTotal:"🟢 和总额：",
+
+payBanker:"💸 若开庄赔付：",
+payPlayer:"💸 若开闲赔付：",
+payTie:"💸 若开和赔付：",
+
+profitBanker:"💵 若开庄净赚：",
+profitPlayer:"💵 若开闲净赚：",
+profitTie:"💵 若开和净赚：",
+
+suggestBanker:"🔥 建议开庄（赚最多）",
+suggestPlayer:"🔥 建议开闲（赚最多）",
+suggestTie:"🔥 建议开和（赚最多）",
+agentLabel:"🤝 代理:",
+winLabel:"赢:",
+loseLabel:"输:",
+roundLabel:"第",
+roundUnit:"局",
+agentEmpty:"暂无代理资料",
+playerCount:"👥 玩家数：",
+totalTurnover:"💧 总流水：",
 },
 
 th:{
@@ -395,7 +425,37 @@ txTitle:"📜 ประวัติรายการผู้เล่น",
 filterUserId:"รหัสผู้เล่น",
 filterAgentCode:"รหัสเอเย่นต์ เช่น AG001",
 search:"🔍 ค้นหา",
-clear:"❌ ล้างข้อมูล"
+clear:"❌ ล้างข้อมูล",
+
+banker:"เจ้ามือ",
+player:"ผู้เล่น",
+tie:"เสมอ",
+
+betEmpty:"ยังไม่มีการเดิมพัน",
+
+bankerTotal:"🔴 ยอดเจ้ามือ：",
+playerTotal:"🔵 ยอดผู้เล่น：",
+tieTotal:"🟢 ยอดเสมอ：",
+
+payBanker:"💸 หากออกเจ้ามือ：",
+payPlayer:"💸 หากออกผู้เล่น：",
+payTie:"💸 หากออกเสมอ：",
+
+profitBanker:"💵 กำไรถ้าออกเจ้ามือ：",
+profitPlayer:"💵 กำไรถ้าออกผู้เล่น：",
+profitTie:"💵 กำไรถ้าออกเสมอ：",
+
+suggestBanker:"🔥 แนะนำออกเจ้ามือ",
+suggestPlayer:"🔥 แนะนำออกผู้เล่น",
+suggestTie:"🔥 แนะนำออกเสมอ",
+agentLabel:"🤝 เอเย่นต์:",
+winLabel:"ชนะ:",
+loseLabel:"แพ้:",
+roundLabel:"รอบที่ ",
+roundUnit:"",
+agentEmpty:"ยังไม่มีข้อมูลเอเย่นต์",
+playerCount:"👥 จำนวนผู้เล่น：",
+totalTurnover:"💧 ยอดเทิร์นโอเวอร์：",
 }
 
 };
@@ -565,6 +625,8 @@ async function createAgent(){
 }
 
 async function loadAgents(){
+  const lang = localStorage.getItem("adminLang") || "zh";
+const t = LANG[lang];
   const res = await fetch("/admin/agents",{
   headers: adminGetHeaders()
 });
@@ -573,7 +635,7 @@ async function loadAgents(){
   let html = "";
 
   if(data.length === 0){
-    html = "暂无代理资料";
+    html = t.agentEmpty;
   }
 
   data.forEach(a=>{
@@ -581,9 +643,9 @@ async function loadAgents(){
       <div style="padding:8px;border-bottom:1px solid rgba(255,255,255,0.15)">
         🤝 ${a.agent_code} ｜ ${a.agent_name}
         <br>
-        👥 玩家数：${a.player_count}
-        <br>
-        💧 总流水：${a.total_turnover}
+        ${t.playerCount}${a.player_count}
+<br>
+${t.totalTurnover}${a.total_turnover}
       </div>
     `;
   });
@@ -592,6 +654,8 @@ async function loadAgents(){
 }
   
 async function loadPlayers(){
+  const lang = localStorage.getItem("adminLang") || "zh";
+const t = LANG[lang];
   const res = await fetch("/admin/players",{
   headers: adminGetHeaders()
 });
@@ -600,14 +664,14 @@ async function loadPlayers(){
   let html = "";
 
   data.forEach(p=>{
-   html += `
+  html += `
   <div style="margin:5px 0">
     🆔 ${p.id}
     | 👤 ${p.username}
-    | 🤝代理:${p.agent_code}
+    | ${t.agentLabel}${p.agent_code}
     | 💰${p.balance}
-    | 赢:${p.win}
-    | 输:${p.lose}
+    | ${t.winLabel}${p.win}
+    | ${t.loseLabel}${p.lose}
   </div>
 `;
   });
@@ -655,6 +719,8 @@ async function minus(){
 });
 }
 async function loadRounds(){
+  const lang = localStorage.getItem("adminLang") || "zh";
+const t = LANG[lang];
   const res = await fetch("/admin/rounds",{
   headers: adminGetHeaders()
 });
@@ -665,11 +731,11 @@ async function loadRounds(){
   data.forEach(r=>{
    let result = r.result;
 
-if(result === "B") result = "庄";
-if(result === "P") result = "闲";
-if(result === "T") result = "和";
+if(result === "B") result = t.banker;
+if(result === "P") result = t.player;
+if(result === "T") result = t.tie;
 
-html += `<div>🎯 第${r.id}局 ｜ ${result}</div>`;
+html += `<div>🎯 ${t.roundLabel}${r.id}${t.roundUnit} ｜ ${result}</div>`;
   });
 
   document.getElementById("rounds").innerHTML = html;
@@ -932,7 +998,8 @@ async function loadProfit(){
     "总盈利：" + data.total;
 }
 async function loadBets(){
-
+const lang = localStorage.getItem("adminLang") || "zh";
+const t = LANG[lang];
   const res = await fetch("/admin/bets",{
   headers: adminGetHeaders()
 });
@@ -954,7 +1021,7 @@ let profitT = 0;
 
   if(data.length === 0){
 
-    html = "暂无下注";
+   html = t.betEmpty;
 
   }else{
 
@@ -962,19 +1029,19 @@ let profitT = 0;
 
       let side = "";
      if(b.side === "B"){
-side = "庄";
+side = t.banker;
 totalB += Number(b.amount);
 payB += Number(b.amount) * 1.95;
 }
 
 if(b.side === "P"){
-side = "闲";
+side = t.player;
 totalP += Number(b.amount);
 payP += Number(b.amount) * 2;
 }
 
 if(b.side === "T"){
-side = "和";
+side = t.tie;
 totalT += Number(b.amount);
 payT += Number(b.amount) * 8;
 }
@@ -1000,32 +1067,32 @@ font-weight:bold;
 color:gold;
 ">
 
-<div>🔴 庄总额：${totalB}</div>
-<div>🔵 闲总额：${totalP}</div>
-<div>🟢 和总额：${totalT}</div>
+<div>${t.bankerTotal}${totalB}</div>
+<div>${t.playerTotal}${totalP}</div>
+<div>${t.tieTotal}${totalT}</div>
 
 <div style="margin-top:8px;color:#ffcc00;">
-💸 若开庄赔付：${payB}
+${t.payBanker}${payB}
 </div>
 
 <div style="color:#ffcc00;">
-💸 若开闲赔付：${payP}
+${t.payPlayer}${payP}
 </div>
 
 <div style="color:#ffcc00;">
-💸 若开和赔付：${payT}
+${t.payTie}${payT}
 </div>
 
 <div style="margin-top:8px;color:#00ff99;">
-💵 若开庄净赚：${profitB}
+${t.profitBanker}${profitB}
 </div>
 
 <div style="color:#00ff99;">
-💵 若开闲净赚：${profitP}
+${t.profitPlayer}${profitP}
 </div>
 
 <div style="color:#00ff99;">
-💵 若开和净赚：${profitT}
+${t.profitTie}${profitT}
 </div>
 
 </div>
@@ -1039,7 +1106,7 @@ if(maxProfit === profitB){
 
 warning = `
 <div style="color:#00ff99;margin-top:10px;font-weight:bold;">
-🔥 建议开庄（赚最多）
+${t.suggestBanker}
 </div>
 `;
 
@@ -1049,7 +1116,7 @@ else if(maxProfit === profitP){
 
 warning = `
 <div style="color:#00ff99;margin-top:10px;font-weight:bold;">
-🔥 建议开闲（赚最多）
+${t.suggestPlayer}
 </div>
 `;
 
@@ -1059,7 +1126,7 @@ else{
 
 warning = `
 <div style="color:#00ff99;margin-top:10px;font-weight:bold;">
-🔥 建议开和（赚最多）
+${t.suggestTie}
 </div>
 `;
 

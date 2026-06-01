@@ -352,7 +352,12 @@ rounds:"📜 游戏记录",
 rechargeTitle:"💳 充值申请",
 noRecharge:"暂无充值申请",
 withdrawTitle:"🏧 提款申请",
-noWithdraw:"暂无提款申请"
+noWithdraw:"暂无提款申请",
+txTitle:"📜 玩家流水记录",
+filterUserId:"玩家ID",
+filterAgentCode:"代理编号，例如 AG001",
+search:"🔍 搜索",
+clear:"❌ 清除"
 },
 
 th:{
@@ -385,7 +390,12 @@ rounds:"📜 ประวัติเกม",
 rechargeTitle:"💳 คำขอเติมเงิน",
 noRecharge:"ยังไม่มีคำขอเติมเงิน",
 withdrawTitle:"🏧 คำขอถอนเงิน",
-noWithdraw:"ยังไม่มีคำขอถอนเงิน"
+noWithdraw:"ยังไม่มีคำขอถอนเงิน",
+txTitle:"📜 ประวัติรายการผู้เล่น",
+filterUserId:"รหัสผู้เล่น",
+filterAgentCode:"รหัสเอเย่นต์ เช่น AG001",
+search:"🔍 ค้นหา",
+clear:"❌ ล้างข้อมูล"
 }
 
 };
@@ -487,8 +497,21 @@ document.getElementById("withdrawRequests").innerText==="暂无提款申请"
 
 document.getElementById("withdrawRequests").innerText =
 LANG[lang].noWithdraw;
-
 }
+document.getElementById("txTitle").innerText =
+LANG[lang].txTitle;
+
+document.getElementById("filterUserId").placeholder =
+LANG[lang].filterUserId;
+
+document.getElementById("filterAgentCode").placeholder =
+LANG[lang].filterAgentCode;
+
+document.getElementById("searchBtn").innerText =
+LANG[lang].search;
+
+document.getElementById("clearBtn").innerText =
+LANG[lang].clear;
 localStorage.setItem(
 "adminLang",
 lang

@@ -399,6 +399,16 @@ status:"📌 状态：",
 
 approve:"✅ 批准",
 reject:"❌ 拒绝",
+withdrawAmount:"💰 提款金额：",
+bankName:"🏦 银行：",
+bankAccount:"💳 账号：",
+txEmpty:"没有找到流水记录",
+agentTx:"🤝 代理：",
+betTx:"🎯 下注：",
+amountTx:"💰 金额：",
+typeTx:"📈 类型：",
+resultTx:"🏁 结果：",
+winTx:"💵 赢取：",
 },
 
 th:{
@@ -478,6 +488,16 @@ status:"📌 สถานะ：",
 
 approve:"✅ อนุมัติ",
 reject:"❌ ปฏิเสธ",
+withdrawAmount:"💰 จำนวนถอนเงิน：",
+bankName:"🏦 ธนาคาร：",
+bankAccount:"💳 เลขบัญชี：",
+txEmpty:"ไม่พบข้อมูลรายการ",
+agentTx:"🤝 เอเย่นต์：",
+betTx:"🎯 เดิมพัน：",
+amountTx:"💰 จำนวนเงิน：",
+typeTx:"📈 ประเภท：",
+resultTx:"🏁 ผลลัพธ์：",
+winTx:"💵 ได้รับ：",
 }
 
 };
@@ -764,6 +784,12 @@ html += `<div>🎯 ${t.roundLabel}${r.id}${t.roundUnit} ｜ ${result}</div>`;
 }
 
 async function loadTx(){
+  const lang =
+localStorage.getItem("adminLang")
+|| "zh";
+
+const t =
+LANG[lang];
   const userId = document.getElementById("filterUserId").value.trim();
   const agentCode = document.getElementById("filterAgentCode").value.trim();
   const date = document.getElementById("filterDate").value;
@@ -781,38 +807,58 @@ async function loadTx(){
   let html = "";
 
   if(data.length === 0){
-    html = "没有找到流水记录";
+   html = t.txEmpty;
   }
 
-  data.forEach(t=>{
-    let side = t.bet_side;
+ data.forEach(tx=>{
 
-    if(side === "B") side = "庄";
-    if(side === "P") side = "闲";
-    if(side === "T") side = "和";
+let side = tx.bet_side;
 
-    html += `
-      <div style="padding:8px;border-bottom:1px solid rgba(255,255,255,0.15)">
-        👤 ${t.username}
-        <br>
-        🆔 ${t.user_id}
-        <br>
-        🤝 代理：${t.agent_code}
-        <br>
-        🎯 下注：${side}
-        <br>
-        💰 金额：${t.amount}
-        <br>
-        📈 类型：${t.type}
-        <br>
-        🏁 结果：${t.result}
-        <br>
-        💵 赢取：${t.win_amount}
-        <br>
-        🕒 ${t.created_at}
-      </div>
-    `;
-  });
+if(side === "B") side = t.banker;
+if(side === "P") side = t.player;
+if(side === "T") side = t.tie;
+
+html += `
+<div style="padding:8px;border-bottom:1px solid rgba(255,255,255,0.15)">
+
+👤 ${tx.username}
+
+<br>
+
+🆔 ${tx.user_id}
+
+<br>
+
+${t.agentTx}${tx.agent_code}
+
+<br>
+
+${t.betTx}${side}
+
+<br>
+
+${t.amountTx}${tx.amount}
+
+<br>
+
+${t.typeTx}${tx.type}
+
+<br>
+
+${t.resultTx}${tx.result}
+
+<br>
+
+${t.winTx}${tx.win_amount}
+
+<br>
+
+🕒 ${tx.created_at}
+
+</div>
+`;
+
+});
 
   document.getElementById("tx").innerHTML = html;
 }
@@ -913,6 +959,12 @@ ${t.reject}
 
 
 async function loadWithdrawRequests(){
+const lang =
+localStorage.getItem("adminLang")
+|| "zh";
+
+const t =
+LANG[lang];
   const res = await fetch("/admin/withdraw-requests",{
     headers: adminGetHeaders()
   });
@@ -922,8 +974,8 @@ async function loadWithdrawRequests(){
   let html = "";
 
   if(data.length === 0){
-    html = "暂无提款申请";
-  }
+html = t.noWithdraw;
+}
 
   data.forEach(w=>{
    html += `
@@ -932,15 +984,15 @@ async function loadWithdrawRequests(){
     <br>
     🆔 ${w.user_id}
     <br>
-    💰 提款金额：${w.amount}
-    <br>
-    🏦 银行：${w.bank_name || "-"}
-    <br>
-    💳 账号：${w.bank_account || "-"}
-    <br>
-    📌 状态：${w.status}
-    <br>
-    📝 备注：${w.note || "-"}
+    ${t.withdrawAmount}${w.amount}
+<br>
+${t.bankName}${w.bank_name || "-"}
+<br>
+${t.bankAccount}${w.bank_account || "-"}
+<br>
+${t.status}${w.status}
+<br>
+${t.note}${w.note || "-"}
     <br>
     🕒 ${w.created_at}
     <br><br>
@@ -949,13 +1001,13 @@ async function loadWithdrawRequests(){
       w.status === "pending"
       ?
       `
-      <button onclick="approveWithdraw('${w.id}')">
-        ✅ 批准
-      </button>
+     <button onclick="approveWithdraw('${w.id}')">
+${t.approve}
+</button>
 
-      <button onclick="rejectWithdraw('${w.id}')">
-        ❌ 拒绝
-      </button>
+<button onclick="rejectWithdraw('${w.id}')">
+${t.reject}
+</button>
       `
       :
       ""

@@ -388,6 +388,17 @@ roundUnit:"局",
 agentEmpty:"暂无代理资料",
 playerCount:"👥 玩家数：",
 totalTurnover:"💧 总流水：",
+profitToday:"今日盈利：",
+profitTotal:"总盈利：",
+rechargeAmount:"💰 充值金额：",
+paymentMethod:"🏦 付款方式：",
+payerName:"👤 付款人名字：",
+note:"📝 备注：",
+screenshot:"📷 截图：请到 LINE 客服查看",
+status:"📌 状态：",
+
+approve:"✅ 批准",
+reject:"❌ 拒绝",
 },
 
 th:{
@@ -456,6 +467,17 @@ roundUnit:"",
 agentEmpty:"ยังไม่มีข้อมูลเอเย่นต์",
 playerCount:"👥 จำนวนผู้เล่น：",
 totalTurnover:"💧 ยอดเทิร์นโอเวอร์：",
+profitToday:"กำไรวันนี้：",
+profitTotal:"กำไรรวม：",
+rechargeAmount:"💰 จำนวนเติมเงิน：",
+paymentMethod:"🏦 วิธีชำระเงิน：",
+payerName:"👤 ชื่อผู้โอน：",
+note:"📝 หมายเหตุ：",
+screenshot:"📷 กรุณาดูที่ LINE แอดมิน",
+status:"📌 สถานะ：",
+
+approve:"✅ อนุมัติ",
+reject:"❌ ปฏิเสธ",
 }
 
 };
@@ -826,6 +848,12 @@ function clearTxFilter(){
   loadTx();
 }
 async function loadRechargeRequests(){
+const lang =
+localStorage.getItem("adminLang")
+|| "zh";
+
+const t =
+LANG[lang];
   const res = await fetch("/admin/recharge-requests",{
     headers: adminGetHeaders()
   });
@@ -835,7 +863,7 @@ async function loadRechargeRequests(){
   let html = "";
 
   if(data.length === 0){
-    html = "暂无充值申请";
+   html = t.noRecharge;
   }
 
   data.forEach(r=>{
@@ -844,37 +872,37 @@ async function loadRechargeRequests(){
     👤 ${r.username || "-"}
     <br>
     🆔 ${r.user_id}
-    <br>
-    💰 充值金额：${r.amount}
 <br>
-🏦 付款方式：${r.payment_method || "-"}
+${t.rechargeAmount}${r.amount}
 <br>
-👤 付款人名字：${r.payer_name || "-"}
+${t.paymentMethod}${r.payment_method || "-"}
 <br>
-📝 备注：${r.note || "-"}
+${t.payerName}${r.payer_name || "-"}
 <br>
-📷 截图：请到 LINE 客服查看
+${t.note}${r.note || "-"}
 <br>
-📌 状态：${r.status}
+${t.screenshot}
+<br>
+${t.status}${r.status}
     <br>
     🕒 ${r.created_at}
     <br><br>
 
-    ${
-      r.status === "pending"
-      ?
-      `
-      <button onclick="approveRecharge('${r.id}')">
-        ✅ 批准
-      </button>
+   ${
+r.status === "pending"
+?
+`
+<button onclick="approveRecharge('${r.id}')">
+${t.approve}
+</button>
 
-      <button onclick="rejectRecharge('${r.id}')">
-        ❌ 拒绝
-      </button>
-      `
-      :
-      ""
-    }
+<button onclick="rejectRecharge('${r.id}')">
+${t.reject}
+</button>
+`
+:
+""
+}
 
   </div>
 `;
@@ -986,16 +1014,26 @@ async function rejectWithdraw(id){
   loadReviewBadges();
 }  
 async function loadProfit(){
+  const lang = localStorage.getItem("adminLang") || "zh";
+const t = LANG[lang];
   const res = await fetch("/admin/profit",{
   headers: adminGetHeaders()
 });
   const data = await res.json();
 
-  document.getElementById("profitToday").innerText =
-    "今日盈利：" + data.today;
+ document.getElementById(
+"profitToday"
+).innerText =
 
-  document.getElementById("profitTotal").innerText =
-    "总盈利：" + data.total;
+t.profitToday
++ data.today;
+
+ document.getElementById(
+"profitTotal"
+).innerText =
+
+t.profitTotal
++ data.total;
 }
 async function loadBets(){
 const lang = localStorage.getItem("adminLang") || "zh";

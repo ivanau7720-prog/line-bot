@@ -147,7 +147,7 @@ if (newBalance < 0) newBalance = 0;
 }
 
 // ===== 开局 =====
-app.post("/start", (req, res) => {
+app.post("/start", async (req, res) => {
   try {
     if (GAME.roundActive) return res.json({ msg: "已在进行中" });
 
@@ -158,7 +158,7 @@ GAME.bets = {};
 GAME.bettingDuration = 60;
 GAME.timeLeft = 60;
 GAME.roundStartTime = Date.now();
-
+    
     GAME.timer = setInterval(() => {
   const elapsed = Math.floor((Date.now() - GAME.roundStartTime) / 1000);
   GAME.timeLeft = Math.max(GAME.bettingDuration - elapsed, 0);
@@ -282,16 +282,32 @@ app.post("/result", checkAdmin, async (req, res) => {
 GAME.roundActive = false;
 GAME.isBetting = false;
 // 👉 写入局记录（现在位置正确）
-const { data: roundData } = await supabase
-  .from("rounds")
-  .insert([
-    {
-      result: result,
-      status: "done"
-    }
-  ])
-  .select()
-  .single();
+const { data: roundData } =
+await supabase
+.from("rounds")
+.insert([
+{
+round_no:
+GAME.currentRound,
+
+result:
+result,
+
+status:
+"done",
+
+start_time:
+new Date(
+GAME.roundStartTime
+).toISOString(),
+
+end_time:
+new Date()
+.toISOString()
+}
+])
+.select()
+.single();
 
 const roundId = roundData.id;
     for (const uid in GAME.bets) {
@@ -357,7 +373,17 @@ await supabase.from("transactions").insert([
  }
 GAME.bets = {};
 
-res.json({ msg: "结算完成" });
+GAME.timeLeft = 60;
+
+GAME.roundStartTime = null;
+
+clearInterval(GAME.timer);
+
+GAME.timer = null;
+
+res.json({
+msg:"结算完成"
+});
 
 } catch (err) {
   console.error(err);

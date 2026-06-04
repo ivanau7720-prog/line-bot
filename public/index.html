@@ -870,6 +870,14 @@ window.myLastBet = {
   amount: amount
 };
 
+localStorage.setItem(
+"myLastBet",
+JSON.stringify({
+side,
+amount
+})
+);
+
 if (!userId) {
   alert("请通过LINE进入游戏");
   return;
@@ -937,17 +945,19 @@ async function loadState() {
    document.getElementById("areaT").classList.remove("disabled");
    
   // 👉 如果刚开始下注（第一次）
-  if (!wasBetting) {
+if (!wasBetting) {
 
-    countdown = 60;
+    countdown = data.timeLeft;
 
     // 防止重复
     if (timerInterval) {
       clearInterval(timerInterval);
     }
-
-    timerInterval = setInterval(async () => {
-
+ timerInterval = setInterval(async () => {
+const s = await fetch("/state");
+const live = await s.json();
+countdown = live.timeLeft;
+      
       document.getElementById("status").innerText =
       "🟢 เปิดรับเดิมพัน " + countdown + " วิ"
 
@@ -983,16 +993,11 @@ tick.play();
 
   document.getElementById("progressInner").style.opacity = "1";
 }
-/* 👆👆👆 贴到这里结束 👆👆👆 */
-
-countdown--;
 
       // ⛔ 时间到自动停止
-      if (countdown < 0 && timerInterval) {
+      if (countdown <= 0 && timerInterval) {
         clearInterval(timerInterval);
         timerInterval = null;
-
-        await fetch("/stop", { method: "POST" });
 
         document.getElementById("status").innerText = "🔴 ปิดรับเดิมพัน";
         document.getElementById("progressInner").style.width = "0%";
@@ -1361,7 +1366,10 @@ return;
 currentUserId = userId;
 document.getElementById("memberName").innerText =
 "👤 " + name;
-
+loadState();
+loadHistory();
+loadStats();
+loadBalance();
 // ===== 发送在线心跳 =====
 sendHeartbeat();
 
@@ -1404,7 +1412,12 @@ function showResult(result) {
 
   if (!win) return;
 
-  const myBet = window.myLastBet;
+  const myBet =
+window.myLastBet ||
+JSON.parse(
+localStorage.getItem("myLastBet")
+|| "null"
+);
 
   if (myBet && myBet.side === result) {
     showWin(myBet.amount);
@@ -1425,9 +1438,11 @@ function showResult(result) {
   flash.innerText = text;
   flash.style.opacity = 1;
 
-  setTimeout(() => {
-    flash.style.opacity = 0;
-  }, 1500);
+ setTimeout(() => {
+flash.style.opacity = 0;
+window.myLastBet = null;
+localStorage.removeItem("myLastBet");
+}, 1500);
 }
 
 function showWin(amount){
@@ -1441,10 +1456,10 @@ function showWin(amount){
 
   document.getElementById("winSound").play();
 
-  setTimeout(() => {
-    el.style.opacity = 0;
-    el.style.transform = "translate(-50%,-50%) scale(0.5)";
-  }, 1500);
+setTimeout(() => {
+  el.style.opacity = 0;
+  el.style.transform = "translate(-50%,-50%) scale(0.5)";
+}, 1500);
 }
 
   function toggleRoad(){

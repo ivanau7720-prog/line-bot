@@ -88,7 +88,9 @@ let GAME = {
   roundActive: false,
   bets: {},
   timer: null,
-  timeLeft: 60
+  timeLeft: 60,
+  roundStartTime: null,
+  bettingDuration: 60
 };
 
 let playersCache = {};
@@ -149,20 +151,23 @@ app.post("/start", (req, res) => {
   try {
     if (GAME.roundActive) return res.json({ msg: "已在进行中" });
 
-    GAME.roundActive = true;
-    GAME.currentRound = (GAME.currentRound || 0) + 1;
-    GAME.isBetting = true;
-    GAME.bets = {};
-    GAME.timeLeft = 60;
+   GAME.roundActive = true;
+GAME.currentRound = (GAME.currentRound || 0) + 1;
+GAME.isBetting = true;
+GAME.bets = {};
+GAME.bettingDuration = 60;
+GAME.timeLeft = 60;
+GAME.roundStartTime = Date.now();
 
     GAME.timer = setInterval(() => {
-      GAME.timeLeft -= 1;
+  const elapsed = Math.floor((Date.now() - GAME.roundStartTime) / 1000);
+  GAME.timeLeft = Math.max(GAME.bettingDuration - elapsed, 0);
 
-      if (GAME.timeLeft <= 0) {
-        GAME.isBetting = false;
-        clearInterval(GAME.timer);
-      }
-    }, 1000);
+  if (GAME.timeLeft <= 0) {
+    GAME.isBetting = false;
+    clearInterval(GAME.timer);
+  }
+}, 1000);
 
     res.json({ msg: "开局成功" });
   } catch (err) {
@@ -300,59 +305,56 @@ const roundId = roundData.id;
 
       if (!data) continue;
 
-      let balance = Number(data.balance);
-      let win = Number(data.total_win || 0);
-      let lose = Number(data.total_lose || 0);
-
-      // 🎯 赢
-      let payout = 0;
+      let win = 0;
+let lose = 0;
+let payout = 0;
 
 if (bet.side === result) {
 
-  payout = bet.amount * 2;
-
-  // 庄抽水5%
   if (result === "B") {
-    payout = bet.amount * 1.95;
+
+    payout = Math.floor(bet.amount * 1.95);
+
+  } else if (result === "P") {
+
+    payout = bet.amount * 2;
+
+  } else if (result === "T") {
+
+    payout = bet.amount * 9;
+
   }
 
-  // 和局8倍
-  if (result === "T") {
-    payout = bet.amount * 8;
-  }
+  await changeBalance(uid, payout);
 
-  balance += payout;
-  win += bet.amount;
+  win = payout;
 
 } else {
 
-  lose += bet.amount;
+  lose = bet.amount;
 
 }
 
       await supabase
   .from("players")
   .update({
-    balance,
-    total_win: win,
-    total_lose: lose
+    total_win: Number(data.total_win || 0) + win,
+    total_lose: Number(data.total_lose || 0) + lose
   })
   .eq("user_id", uid);
-
-// 👇👇👇 新加这里（很关键）
+// 👇👇👇 写入下注结算流水
 await supabase.from("transactions").insert([
   {
     user_id: uid,
     amount: bet.amount,
     bet_side: bet.side,
     result: result,
-    win_amount: bet.side === result ? payout : 0,
-    type: bet.side === result ? "win" : "lose",
+    win_amount: payout,
+    type: payout > 0 ? "win" : "lose",
     round_id: roundId
   }
 ]);
-}      
- 
+ }
 GAME.bets = {};
 
 res.json({ msg: "结算完成" });
@@ -539,12 +541,21 @@ app.get("/admin/monitor-data", checkAdmin, async (req, res) => {
 
 // ===== 状态 =====
 app.get("/state", (req, res) => {
+  if (GAME.roundActive && GAME.roundStartTime) {
+    const elapsed = Math.floor((Date.now() - GAME.roundStartTime) / 1000);
+    GAME.timeLeft = Math.max(GAME.bettingDuration - elapsed, 0);
+
+    if (GAME.timeLeft <= 0) {
+      GAME.isBetting = false;
+    }
+  }
+
   res.json({
-  isBetting: GAME.isBetting,
-  timeLeft: GAME.timeLeft,
-  total: GAME.bets,
-  round: GAME.currentRound || 0
-});
+    isBetting: GAME.isBetting,
+    timeLeft: GAME.timeLeft,
+    total: GAME.bets,
+    round: GAME.currentRound || 0
+  });
 });
 
 // ===== 获取余额 =====
@@ -771,13 +782,18 @@ app.get("/admin/profit", checkAdmin, async (req, res) => {
 
     const now = new Date().toDateString();
 
-    data.forEach(t => {
-      const profit = t.type === "lose"
-        ? t.amount
-        : -t.win_amount;
+   data.forEach(t => {
+  let profit = 0;
 
-      total += profit;
+  if (t.type === "lose") {
+    profit = Number(t.amount || 0);
+  }
 
+  if (t.type === "win") {
+    profit = Number(t.amount || 0) - Number(t.win_amount || 0);
+  }
+
+  total += profit;
       const d = new Date(t.created_at).toDateString();
       if (d === now) {
         today += profit;

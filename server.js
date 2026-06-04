@@ -86,10 +86,19 @@ initDB();
 let GAME = {
   isBetting: false,
   roundActive: false,
+
+  currentRound: 0,
+
+  roundDbId: null,
+
   bets: {},
+
   timer: null,
+
   timeLeft: 60,
+
   roundStartTime: null,
+
   bettingDuration: 60
 };
 
@@ -124,7 +133,25 @@ async function restoreActiveRound(){
     GAME.bettingDuration = duration;
     GAME.timeLeft = left;
     GAME.bets = {};
+const { data: bets } = await supabase
+  .from("transactions")
+  .select("*")
+  .eq("round_id", data.id)
+  .eq("type", "bet");
 
+for (const b of bets || []) {
+
+  if (GAME.bets[b.user_id]) {
+    GAME.bets[b.user_id].amount += Number(b.amount || 0);
+    GAME.bets[b.user_id].side = b.bet_side;
+  } else {
+    GAME.bets[b.user_id] = {
+      side: b.bet_side,
+      amount: Number(b.amount || 0)
+    };
+  }
+
+}
     if(left > 0){
 
       GAME.roundActive = true;
@@ -319,6 +346,16 @@ await supabase.from("turnover_records").insert([
     type: "bet"
   }
 ]);
+await supabase.from("transactions").insert([
+  {
+    user_id: userId,
+    amount: betAmount,
+    bet_side: side,
+    type: "bet",
+    round_id: GAME.roundDbId
+  }
+]);
+    
     if (GAME.bets[userId]) {
 
       GAME.bets[userId].amount += betAmount;
@@ -418,18 +455,16 @@ if (bet.side === result) {
     total_lose: Number(data.total_lose || 0) + lose
   })
   .eq("user_id", uid);
-// 👇👇👇 写入下注结算流水
-await supabase.from("transactions").insert([
-  {
-    user_id: uid,
-    amount: bet.amount,
-    bet_side: bet.side,
+// 👇👇👇 更新本局下注结算流水
+await supabase
+  .from("transactions")
+  .update({
     result: result,
     win_amount: payout,
-    type: payout > 0 ? "win" : "lose",
-    round_id: roundId
-  }
-]);
+    type: payout > 0 ? "win" : "lose"
+  })
+  .eq("round_id", roundId)
+  .eq("user_id", uid);
  }
 GAME.bets = {};
 

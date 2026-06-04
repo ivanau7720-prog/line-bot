@@ -98,6 +98,69 @@ let betCooldown = {};
 let rechargeCooldown = {};
 let withdrawCooldown = {};
 let onlineUsers = {};
+// ===== 恢复进行中的局 =====
+async function restoreActiveRound(){
+
+  try{
+
+    const { data } = await supabase
+      .from("rounds")
+      .select("*")
+      .eq("status", "betting")
+      .order("created_at", { ascending:false })
+      .limit(1)
+      .maybeSingle();
+
+    if(!data) return;
+
+    const start = new Date(data.start_time).getTime();
+    const duration = 60;
+    const elapsed = Math.floor((Date.now() - start) / 1000);
+    const left = Math.max(duration - elapsed, 0);
+
+    GAME.currentRound = data.round_no || 0;
+    GAME.roundDbId = data.id;
+    GAME.roundStartTime = start;
+    GAME.bettingDuration = duration;
+    GAME.timeLeft = left;
+    GAME.bets = {};
+
+    if(left > 0){
+
+      GAME.roundActive = true;
+      GAME.isBetting = true;
+
+      GAME.timer = setInterval(() => {
+
+        const e = Math.floor((Date.now() - GAME.roundStartTime) / 1000);
+        GAME.timeLeft = Math.max(GAME.bettingDuration - e, 0);
+
+        if(GAME.timeLeft <= 0){
+          GAME.isBetting = false;
+          clearInterval(GAME.timer);
+        }
+
+      }, 1000);
+
+    } else {
+
+      GAME.roundActive = true;
+      GAME.isBetting = false;
+      GAME.timeLeft = 0;
+
+    }
+
+    console.log("Restored active round", GAME.currentRound);
+
+  }catch(err){
+
+    console.error("restoreActiveRound error:", err);
+
+  }
+
+}
+
+restoreActiveRound();
 // ===== 获取用户 =====
 async function getUser(userId) {
   try {
@@ -158,6 +221,19 @@ GAME.bets = {};
 GAME.bettingDuration = 60;
 GAME.timeLeft = 60;
 GAME.roundStartTime = Date.now();
+const { data: newRound } = await supabase
+  .from("rounds")
+  .insert([
+    {
+      round_no: GAME.currentRound,
+      status: "betting",
+      start_time: new Date(GAME.roundStartTime).toISOString()
+    }
+  ])
+  .select()
+  .single();
+
+GAME.roundDbId = newRound.id;
     
     GAME.timer = setInterval(() => {
   const elapsed = Math.floor((Date.now() - GAME.roundStartTime) / 1000);
@@ -282,32 +358,16 @@ app.post("/result", checkAdmin, async (req, res) => {
 GAME.roundActive = false;
 GAME.isBetting = false;
 // 👉 写入局记录（现在位置正确）
-const { data: roundData } =
-await supabase
-.from("rounds")
-.insert([
-{
-round_no:
-GAME.currentRound,
-
-result:
-result,
-
-status:
-"done",
-
-start_time:
-new Date(
-GAME.roundStartTime
-).toISOString(),
-
-end_time:
-new Date()
-.toISOString()
-}
-])
-.select()
-.single();
+const { data: roundData } = await supabase
+  .from("rounds")
+  .update({
+    result: result,
+    status: "done",
+    end_time: new Date().toISOString()
+  })
+  .eq("id", GAME.roundDbId)
+  .select()
+  .single();
 
 const roundId = roundData.id;
     for (const uid in GAME.bets) {

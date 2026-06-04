@@ -34,7 +34,8 @@ button{
   font-weight:bold;
   cursor:pointer;
   margin:5px;
-  transition:0.3s;
+  transition:
+all .25s ease;
 }
 
 button:hover{
@@ -54,6 +55,54 @@ h2,h3{
 #betList div{
   padding:6px;
   border-bottom:1px solid rgba(255,255,255,0.1);
+}
+
+/* 开奖按钮高级发光 */
+#btnB,
+#btnP,
+#btnT{
+
+font-size:18px;
+
+font-weight:bold;
+
+transform:translateY(0);
+
+transition:all .25s ease;
+
+box-shadow:
+0 0 20px rgba(255,215,0,.4);
+
+}
+
+#btnB:hover{
+
+transform:
+translateY(-3px);
+
+box-shadow:
+0 0 25px red;
+
+}
+
+#btnP:hover{
+
+transform:
+translateY(-3px);
+
+box-shadow:
+0 0 25px #2196f3;
+
+}
+
+#btnT:hover{
+
+transform:
+translateY(-3px);
+
+box-shadow:
+0 0 25px #00ff99;
+
 }
 
 </style>
@@ -135,20 +184,31 @@ margin-bottom:20px;
 ▶ 开始下注
 </button>
 
-<button id="stopBtn" onclick="stopGame()">
+<button id="stopBtn" onclick="stopGame()" style="display:none;">
 ⛔ 停止下注
 </button>
 
 <br><br>
 
-<input
-id="resultInput"
-placeholder="输入 B / P / T"
->
+<div style="display:flex;gap:10px;margin-top:10px;">
 
-<button id="resultBtn" onclick="setResult()">
-🏁 开奖
+<button id="btnB" style="flex:1;background:#d62828;color:white;" onclick="setResult('B')">
+🔴 开庄
 </button>
+
+<button id="btnP" style="flex:1;background:#1565c0;color:white;" onclick="setResult('P')">
+🔵 开闲
+</button>
+
+<button id="btnT" style="flex:1;background:#2e7d32;color:white;" onclick="setResult('T')">
+🟢 开和
+</button>
+
+</div>
+
+<div id="resultStatus" style="margin-top:15px;font-size:18px;color:gold;">
+等待开奖
+</div>
 
 </div>
 
@@ -334,6 +394,13 @@ start:"▶ 开始下注",
 stop:"⛔ 停止下注",
 result:"🏁 开奖",
 input:"输入 B / P / T",
+openBanker:"🔴 开庄",
+openPlayer:"🔵 开闲",
+openTie:"🟢 开和",
+waitingResult:"等待开奖",
+confirmResult:"确认开奖：",
+settling:"正在结算...",
+done:"完成",
 bet:"📋 当前下注记录",
 noBet:"暂无下注",
 fund:"💰 玩家资金",
@@ -423,6 +490,13 @@ start:"▶ เปิดรับเดิมพัน",
 stop:"⛔ ปิดรับเดิมพัน",
 result:"🏁 ออกผล",
 input:"กรอก B / P / T",
+openBanker:"🔴 ออกเจ้ามือ",
+openPlayer:"🔵 ออกผู้เล่น",
+openTie:"🟢 ออกเสมอ",
+waitingResult:"รอออกผล",
+confirmResult:"ยืนยันผล：",
+settling:"กำลังคำนวณ...",
+done:"เสร็จสิ้น",
 bet:"📋 รายการเดิมพันปัจจุบัน",
 noBet:"ยังไม่มีการเดิมพัน",
 fund:"💰 เงินผู้เล่น",
@@ -529,11 +603,17 @@ LANG[lang].start;
 document.getElementById("stopBtn").innerText =
 LANG[lang].stop;
 
-document.getElementById("resultBtn").innerText =
-LANG[lang].result;
+document.getElementById("btnB").innerText =
+LANG[lang].openBanker;
 
-document.getElementById("resultInput").placeholder =
-LANG[lang].input;
+document.getElementById("btnP").innerText =
+LANG[lang].openPlayer;
+
+document.getElementById("btnT").innerText =
+LANG[lang].openTie;
+
+document.getElementById("resultStatus").innerText =
+LANG[lang].waitingResult;
 document.getElementById("betTitle").innerText =
 LANG[lang].bet;
 
@@ -729,16 +809,74 @@ async function stopGame(){
   await fetch("/stop",{method:"POST"});
 }
 
-async function setResult(){
-  const result = document.getElementById("resultInput").value;
+async function setResult(result){
 
- await fetch("/result",{
+const lang = localStorage.getItem("adminLang") || "zh";
+const t = LANG[lang];
+
+let resultName = result;
+
+if(result === "B") resultName = t.banker;
+if(result === "P") resultName = t.player;
+if(result === "T") resultName = t.tie;
+
+if(!confirm(t.confirmResult + resultName)){
+  return;
+}
+if(
+document.getElementById("betList")
+.innerText
+.includes(t.betEmpty)
+){
+
+alert(
+lang==="th"
+?
+"ยังไม่มีการเดิมพัน"
+:
+"暂无下注"
+);
+
+return;
+
+}
+document.getElementById("resultStatus").innerText =
+t.settling;
+
+document.getElementById("btnB").disabled = true;
+document.getElementById("btnP").disabled = true;
+document.getElementById("btnT").disabled = true;
+
+const res = await fetch("/result",{
   method:"POST",
   headers: adminHeaders(),
   body: JSON.stringify({result})
 });
-}
 
+const data = await res.json();
+
+document.getElementById("resultStatus").innerText =
+"✅ " + (data.msg || t.done);
+
+setTimeout(()=>{
+
+document.getElementById("btnB").disabled = false;
+
+document.getElementById("btnP").disabled = false;
+
+document.getElementById("btnT").disabled = false;
+
+document.getElementById("resultStatus").innerText =
+t.waitingResult;
+
+},3000);
+
+loadBets();
+loadRounds();
+loadPlayers();
+loadProfit();
+
+}
 async function add(){
   const userId = document.getElementById("uid").value;
   const amount = Number(document.getElementById("amt").value);
@@ -1133,7 +1271,7 @@ payP += Number(b.amount) * 2;
 if(b.side === "T"){
 side = t.tie;
 totalT += Number(b.amount);
-payT += Number(b.amount) * 8;
+payT += Number(b.amount) * 9;
 }
 
       html += `

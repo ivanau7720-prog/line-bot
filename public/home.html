@@ -74,7 +74,41 @@ border-radius:18px;
 padding:8px 12px;
 margin-left:6px;
 }
-  
+.welcomeBox{
+
+margin-bottom:14px;
+
+padding:12px;
+
+border-radius:18px;
+
+background:
+rgba(
+0,
+0,
+0,
+.48
+);
+
+border:
+1px solid
+rgba(
+255,
+215,
+0,
+.28
+);
+
+color:gold;
+
+text-align:center;
+
+font-size:16px;
+
+text-shadow:
+0 0 12px gold;
+
+}
 .grid{
 
 display:grid;
@@ -359,6 +393,10 @@ text-shadow:0 0 15px gold;
 
 <div class="logo-spacer"></div>
 
+<div class="welcomeBox" id="welcomeText">
+欢迎回来
+</div>
+
 <div class="grid">
 
 <a class="card" href="/index.html">
@@ -516,6 +554,15 @@ Member
 </div>
 
 <script>
+const userId =
+localStorage.getItem("userId");
+
+if(!userId){
+
+location.href =
+"/login.html";
+
+}  
 const LANG = {
   zh:{
     game:"百家乐",
@@ -529,7 +576,8 @@ const LANG = {
     member:"Member",
     noticeTitle:"🔥 今日活动",
     noticeText:"充值 100 THB = 获得 10 💎 Point",
-    noticeSmall:"积分商城即将开放"
+    noticeSmall:"积分商城即将开放",
+    welcome:"欢迎回来"
   },
  th:{
     game:"บาคาร่า",
@@ -543,7 +591,8 @@ const LANG = {
     member:"สมาชิก",
     noticeTitle:"🔥 โปรโมชันวันนี้",
     noticeText:"เติมเงิน 100 THB = รับ 10 💎 Point",
-    noticeSmall:"ร้านแลกของรางวัลกำลังจะเปิด"
+    noticeSmall:"ร้านแลกของรางวัลกำลังจะเปิด",
+    welome:"ยินดีต้อนรับกลับ"
   }
 };
 
@@ -562,6 +611,11 @@ document.getElementById("memberLabel").innerText = t.member;
   document.getElementById("noticeTitle").innerText = t.noticeTitle;
 document.getElementById("noticeText").innerText = t.noticeText;
 document.getElementById("noticeSmall").innerText = t.noticeSmall;
+  const username =
+localStorage.getItem("username") || localStorage.getItem("userId") || "";
+
+document.getElementById("welcomeText").innerText =
+t.welcome + " " + username;
   localStorage.setItem("homeLang", lang);
 }
 

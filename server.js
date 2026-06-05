@@ -13,6 +13,10 @@ app.get("/admin.html", (req, res) => {
   res.redirect("/admin-login.html");
 });
 
+app.get("/shop.html", (req, res) => {
+  res.sendFile(__dirname + "/shop.html");
+});
+
 app.use(express.static("public"));
 app.use(express.static(__dirname));
 // ===== 管理员登录检查 =====

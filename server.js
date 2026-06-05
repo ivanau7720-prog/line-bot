@@ -66,7 +66,17 @@ await supabase.rpc("exec_sql", {
 sql: `
 ALTER TABLE players
 ADD COLUMN IF NOT EXISTS username TEXT UNIQUE;
+ALTER TABLE players
+ADD COLUMN IF NOT EXISTS bank_name TEXT;
 
+ALTER TABLE players
+ADD COLUMN IF NOT EXISTS bank_account TEXT;
+
+ALTER TABLE players
+ADD COLUMN IF NOT EXISTS phone TEXT;
+
+ALTER TABLE players
+ADD COLUMN IF NOT EXISTS email TEXT;
 ALTER TABLE players
 ADD COLUMN IF NOT EXISTS password TEXT;
 
@@ -710,7 +720,24 @@ data?.vip_level || 10
 total_topup:
 Number(
 data?.total_topup || 0
-)
+),
+
+total_withdraw:
+Number(
+data?.total_withdraw || 0
+),
+
+bank_name:
+data?.bank_name || "",
+
+bank_account:
+data?.bank_account || "",
+
+phone:
+data?.phone || "",
+
+email:
+data?.email || ""
 
 });
 
@@ -724,12 +751,69 @@ point:0,
 
 vip:10,
 
-total_topup:0
+total_topup:0,
+
+total_withdraw:0,
+
+bank_name:"",
+
+bank_account:"",
+
+phone:"",
+
+email:""
 
 });
 }
 });    
+// ===== 玩家：更新个人资料 =====
+app.post("/update-profile", async (req, res) => {
+  try {
 
+    const {
+      user_id,
+      bank_name,
+      bank_account,
+      phone,
+      email
+    } = req.body;
+
+    if (!user_id) {
+      return res.json({
+        success:false,
+        msg:"缺少用户ID"
+      });
+    }
+
+    const { error } = await supabase
+      .from("players")
+      .update({
+        bank_name: bank_name || "",
+        bank_account: bank_account || "",
+        phone: phone || "",
+        email: email || ""
+      })
+      .eq("user_id", user_id);
+
+    if (error) {
+      console.error("update-profile error:", error);
+      return res.json({
+        success:false,
+        msg:"保存失败"
+      });
+    }
+
+    res.json({
+      success:true
+    });
+
+  } catch (err) {
+    console.error("update-profile catch:", err);
+    res.json({
+      success:false
+    });
+  }
+});
 // ===== 管理员：新增代理 =====
 app.post("/admin/create-agent", checkAdmin, async (req, res) => {
   try {

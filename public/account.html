@@ -150,7 +150,48 @@ font-weight:bold;
 background:#b80000;
 color:white;
 }
+.editBox{
+display:none;
+position:fixed;
+left:0;
+top:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,.75);
+z-index:99;
+padding:30px 18px;
+}
 
+.editCard{
+margin-top:120px;
+padding:20px;
+border-radius:24px;
+background:rgba(0,0,0,.9);
+border:1px solid rgba(255,215,0,.35);
+box-shadow:0 0 30px rgba(255,215,0,.18);
+}
+
+.editCard input{
+width:100%;
+height:48px;
+margin-top:10px;
+padding:0 14px;
+border:none;
+border-radius:14px;
+background:rgba(255,255,255,.12);
+color:white;
+font-size:16px;
+outline:none;
+}
+
+.editCard input::placeholder{
+color:#aaa;
+}
+
+.closeBtn{
+background:#444;
+color:white;
+}
 </style>
 
 </head>
@@ -210,6 +251,11 @@ color:white;
 </div>
 
 </div>
+
+<button class="menuBtn" onclick="openEditProfile()">
+<span id="editProfileText">编辑资料</span>
+</button>
+
 </div>
 
 <div class="card">
@@ -281,6 +327,27 @@ color:white;
 
 </div>
 
+<div class="editBox" id="editBox">
+<div class="editCard">
+
+<div class="cardTitle" id="editTitle">编辑资料</div>
+
+<input id="editBankName" placeholder="Bank名称">
+<input id="editBankNo" placeholder="Bank号码">
+<input id="editPhone" placeholder="泰国电话号码">
+<input id="editEmail" placeholder="Email">
+
+<button class="menuBtn" onclick="saveProfile()">
+<span id="saveProfileText">保存资料</span>
+</button>
+
+<button class="menuBtn closeBtn" onclick="closeEditProfile()">
+<span id="cancelText">取消</span>
+</button>
+
+</div>
+</div>
+
 <script>
 
 const LANG={
@@ -312,7 +379,13 @@ pointRecord:"积分记录",
 
 settingTitle:"⚙️ 账户设置",
 changePwd:"修改密码",
-logout:"退出登录"
+logout:"退出登录",
+editProfile:"编辑资料",
+editTitle:"编辑资料",
+saveProfile:"保存资料",
+cancel:"取消",
+saveSuccess:"保存成功",
+saveFail:"保存失败"
 },
 
 th:{
@@ -342,7 +415,13 @@ pointRecord:"ประวัติพอยท์",
 
 settingTitle:"⚙️ ตั้งค่าบัญชี",
 changePwd:"เปลี่ยนรหัสผ่าน",
-logout:"ออกจากระบบ"
+logout:"ออกจากระบบ",
+editProfile:"แก้ไขข้อมูล",
+editTitle:"แก้ไขข้อมูล",
+saveProfile:"บันทึกข้อมูล",
+cancel:"ยกเลิก",
+saveSuccess:"บันทึกสำเร็จ",
+saveFail:"บันทึกไม่สำเร็จ"
 }
 
 };
@@ -376,7 +455,10 @@ document.getElementById("pointRecordText").innerText=t.pointRecord;
 document.getElementById("settingTitle").innerText=t.settingTitle;
 document.getElementById("changePwdText").innerText=t.changePwd;
 document.getElementById("logoutText").innerText=t.logout;
-
+document.getElementById("editProfileText").innerText=t.editProfile;
+document.getElementById("editTitle").innerText=t.editTitle;
+document.getElementById("saveProfileText").innerText=t.saveProfile;
+document.getElementById("cancelText").innerText=t.cancel;
 localStorage.setItem("homeLang",lang);
 
 loadAccount();
@@ -451,7 +533,62 @@ LANG[lang].vipNext +
 Math.max(nextTarget-totalTopup,0).toLocaleString();
 
 }
+function openEditProfile(){
 
+document.getElementById("editBankName").value=
+document.getElementById("bankNameValue").innerText === "-" ? "" : document.getElementById("bankNameValue").innerText;
+
+document.getElementById("editBankNo").value=
+document.getElementById("bankNoValue").innerText === "-" ? "" : document.getElementById("bankNoValue").innerText;
+
+document.getElementById("editPhone").value=
+document.getElementById("phoneValue").innerText === "-" ? "" : document.getElementById("phoneValue").innerText;
+
+document.getElementById("editEmail").value=
+document.getElementById("emailValue").innerText === "-" ? "" : document.getElementById("emailValue").innerText;
+
+document.getElementById("editBox").style.display="block";
+
+}
+
+function closeEditProfile(){
+
+document.getElementById("editBox").style.display="none";
+
+}
+
+async function saveProfile(){
+
+const uid=localStorage.getItem("userId");
+const lang=localStorage.getItem("homeLang") || "zh";
+
+const data={
+user_id:uid,
+bank_name:document.getElementById("editBankName").value.trim(),
+bank_account:document.getElementById("editBankNo").value.trim(),
+phone:document.getElementById("editPhone").value.trim(),
+email:document.getElementById("editEmail").value.trim()
+};
+
+const res=await fetch("/update-profile",{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify(data)
+});
+
+const d=await res.json();
+
+if(d.success){
+alert(LANG[lang].saveSuccess);
+closeEditProfile();
+loadAccount();
+}else{
+alert(LANG[lang].saveFail);
+}
+
+}
 function logout(){
 
 localStorage.clear();

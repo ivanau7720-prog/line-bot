@@ -375,7 +375,12 @@ bankName:"银行名称",
 bankAccount:"银行账号",
 receiverName:"收款人姓名",
 submitWithdraw:"提交提款",
-withdrawSmall:"请确认账户资料正确"
+withdrawSmall:"请确认账户资料正确",
+recordTitle:"我的记录",
+noRecord:"暂无记录",
+amountText:"金额",
+statusText:"状态",
+timeText:"时间"
 },
 
 th:{
@@ -395,7 +400,12 @@ bankName:"ชื่อธนาคาร",
 bankAccount:"เลขบัญชีธนาคาร",
 receiverName:"ชื่อเจ้าของบัญชี",
 submitWithdraw:"ส่งคำขอถอนเงิน",
-withdrawSmall:"กรุณาตรวจสอบข้อมูลบัญชีให้ถูกต้อง"
+withdrawSmall:"กรุณาตรวจสอบข้อมูลบัญชีให้ถูกต้อง",
+recordTitle:"ประวัติของฉัน",
+noRecord:"ยังไม่มีรายการ",
+amountText:"จำนวนเงิน",
+statusText:"สถานะ",
+timeText:"เวลา"
 }
 
 };
@@ -407,6 +417,7 @@ const t = WALLET_LANG[currentLang];
 document.querySelector(".title").innerText = t.title;
 depositBtn.innerText = t.deposit;
 withdrawBtn.innerText = t.withdraw;
+document.getElementById("recordTitle").innerText = t.recordTitle;
 
 }
 
@@ -441,6 +452,8 @@ ${t.depositSmall}
 
 `;
 
+loadRecords();
+
 }
 
 function showWithdraw(){
@@ -473,6 +486,8 @@ ${t.withdrawSmall}
 </div>
 
 `;
+
+loadRecords();
 
 }
 
@@ -589,6 +604,73 @@ showDeposit();
 }
 
 }
+}
+async function loadRecords(){
+
+const userId =
+localStorage.getItem("userId");
+
+const recordList =
+document.getElementById("recordList");
+
+const t =
+WALLET_LANG[currentLang];
+
+if(!userId){
+
+recordList.innerHTML =
+`<div class="small">${t.noRecord}</div>`;
+
+return;
+
+}
+
+const url =
+currentType==="deposit"
+? "/my-recharge-requests/" + userId
+: "/my-withdraw-requests/" + userId;
+
+const res =
+await fetch(url);
+
+const list =
+await res.json();
+
+if(!list || list.length===0){
+
+recordList.innerHTML =
+`<div class="small">${t.noRecord}</div>`;
+
+return;
+
+}
+
+recordList.innerHTML =
+list.slice(0,5).map(item=>{
+
+return `
+
+<div class="recordItem">
+
+<div>
+${t.amountText}：${Number(item.amount || 0).toLocaleString()}
+</div>
+
+<div>
+${t.statusText}：
+<span class="status">${item.status}</span>
+</div>
+
+<div>
+${t.timeText}：${item.created_at ? item.created_at.substring(0,16).replace("T"," ") : "-"}
+</div>
+
+</div>
+
+`;
+
+}).join("");
+
 }
 depositBtn.onclick = showDeposit;
 withdrawBtn.onclick = showWithdraw;

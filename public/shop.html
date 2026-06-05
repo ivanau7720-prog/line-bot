@@ -124,7 +124,14 @@ font-size:38px;
 margin-bottom:8px;
 filter:drop-shadow(0 0 10px rgba(0,180,255,.8));
 }
-
+.product-img{
+width:100%;
+height:120px;
+object-fit:cover;
+border-radius:16px;
+margin-bottom:12px;
+box-shadow:0 0 22px rgba(255,215,0,.35);
+}
 .itemName{
 font-size:15px;
 font-weight:bold;
@@ -276,6 +283,7 @@ let myPoint=0;
 const bonusItems=[
 {
 icon:"💵",
+img:"/images/shop/bonus50.png",
 nameZh:"50 Bonus",
 nameTh:"50 โบนัส",
 cost:300,
@@ -460,7 +468,7 @@ const card=document.createElement("div");
 card.className="item";
 
 card.innerHTML=`
-<div class="icon">${item.icon}</div>
+${item.img ? `<img class="product-img" src="${item.img}">` : `<div class="icon">${item.icon}</div>`}
 <div class="itemName">${name}</div>
 <div class="cost">${item.cost.toLocaleString()} ${t.point}</div>
 <div class="desc">${desc}</div>

@@ -325,6 +325,10 @@ font-size:28px;
 <button class="menuBtn" onclick="location.href='/point-record.html'">
 <span id="pointRecordText">积分记录</span>
 </button>
+
+<button class="menuBtn" onclick="location.href='/shop.html'">
+<span id="shopText">积分商城</span>
+</button>
 </div>
 
 <div class="card">
@@ -401,6 +405,7 @@ recordTitle:"📜 我的记录",
 rechargeRecord:"充值记录",
 withdrawRecord:"提款记录",
 pointRecord:"积分记录",
+shop:"积分商城",
 
 settingTitle:"⚙️ 账户设置",
 changePwd:"修改密码",
@@ -437,6 +442,7 @@ recordTitle:"📜 ประวัติของฉัน",
 rechargeRecord:"ประวัติเติมเงิน",
 withdrawRecord:"ประวัติถอนเงิน",
 pointRecord:"ประวัติพอยท์",
+shop:"ร้านค้าแลกพอยท์",
 
 settingTitle:"⚙️ ตั้งค่าบัญชี",
 changePwd:"เปลี่ยนรหัสผ่าน",
@@ -476,7 +482,8 @@ document.getElementById("recordTitle").innerText=t.recordTitle;
 document.getElementById("rechargeRecordText").innerText=t.rechargeRecord;
 document.getElementById("withdrawRecordText").innerText=t.withdrawRecord;
 document.getElementById("pointRecordText").innerText=t.pointRecord;
-
+document.getElementById("shopText").innerText=t.shop;
+  
 document.getElementById("settingTitle").innerText=t.settingTitle;
 document.getElementById("changePwdText").innerText=t.changePwd;
 document.getElementById("logoutText").innerText=t.logout;

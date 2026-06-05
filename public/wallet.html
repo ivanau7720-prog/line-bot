@@ -249,6 +249,64 @@ class="submit">
 
 </div>
 
+<script>
+
+const depositBtn =
+document.getElementById("depositBtn");
+
+const withdrawBtn =
+document.getElementById("withdrawBtn");
+
+const amountInput =
+document.querySelectorAll(".input")[0];
+
+const nameInput =
+document.querySelectorAll(".input")[1];
+
+const submitBtn =
+document.querySelector(".submit");
+
+const smallText =
+document.querySelector(".small");
+
+function showDeposit(){
+
+depositBtn.classList.add("active");
+withdrawBtn.classList.remove("active");
+
+amountInput.placeholder = "输入充值金额";
+nameInput.placeholder = "付款人姓名";
+submitBtn.innerText = "提交充值";
+smallText.innerText = "审核后自动到账";
+
+}
+
+function showWithdraw(){
+
+withdrawBtn.classList.add("active");
+depositBtn.classList.remove("active");
+
+amountInput.placeholder = "输入提款金额";
+nameInput.placeholder = "收款人姓名";
+submitBtn.innerText = "提交提款";
+smallText.innerText = "请确认账户资料正确";
+
+}
+
+depositBtn.onclick = showDeposit;
+withdrawBtn.onclick = showWithdraw;
+
+const params =
+new URLSearchParams(window.location.search);
+
+if(params.get("tab") === "withdraw"){
+showWithdraw();
+}else{
+showDeposit();
+}
+
+</script>
+  
 </body>
 
 </html>

@@ -224,28 +224,7 @@ id="withdrawBtn">
 
 </div>
 
-<div class="box">
-
-<input
-class="input"
-placeholder="输入金额">
-
-<input
-class="input"
-placeholder="姓名">
-
-<button
-class="submit">
-
-提交申请
-
-</button>
-
-<div class="small">
-
-审核后自动到账
-
-</div>
+<div class="box" id="formBox">
 
 </div>
 
@@ -257,39 +236,178 @@ document.getElementById("depositBtn");
 const withdrawBtn =
 document.getElementById("withdrawBtn");
 
-const amountInput =
-document.querySelectorAll(".input")[0];
+const formBox =
+document.getElementById("formBox");
 
-const nameInput =
-document.querySelectorAll(".input")[1];
-
-const submitBtn =
-document.querySelector(".submit");
-
-const smallText =
-document.querySelector(".small");
+let currentType = "deposit";
 
 function showDeposit(){
+
+currentType = "deposit";
 
 depositBtn.classList.add("active");
 withdrawBtn.classList.remove("active");
 
-amountInput.placeholder = "输入充值金额";
-nameInput.placeholder = "付款人姓名";
-submitBtn.innerText = "提交充值";
-smallText.innerText = "审核后自动到账";
+formBox.innerHTML = `
+
+<input
+class="input"
+id="amount"
+type="number"
+placeholder="输入充值金额">
+
+<input
+class="input"
+id="method"
+placeholder="转账方式 / 银行 / 钱包">
+
+<input
+class="input"
+id="payerName"
+placeholder="付款人姓名">
+
+<input
+class="input"
+id="receipt"
+placeholder="截图链接 / 图片URL">
+
+<button
+class="submit"
+onclick="submitWallet()">
+
+提交充值
+
+</button>
+
+<div class="small">
+
+审核后自动到账
+
+</div>
+
+`;
 
 }
 
 function showWithdraw(){
 
+currentType = "withdraw";
+
 withdrawBtn.classList.add("active");
 depositBtn.classList.remove("active");
 
-amountInput.placeholder = "输入提款金额";
-nameInput.placeholder = "收款人姓名";
-submitBtn.innerText = "提交提款";
-smallText.innerText = "请确认账户资料正确";
+formBox.innerHTML = `
+
+<input
+class="input"
+id="amount"
+type="number"
+placeholder="输入提款金额">
+
+<input
+class="input"
+id="bankName"
+placeholder="银行名称">
+
+<input
+class="input"
+id="bankAccount"
+placeholder="银行账号">
+
+<input
+class="input"
+id="receiverName"
+placeholder="收款人姓名">
+
+<button
+class="submit"
+onclick="submitWallet()">
+
+提交提款
+
+</button>
+
+<div class="small">
+
+请确认账户资料正确
+
+</div>
+
+`;
+
+}
+
+function submitWallet(){
+
+let data = {};
+
+if(currentType==="deposit"){
+
+data = {
+
+type:"deposit",
+
+amount:
+document.getElementById(
+"amount"
+).value,
+
+method:
+document.getElementById(
+"method"
+).value,
+
+payerName:
+document.getElementById(
+"payerName"
+).value,
+
+receipt:
+document.getElementById(
+"receipt"
+).value
+
+};
+
+}else{
+
+data = {
+
+type:"withdraw",
+
+amount:
+document.getElementById(
+"amount"
+).value,
+
+bankName:
+document.getElementById(
+"bankName"
+).value,
+
+bankAccount:
+document.getElementById(
+"bankAccount"
+).value,
+
+receiverName:
+document.getElementById(
+"receiverName"
+).value
+
+};
+
+}
+
+console.log(data);
+
+alert(
+JSON.stringify(
+data,
+null,
+2
+)
+);
 
 }
 

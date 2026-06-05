@@ -192,6 +192,20 @@ color:#aaa;
 background:#444;
 color:white;
 }
+.avatarChoices{
+display:grid;
+grid-template-columns:repeat(5,1fr);
+gap:10px;
+margin-top:12px;
+}
+
+.avatarChoice{
+height:52px;
+border:none;
+border-radius:16px;
+background:rgba(255,255,255,.12);
+font-size:28px;
+}
 </style>
 
 </head>
@@ -206,7 +220,7 @@ color:white;
 <div class="page">
 
 <div class="header">
-<div class="avatar">👤</div>
+<div class="avatar" id="avatarValue">👤</div>
 <div class="title" id="pageTitle">我的账户</div>
 </div>
 
@@ -336,7 +350,18 @@ color:white;
 <input id="editBankNo" placeholder="Bank号码">
 <input id="editPhone" placeholder="泰国电话号码">
 <input id="editEmail" placeholder="Email">
-
+<div class="avatarChoices">
+<button class="avatarChoice" onclick="selectAvatar('👤')">👤</button>
+<button class="avatarChoice" onclick="selectAvatar('🐯')">🐯</button>
+<button class="avatarChoice" onclick="selectAvatar('🐉')">🐉</button>
+<button class="avatarChoice" onclick="selectAvatar('👑')">👑</button>
+<button class="avatarChoice" onclick="selectAvatar('💎')">💎</button>
+<button class="avatarChoice" onclick="selectAvatar('🔥')">🔥</button>
+<button class="avatarChoice" onclick="selectAvatar('🦁')">🦁</button>
+<button class="avatarChoice" onclick="selectAvatar('🐼')">🐼</button>
+<button class="avatarChoice" onclick="selectAvatar('🦊')">🦊</button>
+<button class="avatarChoice" onclick="selectAvatar('⭐')">⭐</button>
+</div>
 <button class="menuBtn" onclick="saveProfile()">
 <span id="saveProfileText">保存资料</span>
 </button>
@@ -349,7 +374,7 @@ color:white;
 </div>
 
 <script>
-
+let selectedAvatar="👤";
 const LANG={
 
 zh:{
@@ -508,7 +533,8 @@ document.getElementById("bankNameValue").innerText=d.bank_name || "-";
 document.getElementById("bankNoValue").innerText=d.bank_account || "-";
 document.getElementById("phoneValue").innerText=d.phone || "-";
 document.getElementById("emailValue").innerText=d.email || "-";
-
+selectedAvatar=d.avatar || "👤";
+document.getElementById("avatarValue").innerText=selectedAvatar;
 const totalTopup=Number(d.total_topup||0);
 
 let nextTarget=10000;
@@ -546,11 +572,16 @@ document.getElementById("phoneValue").innerText === "-" ? "" : document.getEleme
 
 document.getElementById("editEmail").value=
 document.getElementById("emailValue").innerText === "-" ? "" : document.getElementById("emailValue").innerText;
-
+selectedAvatar=document.getElementById("avatarValue").innerText || "👤";
 document.getElementById("editBox").style.display="block";
 
 }
+function selectAvatar(icon){
 
+selectedAvatar=icon;
+document.getElementById("avatarValue").innerText=icon;
+
+}
 function closeEditProfile(){
 
 document.getElementById("editBox").style.display="none";
@@ -567,7 +598,8 @@ user_id:uid,
 bank_name:document.getElementById("editBankName").value.trim(),
 bank_account:document.getElementById("editBankNo").value.trim(),
 phone:document.getElementById("editPhone").value.trim(),
-email:document.getElementById("editEmail").value.trim()
+email:document.getElementById("editEmail").value.trim(),
+avatar:selectedAvatar
 };
 
 const res=await fetch("/update-profile",{

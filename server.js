@@ -86,7 +86,15 @@ ADD COLUMN IF NOT EXISTS password TEXT;
 
 ALTER TABLE players
 ADD COLUMN IF NOT EXISTS agent_code TEXT;
-`
+
+CREATE TABLE IF NOT EXISTS point_records (
+id BIGSERIAL PRIMARY KEY,
+user_id TEXT,
+point NUMERIC DEFAULT 0,
+type TEXT,
+note TEXT,
+created_at TIMESTAMP DEFAULT NOW()
+);
 });
 
 }catch(err){
@@ -1278,7 +1286,15 @@ await supabase
       amount: Number(request.amount),
       type: "recharge_approved"
     }]);
-
+    
+if(addPoint > 0){
+await supabase.from("point_records").insert([{
+  user_id: request.user_id,
+  point: addPoint,
+  type: "recharge_point",
+  note: "Recharge reward"
+}]);
+}
     res.json({ success:true });
 
   } catch (err) {
@@ -1404,6 +1420,25 @@ app.get("/my-withdraw-requests/:userId", async (req, res) => {
 
     const { data } = await supabase
       .from("withdraw_requests")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending:false });
+
+    res.json(data || []);
+
+  } catch (err) {
+    console.error(err);
+    res.json([]);
+  }
+});
+
+// ===== 玩家：我的积分记录 =====
+app.get("/my-point-records/:userId", async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const { data } = await supabase
+      .from("point_records")
       .select("*")
       .eq("user_id", userId)
       .order("created_at", { ascending:false });

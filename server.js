@@ -14,6 +14,7 @@ app.get("/admin.html", (req, res) => {
 });
 
 app.use(express.static("public"));
+app.use(express.static(__dirname));
 // ===== 管理员登录检查 =====
 function checkAdmin(req, res, next){
 

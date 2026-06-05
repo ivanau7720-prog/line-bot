@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>Recharge Record</title>
+
+<style>
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+}
+
+body{
+min-height:100vh;
+padding:20px 18px 40px;
+font-family:sans-serif;
+color:white;
+background:
+linear-gradient(rgba(0,0,0,.18),rgba(0,0,0,.85)),
+url("/lobby-bg.jpg");
+background-size:cover;
+background-position:center top;
+}
+
+.langBox{
+position:fixed;
+top:18px;
+right:18px;
+z-index:10;
+}
+
+.langBox button{
+background:rgba(0,0,0,.55);
+color:gold;
+border:1px solid rgba(255,215,0,.45);
+border-radius:18px;
+padding:8px 12px;
+margin-left:6px;
+}
+
+.page{
+margin-top:150px;
+}
+
+.title{
+text-align:center;
+color:gold;
+font-size:26px;
+font-weight:bold;
+text-shadow:0 0 14px gold;
+margin-bottom:20px;
+}
+
+.card{
+margin-top:14px;
+padding:16px;
+border-radius:22px;
+background:rgba(0,0,0,.6);
+border:1px solid rgba(255,215,0,.28);
+backdrop-filter:blur(18px);
+box-shadow:0 0 28px rgba(255,215,0,.12);
+}
+
+.row{
+display:flex;
+justify-content:space-between;
+gap:10px;
+margin-top:8px;
+font-size:14px;
+}
+
+.label{
+color:#aaa;
+}
+
+.value{
+color:white;
+font-weight:bold;
+text-align:right;
+word-break:break-word;
+}
+
+.amount{
+color:gold;
+font-size:20px;
+font-weight:bold;
+}
+
+.status{
+display:inline-block;
+padding:5px 10px;
+border-radius:12px;
+font-size:13px;
+font-weight:bold;
+}
+
+.pending{
+background:#7a5a00;
+color:white;
+}
+
+.approved{
+background:#006b2b;
+color:white;
+}
+
+.rejected{
+background:#8b0000;
+color:white;
+}
+
+.empty{
+margin-top:40px;
+text-align:center;
+color:#ccc;
+font-size:16px;
+}
+
+.backBtn{
+width:100%;
+height:52px;
+margin-top:20px;
+border:none;
+border-radius:16px;
+background:rgba(255,215,0,.95);
+color:black;
+font-size:17px;
+font-weight:bold;
+}
+</style>
+</head>
+
+<body>
+
+<div class="langBox">
+<button onclick="switchLang('zh')">中文</button>
+<button onclick="switchLang('th')">ไทย</button>
+</div>
+
+<div class="page">
+
+<div class="title" id="pageTitle">充值记录</div>
+
+<div id="list"></div>
+
+<button class="backBtn" onclick="location.href='/account.html'" id="backText">
+返回账户
+</button>
+
+</div>
+
+<script>
+const LANG={
+zh:{
+pageTitle:"充值记录",
+back:"返回账户",
+amount:"充值金额",
+method:"付款方式",
+payer:"付款人姓名",
+note:"备注",
+status:"状态",
+time:"提交时间",
+pending:"审核中",
+approved:"已批准",
+rejected:"已拒绝",
+empty:"暂无充值记录"
+},
+th:{
+pageTitle:"ประวัติเติมเงิน",
+back:"กลับบัญชี",
+amount:"จำนวนเงินฝาก",
+method:"ช่องทางโอน",
+payer:"ชื่อผู้โอน",
+note:"หมายเหตุ",
+status:"สถานะ",
+time:"เวลาส่งคำขอ",
+pending:"รอตรวจสอบ",
+approved:"อนุมัติแล้ว",
+rejected:"ปฏิเสธแล้ว",
+empty:"ยังไม่มีประวัติเติมเงิน"
+}
+};
+
+function switchLang(lang){
+localStorage.setItem("homeLang",lang);
+
+const t=LANG[lang];
+
+document.getElementById("pageTitle").innerText=t.pageTitle;
+document.getElementById("backText").innerText=t.back;
+
+loadRecords();
+}
+
+function statusText(status){
+const lang=localStorage.getItem("homeLang") || "zh";
+const t=LANG[lang];
+
+if(status==="approved") return t.approved;
+if(status==="rejected") return t.rejected;
+return t.pending;
+}
+
+function statusClass(status){
+if(status==="approved") return "approved";
+if(status==="rejected") return "rejected";
+return "pending";
+}
+
+async function loadRecords(){
+
+const uid=localStorage.getItem("userId");
+
+if(!uid){
+location.href="/login.html";
+return;
+}
+
+const lang=localStorage.getItem("homeLang") || "zh";
+const t=LANG[lang];
+
+const res=await fetch("/my-recharge-requests/"+uid);
+const data=await res.json();
+
+const list=document.getElementById("list");
+list.innerHTML="";
+
+if(!data || data.length===0){
+list.innerHTML=`<div class="empty">${t.empty}</div>`;
+return;
+}
+
+data.forEach(r=>{
+
+const time=r.created_at
+? new Date(r.created_at).toLocaleString()
+: "-";
+
+const card=document.createElement("div");
+card.className="card";
+
+card.innerHTML=`
+<div class="row">
+<div class="label">${t.amount}</div>
+<div class="value amount">${Number(r.amount||0).toLocaleString()}</div>
+</div>
+
+<div class="row">
+<div class="label">${t.method}</div>
+<div class="value">${r.payment_method || "-"}</div>
+</div>
+
+<div class="row">
+<div class="label">${t.payer}</div>
+<div class="value">${r.payer_name || "-"}</div>
+</div>
+
+<div class="row">
+<div class="label">${t.note}</div>
+<div class="value">${r.note || "-"}</div>
+</div>
+
+<div class="row">
+<div class="label">${t.status}</div>
+<div class="value">
+<span class="status ${statusClass(r.status)}">${statusText(r.status)}</span>
+</div>
+</div>
+
+<div class="row">
+<div class="label">${t.time}</div>
+<div class="value">${time}</div>
+</div>
+`;
+
+list.appendChild(card);
+
+});
+
+}
+
+switchLang(localStorage.getItem("homeLang") || "zh");
+</script>
+
+</body>
+</html>

@@ -231,7 +231,56 @@ color:#ddd;
 text-align:center;
 
 }
+.recordBox{
 
+margin-top:18px;
+
+}
+
+.recordList{
+
+margin-top:12px;
+
+font-size:14px;
+
+color:#ddd;
+
+}
+
+.recordItem{
+
+padding:12px;
+
+margin-top:10px;
+
+border-radius:14px;
+
+background:
+rgba(
+255,
+255,
+255,
+.07
+);
+
+border:
+1px solid
+rgba(
+255,
+215,
+0,
+.2
+);
+
+}
+
+.status{
+
+color:gold;
+
+font-weight:bold;
+
+}
 </style>
 
 </head>
@@ -277,6 +326,18 @@ id="withdrawBtn">
 </div>
 
 <div class="box" id="formBox">
+
+</div>
+
+<div class="box recordBox">
+
+<div class="small" id="recordTitle">
+我的记录
+</div>
+
+<div id="recordList" class="recordList">
+
+</div>
 
 </div>
 
@@ -528,7 +589,7 @@ showDeposit();
 }
 
 }
-
+}
 depositBtn.onclick = showDeposit;
 withdrawBtn.onclick = showWithdraw;
 

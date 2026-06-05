@@ -109,6 +109,76 @@ text-shadow:
 0 0 12px gold;
 
 }
+.vipProgressBox{
+
+margin-bottom:14px;
+
+padding:12px;
+
+border-radius:18px;
+
+background:
+rgba(
+0,
+0,
+0,
+.48
+);
+
+border:
+1px solid
+rgba(
+255,
+215,
+0,
+.28
+);
+
+text-align:center;
+
+}
+
+#vipProgressText{
+
+color:#ddd;
+
+font-size:13px;
+
+margin-bottom:8px;
+
+}
+
+.vipBar{
+
+height:10px;
+
+background:
+rgba(
+255,
+255,
+255,
+.15
+);
+
+border-radius:20px;
+
+overflow:hidden;
+
+}
+
+#vipBarFill{
+
+height:100%;
+
+width:0%;
+
+background:gold;
+
+border-radius:20px;
+
+transition:.5s;
+
+}
 .grid{
 
 display:grid;
@@ -396,7 +466,19 @@ text-shadow:0 0 15px gold;
 <div class="welcomeBox" id="welcomeText">
 欢迎回来
 </div>
+<div class="vipProgressBox">
 
+<div id="vipProgressText">
+距离下一级 VIP：--
+</div>
+
+<div class="vipBar">
+
+<div id="vipBarFill"></div>
+
+</div>
+
+</div>
 <div class="grid">
 
 <a class="card" href="/index.html">
@@ -576,8 +658,9 @@ const LANG = {
     member:"Member",
     noticeTitle:"🔥 今日活动",
     noticeText:"充值 100 THB = 获得 10 💎 Point",
-    noticeSmall:"积分商城即将开放",
-    welcome:"欢迎回来"
+   noticeSmall:"积分商城即将开放",
+welcome:"欢迎回来",
+vipNext:"距离下一级 VIP："
   },
  th:{
     game:"บาคาร่า",
@@ -591,8 +674,9 @@ const LANG = {
     member:"สมาชิก",
     noticeTitle:"🔥 โปรโมชันวันนี้",
     noticeText:"เติมเงิน 100 THB = รับ 10 💎 Point",
-    noticeSmall:"ร้านแลกของรางวัลกำลังจะเปิด",
-    welome:"ยินดีต้อนรับกลับ"
+   noticeSmall:"ร้านแลกของรางวัลกำลังจะเปิด",
+welcome:"ยินดีต้อนรับกลับ",
+vipNext:"ยอดเติมที่เหลือถึง VIP ถัดไป："
   }
 };
 
@@ -750,7 +834,35 @@ vipEl.style.color =
 "gold";
 
 }
+const totalTopup =
+Number(data.total_topup || 0);
 
+let nextTarget = 10000;
+
+if(totalTopup >= 10000) nextTarget = 20000;
+if(totalTopup >= 20000) nextTarget = 40000;
+if(totalTopup >= 40000) nextTarget = 80000;
+if(totalTopup >= 80000) nextTarget = 150000;
+if(totalTopup >= 150000) nextTarget = 300000;
+if(totalTopup >= 300000) nextTarget = 500000;
+if(totalTopup >= 500000) nextTarget = 800000;
+if(totalTopup >= 800000) nextTarget = 1000000;
+
+const percent =
+Math.min(
+(totalTopup / nextTarget) * 100,
+100
+);
+
+document.getElementById("vipBarFill").style.width =
+percent + "%";
+
+const lang =
+localStorage.getItem("homeLang") || "zh";
+
+document.getElementById("vipProgressText").innerText =
+LANG[lang].vipNext +
+Math.max(nextTarget - totalTopup,0).toLocaleString();
 }catch(e){
 
 console.log(e);

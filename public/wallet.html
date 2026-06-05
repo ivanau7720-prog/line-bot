@@ -292,49 +292,90 @@ const formBox =
 document.getElementById("formBox");
 
 let currentType = "deposit";
+let currentLang =
+localStorage.getItem("homeLang") || "zh";
+
+const WALLET_LANG = {
+
+zh:{
+title:"💰 Wallet",
+deposit:"充值",
+withdraw:"提款",
+
+depositAmount:"输入充值金额",
+depositMethod:"转账方式 / 银行 / 钱包",
+payerName:"付款人姓名",
+receipt:"截图链接 / 图片URL",
+submitDeposit:"提交充值",
+depositSmall:"审核后自动到账",
+
+withdrawAmount:"输入提款金额",
+bankName:"银行名称",
+bankAccount:"银行账号",
+receiverName:"收款人姓名",
+submitWithdraw:"提交提款",
+withdrawSmall:"请确认账户资料正确"
+},
+
+th:{
+title:"💰 กระเป๋า",
+deposit:"เติมเงิน",
+withdraw:"ถอนเงิน",
+
+depositAmount:"กรอกจำนวนเงินที่เติม",
+depositMethod:"ช่องทางโอน / ธนาคาร / วอลเล็ต",
+payerName:"ชื่อผู้โอนเงิน",
+receipt:"ลิงก์สลิป / URL รูปภาพ",
+submitDeposit:"ส่งคำขอเติมเงิน",
+depositSmall:"ระบบจะเติมยอดหลังแอดมินตรวจสอบ",
+
+withdrawAmount:"กรอกจำนวนเงินที่ถอน",
+bankName:"ชื่อธนาคาร",
+bankAccount:"เลขบัญชีธนาคาร",
+receiverName:"ชื่อเจ้าของบัญชี",
+submitWithdraw:"ส่งคำขอถอนเงิน",
+withdrawSmall:"กรุณาตรวจสอบข้อมูลบัญชีให้ถูกต้อง"
+}
+
+};
+
+function applyLang(){
+
+const t = WALLET_LANG[currentLang];
+
+document.querySelector(".title").innerText = t.title;
+depositBtn.innerText = t.deposit;
+withdrawBtn.innerText = t.withdraw;
+
+}
 
 function showDeposit(){
 
 currentType = "deposit";
+
+applyLang();
+
+const t = WALLET_LANG[currentLang];
 
 depositBtn.classList.add("active");
 withdrawBtn.classList.remove("active");
 
 formBox.innerHTML = `
 
-<input
-class="input"
-id="amount"
-type="number"
-placeholder="输入充值金额">
+<input class="input" id="amount" type="number" placeholder="${t.depositAmount}">
 
-<input
-class="input"
-id="method"
-placeholder="转账方式 / 银行 / 钱包">
+<input class="input" id="method" placeholder="${t.depositMethod}">
 
-<input
-class="input"
-id="payerName"
-placeholder="付款人姓名">
+<input class="input" id="payerName" placeholder="${t.payerName}">
 
-<input
-class="input"
-id="receipt"
-placeholder="截图链接 / 图片URL">
+<input class="input" id="receipt" placeholder="${t.receipt}">
 
-<button
-class="submit"
-onclick="submitWallet()">
-
-提交充值
-
+<button class="submit" onclick="submitWallet()">
+${t.submitDeposit}
 </button>
 
 <div class="small">
-
-审核后自动到账
-
+${t.depositSmall}
 </div>
 
 `;
@@ -345,121 +386,52 @@ function showWithdraw(){
 
 currentType = "withdraw";
 
+applyLang();
+
+const t = WALLET_LANG[currentLang];
+
 withdrawBtn.classList.add("active");
 depositBtn.classList.remove("active");
 
 formBox.innerHTML = `
 
-<input
-class="input"
-id="amount"
-type="number"
-placeholder="输入提款金额">
+<input class="input" id="amount" type="number" placeholder="${t.withdrawAmount}">
 
-<input
-class="input"
-id="bankName"
-placeholder="银行名称">
+<input class="input" id="bankName" placeholder="${t.bankName}">
 
-<input
-class="input"
-id="bankAccount"
-placeholder="银行账号">
+<input class="input" id="bankAccount" placeholder="${t.bankAccount}">
 
-<input
-class="input"
-id="receiverName"
-placeholder="收款人姓名">
+<input class="input" id="receiverName" placeholder="${t.receiverName}">
 
-<button
-class="submit"
-onclick="submitWallet()">
-
-提交提款
-
+<button class="submit" onclick="submitWallet()">
+${t.submitWithdraw}
 </button>
 
 <div class="small">
-
-请确认账户资料正确
-
+${t.withdrawSmall}
 </div>
 
 `;
 
 }
 
-function submitWallet(){
+function switchLang(lang){
 
-let data = {};
+currentLang = lang;
 
-if(currentType==="deposit"){
+localStorage.setItem("homeLang", lang);
 
-data = {
-
-type:"deposit",
-
-amount:
-document.getElementById(
-"amount"
-).value,
-
-method:
-document.getElementById(
-"method"
-).value,
-
-payerName:
-document.getElementById(
-"payerName"
-).value,
-
-receipt:
-document.getElementById(
-"receipt"
-).value
-
-};
-
+if(currentType === "withdraw"){
+showWithdraw();
 }else{
-
-data = {
-
-type:"withdraw",
-
-amount:
-document.getElementById(
-"amount"
-).value,
-
-bankName:
-document.getElementById(
-"bankName"
-).value,
-
-bankAccount:
-document.getElementById(
-"bankAccount"
-).value,
-
-receiverName:
-document.getElementById(
-"receiverName"
-).value
-
-};
+showDeposit();
+}
 
 }
 
-console.log(data);
+function submitWallet(){
 
-alert(
-JSON.stringify(
-data,
-null,
-2
-)
-);
+alert("下一步接后台 API");
 
 }
 
@@ -475,50 +447,6 @@ showWithdraw();
 showDeposit();
 }
 
-const WALLET_LANG={
-
-zh:{
-title:"💰 Wallet",
-deposit:"充值",
-withdraw:"提款"
-},
-
-th:{
-title:"💰 กระเป๋า",
-deposit:"เติมเงิน",
-withdraw:"ถอนเงิน"
-}
-
-};
-
-function switchLang(lang){
-
-localStorage.setItem(
-"homeLang",
-lang
-);
-
-document.querySelector(
-".title"
-).innerText=
-WALLET_LANG[lang].title;
-
-depositBtn.innerText=
-WALLET_LANG[lang].deposit;
-
-withdrawBtn.innerText=
-WALLET_LANG[lang].withdraw;
-
-showDeposit();
-
-}
-
-switchLang(
-localStorage.getItem(
-"homeLang"
-)||"zh"
-);
-  
 </script>
   
 </body>

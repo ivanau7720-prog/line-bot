@@ -690,16 +690,42 @@ app.get("/balance/:userId", async (req, res) => {
       .eq("user_id", userId)
       .single();
 
-   res.json({
-  balance: data?.balance || 0,
-  total_topup: data?.total_topup || 0
+ res.json({
+
+balance:
+Number(
+data?.balance || 0
+),
+
+point:
+Number(
+data?.reward_points || 0
+),
+
+vip:
+Number(
+data?.vip_level || 10
+),
+
+total_topup:
+Number(
+data?.total_topup || 0
+)
+
 });
 
   } catch (err) {
     console.error(err);
 res.json({
-  balance: 0,
-  total_topup: 0
+
+balance:0,
+
+point:0,
+
+vip:10,
+
+total_topup:0
+
 });
 }
 });    

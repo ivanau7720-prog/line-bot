@@ -368,7 +368,7 @@ BACCARAT
 
 </a>
 
-<a class="card" href="/wallet.html">
+<a class="card" href="/wallet.html?tab=withdraw">
 
 <div class="icon">
 🏧
@@ -392,7 +392,7 @@ BACCARAT
 
 </a>
 
-<a class="card" href="#">
+<a class="card" href="/account.html">
 
 <div class="icon">
 📞
@@ -574,7 +574,7 @@ document
 ).innerText =
 "VIP " +
 Number(
-data.vip || 10
+data.vip_level || data.vip || 10
 );
 
 }catch(e){

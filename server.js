@@ -95,6 +95,7 @@ type TEXT,
 note TEXT,
 created_at TIMESTAMP DEFAULT NOW()
 );
+`
 });
 
 }catch(err){

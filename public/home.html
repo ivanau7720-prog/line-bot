@@ -54,6 +54,22 @@ padding:
 height:260px;
 }
 
+.langBox{
+position:fixed;
+top:18px;
+right:18px;
+z-index:10;
+}
+
+.langBox button{
+background:rgba(0,0,0,.55);
+color:gold;
+border:1px solid rgba(255,215,0,.5);
+border-radius:18px;
+padding:8px 12px;
+margin-left:6px;
+}
+  
 .grid{
 
 display:grid;
@@ -240,7 +256,12 @@ margin-top:8px;
 </head>
 
 <body>
-
+  
+<div class="langBox">
+  <button onclick="switchLang('zh')">中文</button>
+  <button onclick="switchLang('th')">ไทย</button>
+</div>
+  
 <div class="wrap">
 
 <div class="logo-spacer"></div>
@@ -253,7 +274,7 @@ margin-top:8px;
 🎮
 </div>
 
-<div class="text">
+<div class="text" id="gameText">
 百家乐
 </div>
 
@@ -263,61 +284,61 @@ BACCARAT
 
 </a>
 
-<a class="card">
+<a class="card" href="/shop.html">
 
 <div class="icon">
 🎁
 </div>
 
-<div class="text">
+<div class="text" id="shopText">
 积分商城
 </div>
 
 </a>
 
-<a class="card">
+<a class="card" href="/wallet.html">
 
 <div class="icon">
 💰
 </div>
 
-<div class="text">
+<div class="text" id="rechargeText">
 充值中心
 </div>
 
 </a>
 
-<a class="card">
+<a class="card" href="/wallet.html">
 
 <div class="icon">
 🏧
 </div>
 
-<div class="text">
+<div class="text" id="withdrawText">
 提款申请
 </div>
 
 </a>
 
-<a class="card">
+<a class="card" href="/account.html">
 
 <div class="icon">
 👤
 </div>
 
-<div class="text">
+<div class="text" id="accountText">
 我的账户
 </div>
 
 </a>
 
-<a class="card">
+<a class="card" href="#">
 
 <div class="icon">
 📞
 </div>
 
-<div class="text">
+<div class="text" id="serviceText">
 联系客服
 </div>
 
@@ -339,7 +360,7 @@ BACCARAT
 
 </div>
 
-<div>
+<div id="balanceLabel">
 Balance
 </div>
 
@@ -355,7 +376,7 @@ Balance
 
 </div>
 
-<div>
+<div id="pointLabel">
 Point
 </div>
 
@@ -371,7 +392,7 @@ VIP 8
 
 </div>
 
-<div>
+<div id="memberLabel">
 Member
 </div>
 
@@ -379,6 +400,50 @@ Member
 
 </div>
 
+<script>
+const LANG = {
+  zh:{
+    game:"百家乐",
+    shop:"积分商城",
+    recharge:"充值中心",
+    withdraw:"提款申请",
+    account:"我的账户",
+    service:"联系客服",
+    balance:"Balance",
+    point:"Point",
+    member:"Member"
+  },
+  th:{
+    game:"บาคาร่า",
+    shop:"ร้านแลกของรางวัล",
+    recharge:"เติมเงิน",
+    withdraw:"ถอนเงิน",
+    account:"บัญชีของฉัน",
+    service:"ติดต่อแอดมิน",
+    balance:"ยอดเงิน",
+    point:"พอยท์",
+    member:"สมาชิก"
+  }
+};
+
+function switchLang(lang){
+  const t = LANG[lang];
+
+  document.getElementById("gameText").innerText = t.game;
+  document.getElementById("shopText").innerText = t.shop;
+  document.getElementById("rechargeText").innerText = t.recharge;
+  document.getElementById("withdrawText").innerText = t.withdraw;
+  document.getElementById("accountText").innerText = t.account;
+  document.getElementById("serviceText").innerText = t.service;
+document.getElementById("balanceLabel").innerText = t.balance;
+document.getElementById("pointLabel").innerText = t.point;
+document.getElementById("memberLabel").innerText = t.member;
+  localStorage.setItem("homeLang", lang);
+}
+
+switchLang(localStorage.getItem("homeLang") || "zh");
+</script>
+  
 </body>
 
 </html>

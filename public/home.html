@@ -41,17 +41,14 @@ color:white;
 }
 
 .wrap{
-
 padding:
-
-40px
 20px
-160px;
-
+20px
+120px;
 }
 
 .logo-spacer{
-height:260px;
+height:360px;
 }
 
 .langBox{
@@ -84,7 +81,7 @@ gap:18px;
 
 .card{
 
-height:130px;
+height:115px;
 
 border-radius:30px;
 
@@ -173,7 +170,70 @@ margin-top:8px;
 color:#ddd;
 
 }
+.noticeBox{
 
+margin-top:22px;
+
+padding:18px;
+
+border-radius:24px;
+
+background:
+linear-gradient(
+180deg,
+rgba(0,0,0,.65),
+rgba(0,0,0,.42)
+);
+
+border:
+
+1px solid
+rgba(255,215,0,.35);
+
+box-shadow:
+
+0 0 35px
+rgba(255,215,0,.16);
+
+text-align:center;
+
+backdrop-filter:
+blur(16px);
+
+}
+
+.noticeTitle{
+
+color:gold;
+
+font-size:18px;
+
+font-weight:bold;
+
+margin-bottom:8px;
+
+text-shadow:
+0 0 12px gold;
+
+}
+
+#noticeText{
+
+font-size:15px;
+
+color:white;
+
+}
+
+.noticeSmall{
+
+margin-top:6px;
+
+font-size:12px;
+
+color:#ddd;
+
+}
 .bottom{
 
 position:fixed;
@@ -184,7 +244,7 @@ left:14px;
 
 right:14px;
 
-padding:16px;
+padding:12px;
 
 background:
 
@@ -239,7 +299,7 @@ min-width:90px;
 
 color:gold;
 
-font-size:22px;
+font-size:18px;
 
 font-weight:bold;
 
@@ -346,6 +406,22 @@ BACCARAT
 
 </div>
 
+<div class="noticeBox">
+
+<div class="noticeTitle" id="noticeTitle">
+🔥 今日活动
+</div>
+
+<div id="noticeText">
+充值 100 THB = 获得 10 💎 Point
+</div>
+
+<div class="noticeSmall" id="noticeSmall">
+积分商城即将开放
+</div>
+
+</div>
+
 </div>
 
 <div class="bottom">
@@ -354,9 +430,11 @@ BACCARAT
 
 💰
 
-<div class="value">
+<div
+class="value"
+id="balanceValue">
 
-8,880
+0
 
 </div>
 
@@ -370,9 +448,11 @@ Balance
 
 💎
 
-<div class="value">
+<div
+class="value"
+id="pointValue">
 
-1,250
+0
 
 </div>
 
@@ -386,9 +466,11 @@ Point
 
 👑
 
-<div class="value">
+<div
+class="value"
+id="vipValue">
 
-VIP 8
+VIP 10
 
 </div>
 
@@ -411,9 +493,12 @@ const LANG = {
     service:"联系客服",
     balance:"Balance",
     point:"Point",
-    member:"Member"
+    member:"Member",
+    noticeTitle:"🔥 今日活动",
+    noticeText:"充值 100 THB = 获得 10 💎 Point",
+    noticeSmall:"积分商城即将开放"
   },
-  th:{
+ th:{
     game:"บาคาร่า",
     shop:"ร้านแลกของรางวัล",
     recharge:"เติมเงิน",
@@ -422,7 +507,10 @@ const LANG = {
     service:"ติดต่อแอดมิน",
     balance:"ยอดเงิน",
     point:"พอยท์",
-    member:"สมาชิก"
+    member:"สมาชิก",
+    noticeTitle:"🔥 โปรโมชันวันนี้",
+    noticeText:"เติมเงิน 100 THB = รับ 10 💎 Point",
+    noticeSmall:"ร้านแลกของรางวัลกำลังจะเปิด"
   }
 };
 
@@ -438,10 +526,66 @@ function switchLang(lang){
 document.getElementById("balanceLabel").innerText = t.balance;
 document.getElementById("pointLabel").innerText = t.point;
 document.getElementById("memberLabel").innerText = t.member;
+  document.getElementById("noticeTitle").innerText = t.noticeTitle;
+document.getElementById("noticeText").innerText = t.noticeText;
+document.getElementById("noticeSmall").innerText = t.noticeSmall;
   localStorage.setItem("homeLang", lang);
 }
 
 switchLang(localStorage.getItem("homeLang") || "zh");
+async function loadProfile(){
+
+const uid =
+localStorage.getItem(
+"userId"
+);
+
+if(!uid)return;
+
+try{
+
+const res =
+await fetch(
+"/balance/" + uid
+);
+
+const data =
+await res.json();
+
+document
+.getElementById(
+"balanceValue"
+).innerText =
+Number(
+data.balance || 0
+).toLocaleString();
+
+document
+.getElementById(
+"pointValue"
+).innerText =
+Number(
+data.point || 0
+).toLocaleString();
+
+document
+.getElementById(
+"vipValue"
+).innerText =
+"VIP " +
+Number(
+data.vip || 10
+);
+
+}catch(e){
+
+console.log(e);
+
+}
+
+}
+
+loadProfile();
 </script>
   
 </body>

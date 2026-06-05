@@ -647,7 +647,19 @@ return;
 
 recordList.innerHTML =
 list.slice(0,5).map(item=>{
+let statusText = item.status;
 
+if(item.status === "pending"){
+statusText = currentLang === "th" ? "รอตรวจสอบ" : "审核中";
+}
+
+if(item.status === "approved"){
+statusText = currentLang === "th" ? "อนุมัติแล้ว" : "已批准";
+}
+
+if(item.status === "rejected"){
+statusText = currentLang === "th" ? "ปฏิเสธแล้ว" : "已拒绝";
+}
 return `
 
 <div class="recordItem">
@@ -658,7 +670,7 @@ ${t.amountText}：${Number(item.amount || 0).toLocaleString()}
 
 <div>
 ${t.statusText}：
-<span class="status">${item.status}</span>
+<span class="status">${statusText}</span>
 </div>
 
 <div>

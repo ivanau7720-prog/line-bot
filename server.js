@@ -77,6 +77,10 @@ ADD COLUMN IF NOT EXISTS phone TEXT;
 
 ALTER TABLE players
 ADD COLUMN IF NOT EXISTS email TEXT;
+
+ALTER TABLE players
+ADD COLUMN IF NOT EXISTS avatar TEXT;
+
 ALTER TABLE players
 ADD COLUMN IF NOT EXISTS password TEXT;
 
@@ -737,7 +741,10 @@ phone:
 data?.phone || "",
 
 email:
-data?.email || ""
+data?.email || "",
+
+avatar:
+data?.avatar || "👤"
 
 });
 
@@ -761,7 +768,9 @@ bank_account:"",
 
 phone:"",
 
-email:""
+email:"",
+
+avatar:"👤"
 
 });
 }
@@ -775,8 +784,9 @@ app.post("/update-profile", async (req, res) => {
       bank_name,
       bank_account,
       phone,
-      email
-    } = req.body;
+      email,
+avatar
+} = req.body;
 
     if (!user_id) {
       return res.json({
@@ -791,7 +801,8 @@ app.post("/update-profile", async (req, res) => {
         bank_name: bank_name || "",
         bank_account: bank_account || "",
         phone: phone || "",
-        email: email || ""
+        email: email || "",
+avatar: avatar || "👤"
       })
       .eq("user_id", user_id);
 

@@ -1135,17 +1135,44 @@ app.post("/admin/approve-recharge", checkAdmin, async (req, res) => {
       .eq("user_id", request.user_id)
       .single();
 
-    const newBalance = Number(player.balance || 0) + Number(request.amount);
-    const newTopup = Number(player.total_topup || 0) + Number(request.amount);
+    const rechargeAmount =
+Number(request.amount);
 
-    await supabase
-      .from("players")
-      .update({
-        balance: newBalance,
-        total_topup: newTopup
-      })
-      .eq("user_id", request.user_id);
+const newBalance =
+Number(player.balance || 0) + rechargeAmount;
 
+const newTopup =
+Number(player.total_topup || 0) + rechargeAmount;
+
+/* Point 规则：充值 100 = 10 Point */
+const addPoint =
+Math.floor(rechargeAmount / 100) * 10;
+
+const newPoint =
+Number(player.reward_points || 0) + addPoint;
+
+/* VIP 规则：累计充值越高，VIP 越高 */
+let newVip = 10;
+
+if(newTopup >= 10000) newVip = 9;
+if(newTopup >= 20000) newVip = 8;
+if(newTopup >= 40000) newVip = 7;
+if(newTopup >= 80000) newVip = 6;
+if(newTopup >= 150000) newVip = 5;
+if(newTopup >= 300000) newVip = 4;
+if(newTopup >= 500000) newVip = 3;
+if(newTopup >= 800000) newVip = 2;
+if(newTopup >= 1000000) newVip = 1;
+
+await supabase
+  .from("players")
+  .update({
+    balance: newBalance,
+    total_topup: newTopup,
+    reward_points: newPoint,
+    vip_level: newVip
+  })
+  .eq("user_id", request.user_id);
     await supabase
       .from("recharge_requests")
       .update({ status:"approved" })

@@ -318,7 +318,32 @@ text-shadow:
 margin-top:8px;
 
 }
+.vipGlow,
+.valueGlow{
 
+animation:
+vipFlash 1s ease-in-out 3;
+
+}
+
+@keyframes vipFlash{
+
+0%{
+transform:scale(1);
+text-shadow:0 0 15px gold;
+}
+
+50%{
+transform:scale(1.25);
+text-shadow:0 0 35px gold;
+}
+
+100%{
+transform:scale(1);
+text-shadow:0 0 15px gold;
+}
+
+}
 </style>
 
 </head>
@@ -560,30 +585,117 @@ await fetch(
 const data =
 await res.json();
 
-document
-.getElementById(
+const balanceEl =
+document.getElementById(
 "balanceValue"
-).innerText =
+);
+
+const oldBalance =
+balanceEl.innerText;
+
+const newBalance =
 Number(
 data.balance || 0
 ).toLocaleString();
 
-document
-.getElementById(
+balanceEl.innerText =
+newBalance;
+
+if(oldBalance !== newBalance){
+
+balanceEl.classList.remove(
+"valueGlow"
+);
+
+void balanceEl.offsetWidth;
+
+balanceEl.classList.add(
+"valueGlow"
+);
+
+}
+
+const pointEl =
+document.getElementById(
 "pointValue"
-).innerText =
+);
+
+const oldPoint =
+pointEl.innerText;
+
+const newPoint =
 Number(
 data.point || 0
 ).toLocaleString();
 
-document
-.getElementById(
+pointEl.innerText =
+newPoint;
+
+if(oldPoint !== newPoint){
+
+pointEl.classList.remove(
+"valueGlow"
+);
+
+void pointEl.offsetWidth;
+
+pointEl.classList.add(
+"valueGlow"
+);
+
+}
+const vipEl =
+document.getElementById(
 "vipValue"
-).innerText =
+);
+
+const oldVip =
+vipEl.innerText;
+
+const newVip =
 "VIP " +
 Number(
 data.vip_level || data.vip || 10
 );
+
+vipEl.innerText =
+newVip;
+
+if(oldVip !== newVip){
+
+vipEl.classList.remove(
+"vipGlow"
+);
+
+void vipEl.offsetWidth;
+
+vipEl.classList.add(
+"vipGlow"
+);
+
+}
+
+const vipNum =
+Number(
+data.vip_level || data.vip || 10
+);
+
+if(vipNum <= 3){
+
+vipEl.style.color =
+"#ff4d4d";
+
+}else if(vipNum <= 6){
+
+vipEl.style.color =
+"#ffcc00";
+
+}else{
+
+vipEl.style.color =
+"gold";
+
+}
 
 }catch(e){
 
@@ -594,6 +706,12 @@ console.log(e);
 }
 
 loadProfile();
+
+setInterval(()=>{
+
+loadProfile();
+
+},5000);
 </script>
   
 </body>

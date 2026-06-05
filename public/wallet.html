@@ -41,7 +41,47 @@ font-family:sans-serif;
 padding:20px;
 
 }
+.langBox{
 
+position:fixed;
+
+top:18px;
+
+right:18px;
+
+z-index:10;
+
+}
+
+.langBox button{
+
+background:
+rgba(
+0,
+0,
+0,
+.55
+);
+
+color:gold;
+
+border:
+
+1px solid
+rgba(
+255,
+215,
+0,
+.35
+);
+
+border-radius:18px;
+
+padding:8px 12px;
+
+margin-left:6px;
+
+}
 .title{
 
 font-size:28px;
@@ -197,6 +237,18 @@ text-align:center;
 </head>
 
 <body>
+
+<div class="langBox">
+
+<button onclick="switchLang('zh')">
+中文
+</button>
+
+<button onclick="switchLang('th')">
+ไทย
+</button>
+
+</div>
 
 <div class="title">
 
@@ -423,6 +475,50 @@ showWithdraw();
 showDeposit();
 }
 
+const WALLET_LANG={
+
+zh:{
+title:"💰 Wallet",
+deposit:"充值",
+withdraw:"提款"
+},
+
+th:{
+title:"💰 กระเป๋า",
+deposit:"เติมเงิน",
+withdraw:"ถอนเงิน"
+}
+
+};
+
+function switchLang(lang){
+
+localStorage.setItem(
+"homeLang",
+lang
+);
+
+document.querySelector(
+".title"
+).innerText=
+WALLET_LANG[lang].title;
+
+depositBtn.innerText=
+WALLET_LANG[lang].deposit;
+
+withdrawBtn.innerText=
+WALLET_LANG[lang].withdraw;
+
+showDeposit();
+
+}
+
+switchLang(
+localStorage.getItem(
+"homeLang"
+)||"zh"
+);
+  
 </script>
   
 </body>

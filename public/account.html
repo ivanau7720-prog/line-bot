@@ -4,95 +4,151 @@
 <head>
 
 <meta charset="UTF-8">
-
-<meta name="viewport"
-content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 
 <title>Account</title>
 
 <style>
 
-body{
-
+*{
 margin:0;
+padding:0;
+box-sizing:border-box;
+}
 
-padding:20px;
+body{
+min-height:100vh;
+padding:20px 18px 40px;
+font-family:sans-serif;
+color:white;
 
 background:
-
 linear-gradient(
-rgba(0,0,0,.2),
-rgba(0,0,0,.8)
+rgba(0,0,0,.18),
+rgba(0,0,0,.82)
 ),
-
 url("/lobby-bg.jpg");
 
 background-size:cover;
-
-color:white;
-
-font-family:sans-serif;
-
+background-position:center top;
 }
 
-.box{
+.langBox{
+position:fixed;
+top:18px;
+right:18px;
+z-index:10;
+}
 
-margin-top:180px;
+.langBox button{
+background:rgba(0,0,0,.55);
+color:gold;
+border:1px solid rgba(255,215,0,.45);
+border-radius:18px;
+padding:8px 12px;
+margin-left:6px;
+}
 
-padding:28px;
+.page{
+margin-top:165px;
+}
 
-border-radius:28px;
-
-background:
-
-rgba(
-0,
-0,
-0,
-.55
-);
-
-backdrop-filter:
-blur(20px);
-
+.header{
 text-align:center;
-
+margin-bottom:18px;
 }
 
 .avatar{
-
-font-size:72px;
-
+font-size:70px;
+filter:drop-shadow(0 0 15px gold);
 }
 
-.row{
-
-margin-top:18px;
-
+.title{
 color:gold;
+font-size:26px;
+font-weight:bold;
+text-shadow:0 0 14px gold;
+margin-top:8px;
+}
 
+.card{
+margin-top:16px;
+padding:18px;
+border-radius:24px;
+background:rgba(0,0,0,.58);
+border:1px solid rgba(255,215,0,.28);
+backdrop-filter:blur(18px);
+box-shadow:0 0 30px rgba(255,215,0,.12);
+}
+
+.cardTitle{
+color:gold;
 font-size:18px;
+font-weight:bold;
+margin-bottom:12px;
+}
 
+.infoGrid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:10px;
+}
+
+.item{
+padding:12px;
+border-radius:16px;
+background:rgba(255,255,255,.07);
+border:1px solid rgba(255,215,0,.16);
+}
+
+.label{
+font-size:12px;
+color:#bbb;
+margin-bottom:6px;
+}
+
+.value{
+font-size:15px;
+color:white;
+word-break:break-word;
+}
+
+.gold{
+color:gold;
+font-weight:bold;
+}
+
+.vipBar{
+height:10px;
+background:rgba(255,255,255,.15);
+border-radius:20px;
+overflow:hidden;
+margin-top:10px;
+}
+
+#vipFill{
+height:100%;
+width:0%;
+background:gold;
+border-radius:20px;
+transition:.5s;
+}
+
+.menuBtn{
+width:100%;
+height:50px;
+margin-top:10px;
+border:none;
+border-radius:16px;
+background:rgba(255,215,0,.95);
+color:black;
+font-size:17px;
+font-weight:bold;
 }
 
 .logout{
-
-margin-top:30px;
-
-width:100%;
-
-height:60px;
-
-border:none;
-
-border-radius:18px;
-
-background:red;
-
+background:#b80000;
 color:white;
-
-font-size:20px;
-
 }
 
 </style>
@@ -101,144 +157,309 @@ font-size:20px;
 
 <body>
 
-<div class="box">
-
-<div class="avatar">
-👤
+<div class="langBox">
+<button onclick="switchLang('zh')">中文</button>
+<button onclick="switchLang('th')">ไทย</button>
 </div>
 
-<div class="row" id="name">
-名字
+<div class="page">
+
+<div class="header">
+<div class="avatar">👤</div>
+<div class="title" id="pageTitle">我的账户</div>
 </div>
 
-<div class="row" id="uid">
-UID
+<div class="card">
+<div class="cardTitle" id="profileTitle">👤 玩家资料</div>
+
+<div class="infoGrid">
+
+<div class="item">
+<div class="label" id="nameLabel">昵称</div>
+<div class="value gold" id="nameValue">-</div>
 </div>
 
-<div class="row" id="balance">
-余额
+<div class="item">
+<div class="label" id="uidLabel">User ID</div>
+<div class="value" id="uidValue">-</div>
 </div>
 
-<div class="row" id="point">
-Point
+<div class="item">
+<div class="label" id="vipLabel">VIP</div>
+<div class="value gold" id="vipValue">VIP 10</div>
 </div>
 
-<div class="row" id="vip">
-VIP
+<div class="item">
+<div class="label" id="bankNameLabel">Bank名称</div>
+<div class="value" id="bankNameValue">-</div>
 </div>
 
-<div class="row" id="topup">
-累计充值
+<div class="item">
+<div class="label" id="bankNoLabel">Bank号码</div>
+<div class="value" id="bankNoValue">-</div>
 </div>
 
-<button
-class="logout"
-onclick="logout()">
+<div class="item">
+<div class="label" id="phoneLabel">泰国电话号码</div>
+<div class="value" id="phoneValue">-</div>
+</div>
 
-退出登录
+<div class="item">
+<div class="label" id="emailLabel">Email</div>
+<div class="value" id="emailValue">-</div>
+</div>
 
+</div>
+</div>
+
+<div class="card">
+<div class="cardTitle" id="walletTitle">💰 我的钱包</div>
+
+<div class="infoGrid">
+
+<div class="item">
+<div class="label" id="balanceLabel">余额</div>
+<div class="value gold" id="balanceValue">0</div>
+</div>
+
+<div class="item">
+<div class="label" id="pointLabel">Point</div>
+<div class="value gold" id="pointValue">0</div>
+</div>
+
+<div class="item">
+<div class="label" id="topupLabel">累计充值</div>
+<div class="value" id="topupValue">0</div>
+</div>
+
+<div class="item">
+<div class="label" id="withdrawLabel">累计提款</div>
+<div class="value" id="withdrawValue">0</div>
+</div>
+
+</div>
+</div>
+
+<div class="card">
+<div class="cardTitle" id="vipTitle">👑 VIP等级</div>
+
+<div class="value gold" id="vipNow">VIP 10</div>
+<div class="label" id="vipNextText">距离下一级 VIP：--</div>
+
+<div class="vipBar">
+<div id="vipFill"></div>
+</div>
+</div>
+
+<div class="card">
+<div class="cardTitle" id="recordTitle">📜 我的记录</div>
+
+<button class="menuBtn" onclick="location.href='/wallet.html'">
+<span id="rechargeRecordText">充值记录</span>
 </button>
+
+<button class="menuBtn" onclick="location.href='/wallet.html?tab=withdraw'">
+<span id="withdrawRecordText">提款记录</span>
+</button>
+
+<button class="menuBtn" onclick="alert('Coming soon')">
+<span id="pointRecordText">积分记录</span>
+</button>
+</div>
+
+<div class="card">
+<div class="cardTitle" id="settingTitle">⚙️ 账户设置</div>
+
+<button class="menuBtn" onclick="alert('Coming soon')">
+<span id="changePwdText">修改密码</span>
+</button>
+
+<button class="menuBtn logout" onclick="logout()">
+<span id="logoutText">退出登录</span>
+</button>
+</div>
 
 </div>
 
 <script>
 
-async function load(){
+const LANG={
 
-const uid =
-localStorage.getItem(
-"userId"
-);
+zh:{
+pageTitle:"我的账户",
+profileTitle:"👤 玩家资料",
+name:"昵称",
+uid:"User ID",
+vip:"VIP",
+bankName:"Bank名称",
+bankNo:"Bank号码",
+phone:"泰国电话号码",
+email:"Email",
 
-if(!uid){
+walletTitle:"💰 我的钱包",
+balance:"余额",
+point:"Point",
+topup:"累计充值",
+withdraw:"累计提款",
 
-location.href =
-"/login.html";
+vipTitle:"👑 VIP等级",
+vipNext:"距离下一级 VIP：",
 
-return;
+recordTitle:"📜 我的记录",
+rechargeRecord:"充值记录",
+withdrawRecord:"提款记录",
+pointRecord:"积分记录",
+
+settingTitle:"⚙️ 账户设置",
+changePwd:"修改密码",
+logout:"退出登录"
+},
+
+th:{
+pageTitle:"บัญชีของฉัน",
+profileTitle:"👤 ข้อมูลผู้เล่น",
+name:"ชื่อเล่น",
+uid:"User ID",
+vip:"VIP",
+bankName:"ชื่อธนาคาร",
+bankNo:"เลขบัญชีธนาคาร",
+phone:"เบอร์โทรไทย",
+email:"Email",
+
+walletTitle:"💰 กระเป๋าของฉัน",
+balance:"ยอดเงิน",
+point:"พอยท์",
+topup:"ยอดเติมสะสม",
+withdraw:"ยอดถอนสะสม",
+
+vipTitle:"👑 ระดับ VIP",
+vipNext:"ยอดเติมที่เหลือถึง VIP ถัดไป：",
+
+recordTitle:"📜 ประวัติของฉัน",
+rechargeRecord:"ประวัติเติมเงิน",
+withdrawRecord:"ประวัติถอนเงิน",
+pointRecord:"ประวัติพอยท์",
+
+settingTitle:"⚙️ ตั้งค่าบัญชี",
+changePwd:"เปลี่ยนรหัสผ่าน",
+logout:"ออกจากระบบ"
+}
+
+};
+
+function switchLang(lang){
+
+const t=LANG[lang];
+
+document.getElementById("pageTitle").innerText=t.pageTitle;
+document.getElementById("profileTitle").innerText=t.profileTitle;
+document.getElementById("nameLabel").innerText=t.name;
+document.getElementById("uidLabel").innerText=t.uid;
+document.getElementById("vipLabel").innerText=t.vip;
+document.getElementById("bankNameLabel").innerText=t.bankName;
+document.getElementById("bankNoLabel").innerText=t.bankNo;
+document.getElementById("phoneLabel").innerText=t.phone;
+document.getElementById("emailLabel").innerText=t.email;
+
+document.getElementById("walletTitle").innerText=t.walletTitle;
+document.getElementById("balanceLabel").innerText=t.balance;
+document.getElementById("pointLabel").innerText=t.point;
+document.getElementById("topupLabel").innerText=t.topup;
+document.getElementById("withdrawLabel").innerText=t.withdraw;
+
+document.getElementById("vipTitle").innerText=t.vipTitle;
+document.getElementById("recordTitle").innerText=t.recordTitle;
+document.getElementById("rechargeRecordText").innerText=t.rechargeRecord;
+document.getElementById("withdrawRecordText").innerText=t.withdrawRecord;
+document.getElementById("pointRecordText").innerText=t.pointRecord;
+
+document.getElementById("settingTitle").innerText=t.settingTitle;
+document.getElementById("changePwdText").innerText=t.changePwd;
+document.getElementById("logoutText").innerText=t.logout;
+
+localStorage.setItem("homeLang",lang);
+
+loadAccount();
 
 }
 
-const res =
-await fetch(
-"/balance/"+uid
-);
+async function loadAccount(){
 
-const d =
+const uid=localStorage.getItem("userId");
+
+if(!uid){
+location.href="/login.html";
+return;
+}
+
+const username=
+localStorage.getItem("username") || uid;
+
+const res=
+await fetch("/balance/"+uid);
+
+const d=
 await res.json();
 
-document
-.getElementById(
-"name"
-).innerText =
-"👤 "
-+
-(
-d.name
-||
-uid
-);
+document.getElementById("nameValue").innerText=username;
+document.getElementById("uidValue").innerText=uid;
 
-document
-.getElementById(
-"uid"
-).innerText =
-"🆔 "
-+
-uid;
+document.getElementById("balanceValue").innerText=
+Number(d.balance||0).toLocaleString();
 
-document
-.getElementById(
-"balance"
-).innerText =
-"💰 "
-+
-(
-d.balance||0
-);
+document.getElementById("pointValue").innerText=
+Number(d.point||0).toLocaleString();
 
-document
-.getElementById(
-"point"
-).innerText =
-"💎 "
-+
-(
-d.point||0
-);
+document.getElementById("topupValue").innerText=
+Number(d.total_topup||0).toLocaleString();
 
-document
-.getElementById(
-"vip"
-).innerText =
-"👑 VIP "
-+
-(
-d.vip_level||10
-);
+document.getElementById("withdrawValue").innerText=
+Number(d.total_withdraw||0).toLocaleString();
 
-document
-.getElementById(
-"topup"
-).innerText =
-"🏦 "
-+
-(
-d.total_topup||0
-);
+const vip=
+Number(d.vip_level || d.vip || 10);
+
+document.getElementById("vipValue").innerText="VIP "+vip;
+document.getElementById("vipNow").innerText="VIP "+vip;
+
+document.getElementById("bankNameValue").innerText=d.bank_name || "-";
+document.getElementById("bankNoValue").innerText=d.bank_account || "-";
+document.getElementById("phoneValue").innerText=d.phone || "-";
+document.getElementById("emailValue").innerText=d.email || "-";
+
+const totalTopup=Number(d.total_topup||0);
+
+let nextTarget=10000;
+
+if(totalTopup >= 10000) nextTarget=20000;
+if(totalTopup >= 20000) nextTarget=40000;
+if(totalTopup >= 40000) nextTarget=80000;
+if(totalTopup >= 80000) nextTarget=150000;
+if(totalTopup >= 150000) nextTarget=300000;
+if(totalTopup >= 300000) nextTarget=500000;
+if(totalTopup >= 500000) nextTarget=800000;
+if(totalTopup >= 800000) nextTarget=1000000;
+
+const percent=Math.min((totalTopup/nextTarget)*100,100);
+
+document.getElementById("vipFill").style.width=percent+"%";
+
+const lang=localStorage.getItem("homeLang") || "zh";
+
+document.getElementById("vipNextText").innerText=
+LANG[lang].vipNext +
+Math.max(nextTarget-totalTopup,0).toLocaleString();
 
 }
 
 function logout(){
 
 localStorage.clear();
-
-location.href=
-"/login.html";
+location.href="/login.html";
 
 }
 
-load();
+switchLang(localStorage.getItem("homeLang") || "zh");
 
 </script>
 

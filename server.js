@@ -14,7 +14,7 @@ app.get("/admin.html", (req, res) => {
 });
 
 app.get("/shop.html", (req, res) => {
-  res.sendFile(__dirname + "/shop.html");
+  res.sendFile(__dirname + "/public/shop.html");
 });
 
 app.use(express.static("public"));

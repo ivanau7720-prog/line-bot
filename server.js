@@ -1472,6 +1472,25 @@ app.get("/my-point-records/:userId", async (req, res) => {
   }
 });
 
+// ===== 玩家：我的兑换记录 =====
+app.get("/my-exchange-records/:userId", async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const { data } = await supabase
+      .from("exchange_records")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending:false });
+
+    res.json(data || []);
+
+  } catch (err) {
+    console.error(err);
+    res.json([]);
+  }
+});
+
 // ===== 玩家申请充值 =====
 app.post("/request-recharge", async (req, res) => {
 

@@ -495,6 +495,45 @@ app.post("/stop", async (req, res) => {
     });
   }
 });
+// ===== 管理员：强制重置游戏 =====
+app.post("/admin/reset-game", checkAdmin, async (req, res) => {
+  try {
+
+    GAME.isBetting = false;
+    GAME.roundActive = false;
+    GAME.bets = {};
+    GAME.timeLeft = 60;
+    GAME.roundStartTime = null;
+
+    if (GAME.timer) {
+      clearInterval(GAME.timer);
+      GAME.timer = null;
+    }
+
+    if (GAME.roundDbId) {
+      await supabase
+        .from("rounds")
+        .update({
+          status:"cancelled"
+        })
+        .eq("id", GAME.roundDbId);
+    }
+
+    GAME.roundDbId = null;
+
+    res.json({
+      success:true,
+      msg:"游戏已重置"
+    });
+
+  } catch (err) {
+    console.error("reset-game error:", err);
+    res.json({
+      success:false,
+      msg:"重置失败"
+    });
+  }
+});
 // ===== 结算 =====
 app.post("/result", checkAdmin, async (req, res) => {
   try { 

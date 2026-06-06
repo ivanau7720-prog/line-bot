@@ -1649,7 +1649,91 @@ app.post("/request-withdraw", async (req, res) => {
 
 });
  
+// ===== 玩家：积分商城兑换 =====
+app.post("/exchange", async (req, res) => {
 
+  try {
+
+    const {
+      userId,
+      itemName,
+      cost
+    } = req.body;
+
+    if (!userId || !itemName || !cost) {
+      return res.json({
+        success:false,
+        msg:"资料不完整"
+      });
+    }
+
+    const { data: player } = await supabase
+      .from("players")
+      .select("*")
+      .eq("user_id", userId)
+      .single();
+
+    if (!player) {
+      return res.json({
+        success:false,
+        msg:"找不到玩家"
+      });
+    }
+
+    const currentPoint = Number(player.reward_points || 0);
+    const pointCost = Number(cost);
+
+    if (currentPoint < pointCost) {
+      return res.json({
+        success:false,
+        msg:"积分不足"
+      });
+    }
+
+    const newPoint = currentPoint - pointCost;
+
+    await supabase
+      .from("players")
+      .update({
+        reward_points:newPoint
+      })
+      .eq("user_id", userId);
+
+    await supabase
+      .from("exchange_records")
+      .insert([{
+        user_id:userId,
+        item_name:itemName,
+        point_cost:pointCost,
+        status:"pending"
+      }]);
+
+    await supabase
+      .from("point_records")
+      .insert([{
+        user_id:userId,
+        point:-pointCost,
+        type:"exchange",
+        note:"Exchange " + itemName
+      }]);
+
+    res.json({
+      success:true,
+      msg:"兑换申请已提交"
+    });
+
+  } catch (err) {
+
+    console.error("exchange error:", err);
+
+    res.json({
+      success:false,
+      msg:"兑换失败"
+    });
+
+  }
+
+});
 // ===== 启动 =====
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

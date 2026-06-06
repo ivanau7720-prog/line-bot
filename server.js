@@ -1818,14 +1818,17 @@ if(userVip > needVip){
       })
       .eq("user_id", userId);
 
-    await supabase
-      .from("exchange_records")
-      .insert([{
-        user_id:userId,
-        item_name:itemName,
-        point_cost:pointCost,
-        status:"pending"
-      }]);
+   const isBonus =
+itemName.toLowerCase().includes("bonus");
+
+await supabase
+  .from("exchange_records")
+  .insert([{
+    user_id:userId,
+    item_name:itemName,
+    point_cost:pointCost,
+    status: isBonus ? "approved" : "pending"
+  }]);
 
     await supabase
       .from("point_records")

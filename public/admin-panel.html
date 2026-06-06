@@ -1145,18 +1145,24 @@ async function loadReviewBadges(){
   });
 
   const withdrawData = await withdrawRes.json();
+  const exchangeRes = await fetch("/admin/exchange-records",{
+headers: adminGetHeaders()
+});
+
+const exchangeData = await exchangeRes.json();
 
   const rechargePending = rechargeData.filter(r => r.status === "pending").length;
   const withdrawPending = withdrawData.filter(w => w.status === "pending").length;
-
+  const exchangePending = exchangeData.filter(e => e.status === "pending").length;
   const rechargeBadge = document.getElementById("rechargeBadge");
   const withdrawBadge = document.getElementById("withdrawBadge");
-
+  const exchangeBadge = document.getElementById("exchangeBadge");
   rechargeBadge.innerText = rechargePending;
   withdrawBadge.innerText = withdrawPending;
-
+ exchangeBadge.innerText = exchangePending;
   rechargeBadge.style.display = rechargePending > 0 ? "inline-block" : "none";
   withdrawBadge.style.display = withdrawPending > 0 ? "inline-block" : "none";
+  exchangeBadge.style.display = exchangePending > 0 ? "inline-block" : "none";
 }
 function clearTxFilter(){
   document.getElementById("filterUserId").value = "";
@@ -1290,7 +1296,129 @@ ${t.reject}
 
   document.getElementById("withdrawRequests").innerHTML = html;
 }  
+async function loadExchangeRequests(){
 
+const lang =
+localStorage.getItem("adminLang")
+|| "zh";
+
+const t =
+LANG[lang];
+
+const res = await fetch("/admin/exchange-records",{
+headers: adminGetHeaders()
+});
+
+const data = await res.json();
+
+let html = "";
+
+if(data.length === 0){
+html = t.noExchange;
+}
+
+data.forEach(e=>{
+
+html += `
+<div style="padding:8px;border-bottom:1px solid rgba(255,255,255,0.15)">
+
+🆔 ${e.user_id}
+
+<br>
+
+🎁 ${e.item_name || "-"}
+
+<br>
+
+💎 Point：${Number(e.point_cost || 0).toLocaleString()}
+
+<br>
+
+${t.status}${e.status}
+
+<br>
+
+🕒 ${e.created_at}
+
+<br><br>
+
+${
+e.status === "pending"
+?
+`
+<button onclick="approveExchange('${e.id}')">
+${t.approve}
+</button>
+
+<button onclick="rejectExchange('${e.id}')">
+${t.reject}
+</button>
+`
+:
+""
+}
+
+${
+e.status === "approved"
+?
+`
+<button onclick="doneExchange('${e.id}')">
+${t.doneExchange}
+</button>
+`
+:
+""
+}
+
+</div>
+`;
+
+});
+
+document.getElementById("exchangeRequests").innerHTML = html;
+
+}
+
+async function approveExchange(id){
+
+await fetch("/admin/approve-exchange",{
+method:"POST",
+headers: adminHeaders(),
+body: JSON.stringify({id})
+});
+
+loadExchangeRequests();
+loadReviewBadges();
+
+}
+
+async function rejectExchange(id){
+
+await fetch("/admin/reject-exchange",{
+method:"POST",
+headers: adminHeaders(),
+body: JSON.stringify({id})
+});
+
+loadExchangeRequests();
+loadPlayers();
+loadReviewBadges();
+
+}
+
+async function doneExchange(id){
+
+await fetch("/admin/done-exchange",{
+method:"POST",
+headers: adminHeaders(),
+body: JSON.stringify({id})
+});
+
+loadExchangeRequests();
+loadReviewBadges();
+
+}
+  
 async function approveRecharge(id){
   await fetch("/admin/approve-recharge",{
     method:"POST",
@@ -1299,8 +1427,9 @@ async function approveRecharge(id){
   });
 
     loadRechargeRequests();
-  loadPlayers();
-  loadReviewBadges();
+loadWithdrawRequests();
+loadExchangeRequests();
+loadReviewBadges();
 }
 
 async function rejectRecharge(id){
@@ -1506,6 +1635,7 @@ setInterval(()=>{
   loadAgents();
   loadRechargeRequests();
   loadWithdrawRequests();
+  loadExchangeRequests();
   loadReviewBadges();
 },2000);
   loadBets();

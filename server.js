@@ -1753,6 +1753,120 @@ app.post("/exchange", async (req, res) => {
   }
 
 });
+
+// ===== 管理员：查看兑换申请 =====
+app.get("/admin/exchange-records", checkAdmin, async (req, res) => {
+  try {
+
+    const { data } = await supabase
+      .from("exchange_records")
+      .select("*")
+      .order("created_at", { ascending:false });
+
+    res.json(data || []);
+
+  } catch (err) {
+    console.error("admin exchange records error:", err);
+    res.json([]);
+  }
+});
+
+
+// ===== 管理员：批准兑换 =====
+app.post("/admin/approve-exchange", checkAdmin, async (req, res) => {
+  try {
+
+    const { id } = req.body;
+
+    await supabase
+      .from("exchange_records")
+      .update({ status:"approved" })
+      .eq("id", id);
+
+    res.json({ success:true });
+
+  } catch (err) {
+    console.error("approve exchange error:", err);
+    res.json({ success:false });
+  }
+});
+
+
+// ===== 管理员：拒绝兑换 =====
+app.post("/admin/reject-exchange", checkAdmin, async (req, res) => {
+  try {
+
+    const { id } = req.body;
+
+    const { data: record } = await supabase
+      .from("exchange_records")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (!record || record.status !== "pending") {
+      return res.json({
+        success:false,
+        msg:"申请不存在或已处理"
+      });
+    }
+
+    const { data: player } = await supabase
+      .from("players")
+      .select("*")
+      .eq("user_id", record.user_id)
+      .single();
+
+    const newPoint =
+      Number(player.reward_points || 0) +
+      Number(record.point_cost || 0);
+
+    await supabase
+      .from("players")
+      .update({ reward_points:newPoint })
+      .eq("user_id", record.user_id);
+
+    await supabase
+      .from("exchange_records")
+      .update({ status:"rejected" })
+      .eq("id", id);
+
+    await supabase
+      .from("point_records")
+      .insert([{
+        user_id:record.user_id,
+        point:Number(record.point_cost || 0),
+        type:"exchange_refund",
+        note:"Exchange rejected refund"
+      }]);
+
+    res.json({ success:true });
+
+  } catch (err) {
+    console.error("reject exchange error:", err);
+    res.json({ success:false });
+  }
+});
+
+
+// ===== 管理员：兑换完成 / 已发货 =====
+app.post("/admin/done-exchange", checkAdmin, async (req, res) => {
+  try {
+
+    const { id } = req.body;
+
+    await supabase
+      .from("exchange_records")
+      .update({ status:"done" })
+      .eq("id", id);
+
+    res.json({ success:true });
+
+  } catch (err) {
+    console.error("done exchange error:", err);
+    res.json({ success:false });
+  }
+});
 // ===== 启动 =====
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

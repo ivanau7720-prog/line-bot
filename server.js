@@ -287,43 +287,64 @@ if (newBalance < 0) newBalance = 0;
 // ===== 开局 =====
 app.post("/start", async (req, res) => {
   try {
-    if (GAME.roundActive) return res.json({ msg: "已在进行中" });
 
-   GAME.roundActive = true;
-GAME.currentRound = (GAME.currentRound || 0) + 1;
-GAME.isBetting = true;
-GAME.bets = {};
-GAME.bettingDuration = 60;
-GAME.timeLeft = 60;
-GAME.roundStartTime = Date.now();
-const { data: newRound } = await supabase
-  .from("rounds")
-  .insert([
-    {
-      round_no: GAME.currentRound,
-      status: "betting",
-      start_time: new Date(GAME.roundStartTime).toISOString()
+    if (GAME.roundActive && !GAME.isBetting) {
+      return res.json({
+        success:false,
+        msg:"上一局已停止下注，请先开奖或强制重置"
+      });
     }
-  ])
-  .select()
-  .single();
 
-GAME.roundDbId = newRound.id;
-    
+    if (GAME.roundActive && GAME.isBetting) {
+      return res.json({
+        success:false,
+        msg:"已在进行中"
+      });
+    }
+
+    GAME.roundActive = true;
+    GAME.currentRound = (GAME.currentRound || 0) + 1;
+    GAME.isBetting = true;
+    GAME.bets = {};
+    GAME.bettingDuration = 60;
+    GAME.timeLeft = 60;
+    GAME.roundStartTime = Date.now();
+
+    const { data: newRound } = await supabase
+      .from("rounds")
+      .insert([
+        {
+          round_no: GAME.currentRound,
+          status: "betting",
+          start_time: new Date(GAME.roundStartTime).toISOString()
+        }
+      ])
+      .select()
+      .single();
+
+    GAME.roundDbId = newRound.id;
+
     GAME.timer = setInterval(() => {
-  const elapsed = Math.floor((Date.now() - GAME.roundStartTime) / 1000);
-  GAME.timeLeft = Math.max(GAME.bettingDuration - elapsed, 0);
+      const elapsed = Math.floor((Date.now() - GAME.roundStartTime) / 1000);
+      GAME.timeLeft = Math.max(GAME.bettingDuration - elapsed, 0);
 
-  if (GAME.timeLeft <= 0) {
-    GAME.isBetting = false;
-    clearInterval(GAME.timer);
-  }
-}, 1000);
+      if (GAME.timeLeft <= 0) {
+        GAME.isBetting = false;
+        clearInterval(GAME.timer);
+      }
+    }, 1000);
 
-    res.json({ msg: "开局成功" });
+    res.json({
+      success:true,
+      msg:"开局成功"
+    });
+
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ msg: "错误" });
+    console.error("start error:", err);
+    res.status(500).json({
+      success:false,
+      msg:"开局失败"
+    });
   }
 });
 
@@ -814,23 +835,34 @@ app.get("/admin/monitor-data", checkAdmin, async (req, res) => {
 
 // ===== 状态 =====
 app.get("/state", (req, res) => {
+  let status = "idle";
+
+  if (GAME.roundActive && GAME.isBetting) {
+    status = "betting";
+  } else if (GAME.roundActive && !GAME.isBetting) {
+    status = "closed";
+  }
+
   if (GAME.roundActive && GAME.roundStartTime) {
     const elapsed = Math.floor((Date.now() - GAME.roundStartTime) / 1000);
     GAME.timeLeft = Math.max(GAME.bettingDuration - elapsed, 0);
 
     if (GAME.timeLeft <= 0) {
       GAME.isBetting = false;
+      GAME.timeLeft = 0;
+      status = "closed";
     }
   }
 
   res.json({
+    status,
     isBetting: GAME.isBetting,
+    roundActive: GAME.roundActive,
     timeLeft: GAME.timeLeft,
     total: GAME.bets,
     round: GAME.currentRound || 0
   });
 });
-
 // ===== 获取余额 =====
 app.get("/balance/:userId", async (req, res) => {
   const { userId } = req.params;
@@ -1055,11 +1087,20 @@ app.get("/admin/players", checkAdmin, async (req, res) => {
 
 // ===== 管理员：局记录 =====
 app.get("/admin/rounds", checkAdmin, async (req, res) => {
-  const { data } = await supabase
-    .from("rounds")
-    .select("*")
-    .order("id", { ascending: false })
-    .limit(20);
+  try {
+
+    const { data } = await supabase
+      .from("rounds")
+      .select("*")
+      .order("id", { ascending: false })
+      .limit(20);
+
+    res.json(data || []);
+
+  } catch (err) {
+    console.error("admin rounds error:", err);
+    res.json([]);
+  }
 });
 
 // ===== 管理员：玩家流水记录 + 筛选 =====

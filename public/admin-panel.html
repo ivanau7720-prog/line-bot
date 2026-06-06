@@ -384,6 +384,8 @@ const LANG={
 
 zh:{
 title:"🎮 管理员面板",
+startSuccess:"已开始下注",
+stopSuccess:"已停止下注",
 review:"🔔 审核提醒",
 rechargeBtn:"💳 充值申请",
 withdrawBtn:"🏧 提款申请",
@@ -480,6 +482,8 @@ winTx:"💵 赢取：",
 
 th:{
 title:"🎮 แผงควบคุมผู้ดูแลระบบ",
+startSuccess:"เปิดรับเดิมพันแล้ว",
+stopSuccess:"ปิดรับเดิมพันแล้ว",
 review:"🔔 แจ้งเตือนการตรวจสอบ",
 rechargeBtn:"💳 คำขอเติมเงิน",
 withdrawBtn:"🏧 คำขอถอนเงิน",
@@ -806,7 +810,45 @@ async function startGame(){
 }
 
 async function stopGame(){
-  await fetch("/stop",{method:"POST"});
+
+const lang=
+localStorage.getItem(
+"adminLang"
+) || "zh";
+
+const t=
+LANG[lang];
+
+const res=
+await fetch(
+"/stop",
+{
+method:"POST"
+}
+);
+
+const d=
+await res.json();
+
+alert(
+d.msg ||
+t.stopSuccess
+);
+
+document
+.getElementById(
+"stopBtn"
+)
+.style.display=
+"none";
+
+document
+.getElementById(
+"startBtn"
+)
+.style.display=
+"inline-block";
+
 }
 
 async function setResult(result){
@@ -821,8 +863,9 @@ if(result === "P") resultName = t.player;
 if(result === "T") resultName = t.tie;
 
 if(!confirm(t.confirmResult + resultName)){
-  return;
+return;
 }
+
 if(
 document.getElementById("betList")
 .innerText
@@ -840,6 +883,7 @@ lang==="th"
 return;
 
 }
+  
 document.getElementById("resultStatus").innerText =
 t.settling;
 

@@ -997,15 +997,15 @@ app.get("/admin/players", checkAdmin, async (req, res) => {
       .from("players")
       .select("*");
 
-   const list = data.map(p => ({
+  const list = data.map(p => ({
   id: p.user_id,
   username: p.username || "",
   agent_code: p.agent_code || "-",
   balance: p.balance,
+  vip: p.vip_level || 10,
   win: p.total_win || 0,
   lose: p.total_lose || 0
 }));
-
     res.json(list);
 
 } catch (err) {

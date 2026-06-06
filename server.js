@@ -1748,7 +1748,26 @@ app.post("/exchange", async (req, res) => {
       itemName,
       cost
     } = req.body;
+const vipMap={
 
+"1g 金条":5,
+
+"AirPods Pro":5,
+
+"Apple Watch":5,
+
+"iPad Air":3,
+
+"MacBook Air":3,
+
+"5g 金条":2,
+
+"iPhone Pro Max":1,
+
+"ทองคำ 1 กรัม":5,
+"ทองคำ 5 กรัม":2
+
+};
     if (!userId || !itemName || !cost) {
       return res.json({
         success:false,
@@ -1768,7 +1787,20 @@ app.post("/exchange", async (req, res) => {
         msg:"找不到玩家"
       });
     }
+const userVip =
+Number(player.vip_level || 10);
 
+const needVip =
+vipMap[itemName] || 10;
+
+if(userVip > needVip){
+
+  return res.json({
+    success:false,
+    msg:"VIP等级不足"
+  });
+
+}
     const currentPoint = Number(player.reward_points || 0);
     const pointCost = Number(cost);
 

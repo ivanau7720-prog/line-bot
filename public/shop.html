@@ -222,6 +222,19 @@ font-size:14px;
 <div class="pointBox">
 <div class="pointLabel" id="myPointLabel">我的积分</div>
 <div class="pointValue" id="pointValue">0</div>
+<div id="vipBadge" style="
+margin-top:10px;
+display:inline-block;
+padding:8px 18px;
+border-radius:20px;
+background:linear-gradient(90deg,#ffd700,#ff9d00);
+color:black;
+font-weight:bold;
+font-size:15px;
+box-shadow:0 0 16px rgba(255,215,0,.55);
+">
+👑 VIP10 MEMBER
+</div>
 </div>
 
 <div class="sectionTitle" id="bonusTitle">🎁 Bonus 兑换区</div>
@@ -462,6 +475,8 @@ const d=await res.json();
 
 myPoint=Number(d.point || 0);
 myVip=Number(d.vip || 10);
+document.getElementById("vipBadge").innerText =
+"👑 VIP" + myVip + " MEMBER";
 document.getElementById("pointValue").innerText=
 myPoint.toLocaleString();
 
@@ -499,9 +514,28 @@ ${item.img ? `<img class="product-img" src="${item.img}">` : `<div class="icon">
 <div class="cost">${item.cost.toLocaleString()} ${t.point}</div>
 <div class="desc">${desc}</div>
 <div class="rule">
+
 ${rule}
+
+${
+item.vipNeed
+?
+`
 <br>
-${item.vipNeed ? "🔒 " + t.vipNeed + vipNeed : ""}
+
+<div style="
+margin-top:6px;
+font-size:12px;
+font-weight:bold;
+color:${vipOk ? "#00ff99" : "#ffcc00"};
+">
+${vipOk ? "🔓 VIP"+vipNeed : "🔒 "+t.vipNeed+vipNeed}
+</div>
+`
+:
+""
+}
+
 </div>
 
 <button

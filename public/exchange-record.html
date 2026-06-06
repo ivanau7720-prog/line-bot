@@ -168,16 +168,77 @@ const card=document.createElement("div");
 card.className="card";
 
 card.innerHTML=`
-<div class="name">${r.item_name || "-"}</div>
-<div class="point">-${Number(r.point_cost || 0).toLocaleString()} Point</div>
-<div class="status" style="
+<div class="name">
+${r.item_name || "-"}
+</div>
+
+<div class="point">
+-${Number(r.point_cost || 0).toLocaleString()} Point
+</div>
+
+<div
+class="status"
+style="
 color:${statusColor};
 font-size:16px;
 font-weight:bold;
 ">
-${lang==="th" ? "สถานะ：" : "状态："}${statusText}
+
+${lang==="th"
+?
+"สถานะ："
+:
+"状态："
+}
+
+${statusText}
+
 </div>
-<div class="date">${new Date(r.created_at).toLocaleString()}</div>
+
+${
+r.shipping_note
+
+?
+
+`
+
+<div style="
+margin-top:8px;
+padding:10px;
+border-radius:12px;
+background:rgba(255,215,0,.12);
+color:gold;
+font-size:14px;
+">
+
+📦
+${lang==="th"
+?
+"หมายเหตุการจัดส่ง"
+:
+"发货备注"}
+
+：
+
+${r.shipping_note}
+
+</div>
+
+`
+
+:
+
+""
+
+}
+
+<div class="date">
+
+${new Date(
+r.created_at
+).toLocaleString()}
+
+</div>
 `;
 
 list.appendChild(card);

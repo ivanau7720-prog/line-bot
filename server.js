@@ -372,14 +372,43 @@ app.post("/bet", async (req, res) => {
       });
     }
 
-    if (Number(user.balance) < betAmount) {
-      return res.json({
-        success:false,
-        msg:"余额不足"
-      });
-    }
+  if (Number(user.balance) < betAmount) {
+  return res.json({
+    success:false,
+    msg:"余额不足"
+  });
+}
 
-    await changeBalance(userId, -betAmount);
+/* 防庄闲对冲 */
+
+if (GAME.bets[userId]) {
+
+  const oldSide =
+  GAME.bets[userId].side;
+
+  if (
+
+    (oldSide==="B" && side==="P")
+
+    ||
+
+    (oldSide==="P" && side==="B")
+
+  ){
+
+    return res.json({
+      success:false,
+      msg:"同一局不能同时买庄和闲"
+    });
+
+  }
+
+}
+
+await changeBalance(
+userId,
+-betAmount
+);
 await supabase.from("turnover_records").insert([
   {
     user_id: userId,
@@ -398,20 +427,18 @@ await supabase.from("transactions").insert([
     round_id: GAME.roundDbId
   }
 ]);
-    
-    if (GAME.bets[userId]) {
+ if (GAME.bets[userId]) {
 
-      GAME.bets[userId].amount += betAmount;
-      GAME.bets[userId].side = side;
+  GAME.bets[userId].amount += betAmount;
 
-    } else {
+} else {
 
-      GAME.bets[userId] = {
-        side: side,
-        amount: betAmount
-      };
+  GAME.bets[userId] = {
+    side: side,
+    amount: betAmount
+  };
 
-    }
+}   
 
     res.json({
       success:true

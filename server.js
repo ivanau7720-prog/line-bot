@@ -424,7 +424,45 @@ await supabase.from("transactions").insert([
     });
   }
 });
+// ===== 停止下注 =====
+app.post("/stop", async (req, res) => {
+  try {
 
+    if (!GAME.roundActive) {
+      return res.json({
+        success:false,
+        msg:"没有进行中的局"
+      });
+    }
+
+    GAME.isBetting = false;
+    GAME.timeLeft = 0;
+
+    if (GAME.timer) {
+      clearInterval(GAME.timer);
+      GAME.timer = null;
+    }
+
+    await supabase
+      .from("rounds")
+      .update({
+        status:"closed"
+      })
+      .eq("id", GAME.roundDbId);
+
+    res.json({
+      success:true,
+      msg:"已停止下注"
+    });
+
+  } catch (err) {
+    console.error("stop error:", err);
+    res.json({
+      success:false,
+      msg:"停止失败"
+    });
+  }
+});
 // ===== 结算 =====
 app.post("/result", checkAdmin, async (req, res) => {
   try { 

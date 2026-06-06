@@ -112,8 +112,13 @@ point_cost NUMERIC DEFAULT 0,
 
 status TEXT DEFAULT 'pending',
 
+shipping_note TEXT,
+
 created_at TIMESTAMP DEFAULT NOW()
 );
+
+ALTER TABLE exchange_records
+ADD COLUMN IF NOT EXISTS shipping_note TEXT;
 
 `
 });
@@ -1918,12 +1923,15 @@ app.post("/admin/reject-exchange", checkAdmin, async (req, res) => {
 app.post("/admin/done-exchange", checkAdmin, async (req, res) => {
   try {
 
-    const { id } = req.body;
+    const { id, shippingNote } = req.body;
 
-    await supabase
-      .from("exchange_records")
-      .update({ status:"done" })
-      .eq("id", id);
+await supabase
+  .from("exchange_records")
+  .update({
+    status:"done",
+    shipping_note: shippingNote || ""
+  })
+  .eq("id", id);
 
     res.json({ success:true });
 

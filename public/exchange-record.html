@@ -113,7 +113,9 @@ font-weight:bold;
 
 <script>
 async function loadRecords(){
-
+const lang =
+localStorage.getItem("lang")
+|| "zh";
 const uid=localStorage.getItem("userId");
 
 if(!uid){
@@ -139,18 +141,27 @@ list.innerHTML="";
 
 data.forEach(r=>{
 
-let statusText="审核中";
+let statusText = "";
+let statusColor = "#ffcc00";
+
+if(r.status==="pending"){
+statusText = lang==="th" ? "รอตรวจสอบ" : "审核中";
+statusColor = "#ffcc00";
+}
 
 if(r.status==="approved"){
-statusText="已批准";
+statusText = lang==="th" ? "อนุมัติแล้ว" : "已批准";
+statusColor = "#00ff99";
 }
 
 if(r.status==="rejected"){
-statusText="已拒绝";
+statusText = lang==="th" ? "ปฏิเสธ / คืน Point แล้ว" : "已拒绝 / Point已退回";
+statusColor = "#ff4444";
 }
 
 if(r.status==="done"){
-statusText="已完成";
+statusText = lang==="th" ? "จัดส่งแล้ว" : "已发货";
+statusColor = "gold";
 }
 
 const card=document.createElement("div");
@@ -159,7 +170,13 @@ card.className="card";
 card.innerHTML=`
 <div class="name">${r.item_name || "-"}</div>
 <div class="point">-${Number(r.point_cost || 0).toLocaleString()} Point</div>
-<div class="status">状态：${statusText}</div>
+<div class="status" style="
+color:${statusColor};
+font-size:16px;
+font-weight:bold;
+">
+${lang==="th" ? "สถานะ：" : "状态："}${statusText}
+</div>
 <div class="date">${new Date(r.created_at).toLocaleString()}</div>
 `;
 

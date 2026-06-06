@@ -870,7 +870,51 @@ const t = LANG[lang];
 }
   
 async function startGame(){
-  await fetch("/start",{method:"POST"});
+
+const lang =
+localStorage.getItem("adminLang")
+|| "zh";
+
+const t =
+LANG[lang];
+
+const res =
+await fetch(
+"/start",
+{
+method:"POST",
+headers:adminHeaders()
+}
+);
+
+const d =
+await res.json();
+
+alert(
+d.msg ||
+t.startSuccess
+);
+
+/* 显示停止 */
+
+document
+.getElementById(
+"startBtn"
+)
+.style.display=
+"none";
+
+document
+.getElementById(
+"stopBtn"
+)
+.style.display=
+"inline-block";
+
+/* 重载下注 */
+
+loadBets();
+
 }
 
 async function stopGame(){

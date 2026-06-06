@@ -162,6 +162,34 @@ margin-bottom:20px;
       display:none;
     ">0</span>
   </button>
+  <button onclick="loadExchangeRequests()">
+
+<span id="exchangeBtnText">
+🎁 兑换申请
+</span>
+
+<span
+id="exchangeBadge"
+
+style="
+background:red;
+color:white;
+
+border-radius:50%;
+
+padding:3px 8px;
+
+margin-left:5px;
+
+display:none;
+
+">
+
+0
+
+</span>
+
+</button>
 </div>
 <button id="logoutBtn" onclick="logoutAdmin()">
 🚪 退出登录
@@ -337,7 +365,21 @@ onclick="createAgent()">
 </div>
 
 </div>
-  
+ <div class="card">
+
+<h3 id="exchangeTitle">
+
+🎁 商品兑换申请
+
+</h3>
+
+<div id="exchangeRequests">
+
+暂无兑换申请
+
+</div>
+
+</div> 
 <div class="card">
 
 <h3 id="txTitle">
@@ -389,6 +431,10 @@ stopSuccess:"已停止下注",
 review:"🔔 审核提醒",
 rechargeBtn:"💳 充值申请",
 withdrawBtn:"🏧 提款申请",
+exchangeBtn:"🎁 兑换申请",
+exchangeTitle:"🎁 商品兑换申请",
+noExchange:"暂无兑换申请",
+doneExchange:"📦 已发货",
 logout:"🚪 退出登录",
 profit:"📊 盈利统计",
 game:"🎰 游戏控制",
@@ -487,6 +533,10 @@ stopSuccess:"ปิดรับเดิมพันแล้ว",
 review:"🔔 แจ้งเตือนการตรวจสอบ",
 rechargeBtn:"💳 คำขอเติมเงิน",
 withdrawBtn:"🏧 คำขอถอนเงิน",
+exchangeBtn:"🎁 คำขอแลกของ",
+exchangeTitle:"🎁 คำขอแลกรางวัล",
+noExchange:"ยังไม่มีคำขอแลก",
+doneExchange:"📦 จัดส่งแล้ว",
 logout:"🚪 ออกจากระบบ",
 profit:"📊 สถิติกำไร",
 game:"🎰 ควบคุมเกม",
@@ -594,6 +644,13 @@ LANG[lang].rechargeBtn;
 document.getElementById("withdrawBtnText").innerText =
 LANG[lang].withdrawBtn;
 
+document.getElementById(
+"exchangeBtnText"
+).innerText=
+
+LANG[lang]
+.exchangeBtn;
+  
 document.getElementById("logoutBtn").innerText =
 LANG[lang].logout;
 document.getElementById("profitTitle").innerText =
@@ -677,6 +734,13 @@ LANG[lang].noRecharge;
 document.getElementById("withdrawTitle").innerText =
 LANG[lang].withdrawTitle;
 
+document.getElementById(
+"exchangeTitle"
+).innerText=
+
+LANG[lang]
+.exchangeTitle;
+  
 if(
 document.getElementById("withdrawRequests").innerText==="暂无提款申请"
 ){

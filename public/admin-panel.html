@@ -930,7 +930,15 @@ alert(
 d.msg ||
 t.startSuccess
 );
+loadAdminTimer();
 
+setTimeout(()=>{
+loadAdminTimer();
+},300);
+
+setTimeout(()=>{
+loadAdminTimer();
+},1000);
 /* 显示停止 */
 
 document
@@ -967,7 +975,8 @@ const res=
 await fetch(
 "/stop",
 {
-method:"POST"
+method:"POST",
+headers:adminHeaders()
 }
 );
 
@@ -1687,7 +1696,6 @@ lang==="th"
 );
 
 loadExchangeRequests();
-
 loadReviewBadges();
 
 }
@@ -1912,8 +1920,8 @@ setInterval(()=>{
   loadReviewBadges();
   loadAdminTimer();
 },2000);
-  loadBets();
-  loadAdminTimer();
+loadBets();
+loadAdminTimer();
 loadAgents();
 loadTx();
 loadPlayers();
@@ -1921,7 +1929,9 @@ loadProfit();
 loadRounds();
 loadRechargeRequests();
 loadWithdrawRequests();
+loadExchangeRequests();
 loadReviewBadges();
+loadAdminTimer();
 </script>
 
 </body>

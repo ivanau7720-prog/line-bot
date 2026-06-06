@@ -879,8 +879,9 @@ const t = LANG[lang];
     🆔 ${p.id}
     | 👤 ${p.username}
     | ${t.agentLabel}${p.agent_code}
-    | 💰${p.balance}
-    | ${t.winLabel}${p.win}
+   | 💰${p.balance}
+| 👑 VIP${p.vip || 10}
+| ${t.winLabel}${p.win}
     | ${t.loseLabel}${p.lose}
   </div>
 `;

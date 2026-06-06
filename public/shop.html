@@ -254,7 +254,9 @@ qualification:"兑换资格",
 physical:"实体礼品",
 back:"返回账户",
 notEnough:"积分不足",
-comingSoon:"兑换系统即将开放"
+comingSoon:"兑换系统即将开放",
+vipNeed:"需要 VIP",
+vipNotEnough:"VIP等级不足"
 },
 
 th:{
@@ -272,13 +274,16 @@ qualification:"สิทธิ์แลกของรางวัล",
 physical:"ของรางวัลจริง",
 back:"กลับบัญชี",
 notEnough:"พอยท์ไม่เพียงพอ",
-comingSoon:"ระบบแลกของรางวัลกำลังจะเปิดใช้งาน"
+comingSoon:"ระบบแลกของรางวัลกำลังจะเปิดใช้งาน",
+vipNeed:"ต้องใช้ VIP",
+vipNotEnough:"ระดับ VIP ไม่พอ"
 }
 
 };
 
 let currentLang=localStorage.getItem("homeLang") || "zh";
 let myPoint=0;
+let myVip=10;
 
 const bonusItems=[
 {
@@ -345,6 +350,7 @@ img:"/images/shop/gold1g.png",
 nameZh:"1g 金条",
 nameTh:"ทองคำ 1 กรัม",
 cost:25000,
+vipNeed:5,
 descZh:"泰国市场高价值礼品",
 descTh:"ของรางวัลมูลค่าสูง",
 ruleZh:"实物兑换审核",
@@ -356,6 +362,7 @@ img:"/images/shop/airpods.png",
 nameZh:"AirPods Pro",
 nameTh:"AirPods Pro",
 cost:50000,
+vipNeed:5,
 descZh:"豪华电子礼品",
 descTh:"ของรางวัลอิเล็กทรอนิกส์",
 ruleZh:"实体礼品",
@@ -367,6 +374,7 @@ img:"/images/shop/watch.png",
 nameZh:"Apple Watch",
 nameTh:"Apple Watch",
 cost:90000,
+vipNeed:5,
 descZh:"高级智能手表",
 descTh:"สมาร์ทวอทช์พรีเมียม",
 ruleZh:"实体礼品",
@@ -378,6 +386,7 @@ img:"/images/shop/ipad.png",
 nameZh:"iPad Air",
 nameTh:"iPad Air",
 cost:150000,
+vipNeed:3,
 descZh:"平板电脑礼品",
 descTh:"แท็บเล็ตพรีเมียม",
 ruleZh:"实体礼品",
@@ -389,6 +398,7 @@ img:"/images/shop/macbook.png",
 nameZh:"MacBook Air",
 nameTh:"MacBook Air",
 cost:300000,
+vipNeed:3,
 descZh:"高级电脑礼品",
 descTh:"แล็ปท็อประดับพรีเมียม",
 ruleZh:"实体礼品",
@@ -400,6 +410,7 @@ img:"/images/shop/gold5g.png",
 nameZh:"5g 金条",
 nameTh:"ทองคำ 5 กรัม",
 cost:350000,
+vipNeed:2,
 descZh:"高价值黄金礼品",
 descTh:"ทองคำมูลค่าสูง",
 ruleZh:"实物兑换审核",
@@ -411,6 +422,7 @@ img:"/images/shop/iphone17.png",
 nameZh:"iPhone Pro Max",
 nameTh:"iPhone Pro Max",
 cost:600000,
+vipNeed:1,
 descZh:"旗舰终极奖励",
 descTh:"รางวัลใหญ่ระดับเรือธง",
 ruleZh:"实体礼品",
@@ -449,7 +461,7 @@ const res=await fetch("/balance/"+uid);
 const d=await res.json();
 
 myPoint=Number(d.point || 0);
-
+myVip=Number(d.vip || 10);
 document.getElementById("pointValue").innerText=
 myPoint.toLocaleString();
 
@@ -475,6 +487,9 @@ const name=currentLang==="zh" ? item.nameZh : item.nameTh;
 const desc=currentLang==="zh" ? item.descZh : item.descTh;
 const rule=currentLang==="zh" ? item.ruleZh : item.ruleTh;
 
+const vipNeed=item.vipNeed || 10;
+const vipOk=myVip <= vipNeed;
+
 const card=document.createElement("div");
 card.className="item";
 
@@ -483,8 +498,19 @@ ${item.img ? `<img class="product-img" src="${item.img}">` : `<div class="icon">
 <div class="itemName">${name}</div>
 <div class="cost">${item.cost.toLocaleString()} ${t.point}</div>
 <div class="desc">${desc}</div>
-<div class="rule">${rule}</div>
-<button class="exchangeBtn" onclick="exchangeItem('${name}',${item.cost})">${t.exchange}</button>
+<div class="rule">
+${rule}
+<br>
+${item.vipNeed ? "🔒 " + t.vipNeed + vipNeed : ""}
+</div>
+
+<button
+class="exchangeBtn"
+${vipOk ? "" : "disabled"}
+style="${vipOk ? "" : "background:#555;color:#aaa;box-shadow:none;"}"
+onclick="exchangeItem('${name}',${item.cost},${vipNeed})">
+${vipOk ? t.exchange : t.vipNotEnough}
+</button>
 `;
 
 box.appendChild(card);
@@ -493,10 +519,13 @@ box.appendChild(card);
 
 }
 
-async function exchangeItem(itemName,cost){
+async function exchangeItem(itemName,cost,vipNeed){
 
 const t=LANG[currentLang];
-
+if(myVip > vipNeed){
+alert(t.vipNotEnough);
+return;
+}
 if(myPoint < cost){
 alert(t.notEnough);
 return;

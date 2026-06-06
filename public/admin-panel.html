@@ -1558,13 +1558,71 @@ loadReviewBadges();
 
 async function doneExchange(id){
 
-await fetch("/admin/done-exchange",{
+const lang =
+localStorage.getItem(
+"adminLang"
+)
+|| "zh";
+
+const shippingNote =
+prompt(
+
+lang==="th"
+
+?
+
+"หมายเหตุการจัดส่ง"
+
+:
+
+"请输入发货备注"
+
+);
+
+if(
+shippingNote===null
+){
+return;
+}
+
+await fetch(
+"/admin/done-exchange",
+{
+
 method:"POST",
-headers: adminHeaders(),
-body: JSON.stringify({id})
-});
+
+headers:
+adminHeaders(),
+
+body:
+JSON.stringify({
+
+id,
+
+shippingNote
+
+})
+
+}
+
+);
+
+alert(
+
+lang==="th"
+
+?
+
+"บันทึกเรียบร้อย"
+
+:
+
+"发货备注已保存"
+
+);
 
 loadExchangeRequests();
+
 loadReviewBadges();
 
 }

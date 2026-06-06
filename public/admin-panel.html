@@ -942,6 +942,11 @@ alert(
 d.msg ||
 t.startSuccess
 );
+
+if(!d.success){
+  loadAdminTimer();
+  return;
+}
 loadAdminTimer();
 
 setTimeout(()=>{

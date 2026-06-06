@@ -1473,6 +1473,16 @@ html += `
 
 <br>
 
+${
+(e.item_name || "").toLowerCase().includes("bonus")
+?
+(lang==="th" ? "🎁 ประเภท：โบนัส / ตรวจสอบเทิร์นโอเวอร์" : "🎁 类型：Bonus / 人工审核流水")
+:
+(lang==="th" ? "📦 ประเภท：ของรางวัล / จัดส่ง" : "📦 类型：实物礼品 / 人工发货")
+}
+
+<br>
+
 💎 Point：${Number(e.point_cost || 0).toLocaleString()}
 
 <br>

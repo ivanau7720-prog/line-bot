@@ -215,7 +215,21 @@ display:none;
 <button id="stopBtn" onclick="stopGame()" style="display:none;">
 ⛔ 停止下注
 </button>
-
+<div id="adminTimerBox" style="
+display:inline-block;
+margin-left:20px;
+padding:14px 28px;
+border:2px solid gold;
+border-radius:16px;
+background:rgba(0,0,0,.75);
+color:gold;
+font-size:34px;
+font-weight:bold;
+box-shadow:0 0 18px rgba(255,215,0,.55);
+vertical-align:middle;
+">
+⏱ 60s
+</div>
 <br><br>
 
 <div style="display:flex;gap:10px;margin-top:10px;">
@@ -440,6 +454,9 @@ profit:"📊 盈利统计",
 game:"🎰 游戏控制",
 start:"▶ 开始下注",
 stop:"⛔ 停止下注",
+timerBetting:"⏱ 倒数：",
+timerStopped:"⛔ 已停止",
+timerWaiting:"等待开局",
 result:"🏁 开奖",
 input:"输入 B / P / T",
 openBanker:"🔴 开庄",
@@ -542,6 +559,9 @@ profit:"📊 สถิติกำไร",
 game:"🎰 ควบคุมเกม",
 start:"▶ เปิดรับเดิมพัน",
 stop:"⛔ ปิดรับเดิมพัน",
+timerBetting:"⏱ นับถอยหลัง：",
+timerStopped:"⛔ ปิดรับแล้ว",
+timerWaiting:"รอเปิดรอบ",
 result:"🏁 ออกผล",
 input:"กรอก B / P / T",
 openBanker:"🔴 ออกเจ้ามือ",
@@ -956,9 +976,65 @@ document
 )
 .style.display=
 "inline-block";
+}
+
+async function loadAdminTimer(){
+
+const lang =
+localStorage.getItem("adminLang")
+|| "zh";
+
+const t =
+LANG[lang];
+
+const box =
+document.getElementById("adminTimerBox");
+
+if(!box) return;
+
+const res =
+await fetch("/state");
+
+const data =
+await res.json();
+
+if(data.isBetting){
+
+box.innerText =
+t.timerBetting + data.timeLeft + "s";
+
+box.style.color =
+data.timeLeft <= 10 ? "red" : "gold";
+
+box.style.borderColor =
+data.timeLeft <= 10 ? "red" : "gold";
+
+}else if(data.round > 0 && data.timeLeft === 0){
+
+box.innerText =
+t.timerStopped;
+
+box.style.color =
+"#ff4444";
+
+box.style.borderColor =
+"#ff4444";
+
+}else{
+
+box.innerText =
+t.timerWaiting;
+
+box.style.color =
+"gold";
+
+box.style.borderColor =
+"gold";
 
 }
 
+}
+  
 async function setResult(result){
 
 const lang = localStorage.getItem("adminLang") || "zh";
@@ -1681,8 +1757,10 @@ setInterval(()=>{
   loadWithdrawRequests();
   loadExchangeRequests();
   loadReviewBadges();
+  loadAdminTimer();
 },2000);
   loadBets();
+  loadAdminTimer();
 loadAgents();
 loadTx();
 loadPlayers();

@@ -1464,10 +1464,21 @@ statusColor = "gold";
 }
 
 html += `
-<div style="padding:8px;border-bottom:1px solid rgba(255,255,255,0.15)">
+
+<div style="
+padding:8px;
+border-bottom:1px solid rgba(255,255,255,.15)
+">
+
+👤 ${e.player_name || "-"}
+
+<br>
+
+👑 VIP${e.vip_level || 10}
+
+<br>
 
 🆔 ${e.user_id}
-
 <br>
 
 🎁 ${e.item_name || "-"}

@@ -865,7 +865,32 @@ if(result === "T") resultName = t.tie;
 if(!confirm(t.confirmResult + resultName)){
 return;
 }
+if(
+document
+.getElementById(
+"stopBtn"
+)
+.style.display
+!=="none"
+){
 
+alert(
+
+lang==="th"
+
+?
+
+"กรุณาปิดรับเดิมพันก่อน"
+
+:
+
+"请先停止下注"
+
+);
+
+return;
+
+}
 if(
 document.getElementById("betList")
 .innerText

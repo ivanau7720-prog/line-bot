@@ -1021,8 +1021,6 @@ app.get("/admin/rounds", checkAdmin, async (req, res) => {
     .select("*")
     .order("id", { ascending: false })
     .limit(20);
-
-  res.json(data || []);
 });
 
 // ===== 管理员：玩家流水记录 + 筛选 =====
@@ -1860,17 +1858,63 @@ if(userVip > needVip){
 app.get("/admin/exchange-records", checkAdmin, async (req, res) => {
   try {
 
-    const { data } = await supabase
-      .from("exchange_records")
-      .select("*")
-      .order("created_at", { ascending:false });
+const { data: records } = await supabase
+.from("exchange_records")
+.select("*")
+.order("created_at",{
+ascending:false
+});
 
-    res.json(data || []);
+const { data: players } = await supabase
+.from("players")
+.select(`
+user_id,
+username,
+name,
+vip_level
+`);
 
-  } catch (err) {
-    console.error("admin exchange records error:", err);
-    res.json([]);
-  }
+const list=(records||[]).map(r=>{
+
+const player=
+(players||[])
+.find(
+p=>p.user_id===r.user_id
+);
+
+return{
+
+...r,
+
+player_name:
+player?.username
+||
+player?.name
+||
+"未知玩家",
+
+vip_level:
+player?.vip_level
+||
+10
+
+};
+
+});
+
+res.json(list);
+
+}catch(err){
+
+console.error(
+"admin exchange records error:",
+err
+);
+
+res.json([]);
+
+}
+
 });
 
 

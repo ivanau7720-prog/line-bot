@@ -1439,6 +1439,29 @@ html = t.noExchange;
 
 data.forEach(e=>{
 
+let statusText = e.status;
+let statusColor = "white";
+
+if(e.status === "pending"){
+statusText = lang === "th" ? "รอตรวจสอบ" : "审核中";
+statusColor = "#ffcc00";
+}
+
+if(e.status === "approved"){
+statusText = lang === "th" ? "อนุมัติแล้ว" : "已批准";
+statusColor = "#00ff99";
+}
+
+if(e.status === "rejected"){
+statusText = lang === "th" ? "ปฏิเสธ / คืน Point แล้ว" : "已拒绝 / Point已退回";
+statusColor = "#ff4444";
+}
+
+if(e.status === "done"){
+statusText = lang === "th" ? "จัดส่งแล้ว" : "已发货";
+statusColor = "gold";
+}
+
 html += `
 <div style="padding:8px;border-bottom:1px solid rgba(255,255,255,0.15)">
 
@@ -1454,7 +1477,14 @@ html += `
 
 <br>
 
-${t.status}${e.status}
+${t.status}
+<span style="
+color:${statusColor};
+font-weight:bold;
+font-size:18px;
+">
+${statusText}
+</span>
 
 <br>
 

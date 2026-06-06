@@ -42,7 +42,22 @@ button:hover{
   transform:scale(1.1);
   box-shadow:0 0 15px gold;
 }
+.blinkAlert{
+  animation: blinkAlert 1s infinite;
+}
 
+@keyframes blinkAlert{
+  0%{
+    box-shadow:0 0 5px red;
+  }
+  50%{
+    box-shadow:0 0 25px red;
+    transform:scale(1.05);
+  }
+  100%{
+    box-shadow:0 0 5px red;
+  }
+}
 /* 标题 */
 h2,h3{
   color: gold;
@@ -162,7 +177,7 @@ margin-bottom:20px;
       display:none;
     ">0</span>
   </button>
-  <button onclick="loadExchangeRequests()">
+  <button id="exchangeReviewBtn" onclick="loadExchangeRequests()">
 
 <span id="exchangeBtnText">
 🎁 兑换申请
@@ -1284,6 +1299,14 @@ const exchangeData = await exchangeRes.json();
   rechargeBadge.style.display = rechargePending > 0 ? "inline-block" : "none";
   withdrawBadge.style.display = withdrawPending > 0 ? "inline-block" : "none";
   exchangeBadge.style.display = exchangePending > 0 ? "inline-block" : "none";
+  const exchangeReviewBtn =
+document.getElementById("exchangeReviewBtn");
+
+if(exchangePending > 0){
+  exchangeReviewBtn.classList.add("blinkAlert");
+}else{
+  exchangeReviewBtn.classList.remove("blinkAlert");
+}
 }
 function clearTxFilter(){
   document.getElementById("filterUserId").value = "";
@@ -1439,7 +1462,23 @@ html = t.noExchange;
 }
 
 data.forEach(e=>{
+const vip =
+Number(e.vip_level || 10);
 
+const isVipItem =
+(
+e.item_name || ""
+)
+.toLowerCase()
+.includes("vip");
+
+if(
+isVipItem
+&&
+vip > 3
+){
+return;
+}
 let statusText = e.status;
 let statusColor = "white";
 
@@ -1511,6 +1550,10 @@ ${statusText}
 <br>
 
 🕒 ${e.created_at}
+
+<br>
+
+${t.note}${e.shipping_note || "-"}
 
 <br><br>
 

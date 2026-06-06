@@ -100,6 +100,21 @@ type TEXT,
 note TEXT,
 created_at TIMESTAMP DEFAULT NOW()
 );
+
+CREATE TABLE IF NOT EXISTS exchange_records (
+id BIGSERIAL PRIMARY KEY,
+
+user_id TEXT,
+
+item_name TEXT,
+
+point_cost NUMERIC DEFAULT 0,
+
+status TEXT DEFAULT 'pending',
+
+created_at TIMESTAMP DEFAULT NOW()
+);
+
 `
 });
 

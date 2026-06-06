@@ -484,7 +484,7 @@ ${item.img ? `<img class="product-img" src="${item.img}">` : `<div class="icon">
 <div class="cost">${item.cost.toLocaleString()} ${t.point}</div>
 <div class="desc">${desc}</div>
 <div class="rule">${rule}</div>
-<button class="exchangeBtn" onclick="exchangeItem(${item.cost})">${t.exchange}</button>
+<button class="exchangeBtn" onclick="exchangeItem('${name}',${item.cost})">${t.exchange}</button>
 `;
 
 box.appendChild(card);
@@ -493,7 +493,7 @@ box.appendChild(card);
 
 }
 
-function exchangeItem(cost){
+async function exchangeItem(itemName,cost){
 
 const t=LANG[currentLang];
 
@@ -502,7 +502,32 @@ alert(t.notEnough);
 return;
 }
 
-alert(t.comingSoon);
+if(!confirm(itemName+" ต้องการแลกใช้ "+cost+" Point ?")){
+return;
+}
+
+const uid=localStorage.getItem("userId");
+
+const res=await fetch("/exchange",{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+userId:uid,
+itemName:itemName,
+cost:cost
+})
+});
+
+const d=await res.json();
+
+alert(d.msg || "Success");
+
+if(d.success){
+await loadPoint();
+renderItems();
+}
 
 }
 

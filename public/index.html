@@ -121,7 +121,13 @@ linear-gradient(to bottom,
 #chip100{
  background:radial-gradient(circle,#ffd700,#aa7700);
 }
+#chip500{
+ background:radial-gradient(circle,#8a2be2,#23004d);
+}
 
+#chip1000{
+ background:radial-gradient(circle,#ff2d2d,#5a0000);
+}
 /* 旋转 */
 @keyframes chipSpin{
   0%{ transform:rotateY(0deg); }
@@ -245,7 +251,7 @@ margin-top:8px !important;
 
 /* 🔴 红色锁定文字 */
 .disabled::after{
-  content:"LOCKED";
+ content:attr(data-lock);
   position:absolute;
 
   top:3px;
@@ -1068,7 +1074,8 @@ roadBtn:"📊 路单",
     result:"结果",
     bankerWin:"庄 WIN",
     playerWin:"闲 WIN",
-    tieWin:"和"
+   tieWin:"和",
+winPopup:"🎉 恭喜中奖 +"
   },
 
   th:{
@@ -1148,7 +1155,8 @@ roadBtn:"📊 สถิติไพ่",
     result:"RESULT",
     bankerWin:"BANKER WIN",
     playerWin:"PLAYER WIN",
-    tieWin:"TIE"
+   tieWin:"TIE",
+winPopup:"🎉 คุณชนะ +"
   }
 };
 
@@ -1203,7 +1211,16 @@ loadStats();
 
   document.getElementById("tieText").innerText =
 "🟢 " + T("tie");
+document
+.querySelectorAll(".disabled")
+.forEach(el=>{
 
+el.dataset.lock =
+currentLang==="zh"
+? "已封盘"
+: "ปิดแล้ว";
+
+});
 /* 钱包打开自动刷新语言 */
 if(
 document.getElementById("walletModal")
@@ -1587,22 +1604,23 @@ async function loadBalance() {
   const res = await fetch("/balance/" + userId);
   const data = await res.json();
 
-  let money = data.total_topup;
+let balance = data.balance;
+let topup = data.total_topup;
 
-  document.getElementById("memberBalance").innerText =
-  "💰" + money;
+document.getElementById("memberBalance").innerText =
+"💰" + balance;
 
-  let vip = T("vip10");
+let vip = T("vip10");
 
-if (money >= 4001) vip = T("vip9");
-if (money >= 8001) vip = T("vip8");
-if (money >= 16001) vip = T("vip7");
-if (money >= 32001) vip = T("vip6");
-if (money >= 64001) vip = T("vip5");
-if (money >= 128001) vip = T("vip4");
-if (money >= 256001) vip = T("vip3");
-if (money >= 512001) vip = T("vip2");
-if (money >= 1024001) vip = T("vip1");
+if (topup >= 4001) vip = T("vip9");
+if (topup >= 8001) vip = T("vip8");
+if (topup >= 16001) vip = T("vip7");
+if (topup >= 32001) vip = T("vip6");
+if (topup >= 64001) vip = T("vip5");
+if (topup >= 128001) vip = T("vip4");
+if (topup >= 256001) vip = T("vip3");
+if (topup >= 512001) vip = T("vip2");
+if (topup >= 1024001) vip = T("vip1");
 
  const vipBox = document.getElementById("vipLevel");
 
@@ -1611,50 +1629,50 @@ vipBox.innerText = "👑 " + vip;
 vipBox.style.color = "#00ff66";
 vipBox.style.textShadow = "0 0 8px #00ff66";
 
-if (money >= 4001){
+if (topup >= 4001){
   vipBox.style.color = "#33ccff";
   vipBox.style.textShadow = "0 0 8px #33ccff";
 }
 
-if (money >= 8001){
+if (topup >= 8001){
   vipBox.style.color = "#cd7f32";
   vipBox.style.textShadow = "0 0 8px #cd7f32";
 }
 
-if (money >= 16001){
+if (topup >= 16001){
   vipBox.style.color = "#ffffff";
   vipBox.style.textShadow = "0 0 10px #ffffff";
 }
 
-if (money >= 32001){
+if (topup >= 32001){
   vipBox.style.color = "#ffd700";
   vipBox.style.textShadow = "0 0 12px gold";
 }
 
-if (money >= 64001){
+if (topup >= 64001){
   vipBox.style.color = "#e5e4e2";
   vipBox.style.textShadow = "0 0 12px #ffffff";
 }
 
-if (money >= 128001){
+if (topup >= 128001){
   vipBox.style.color = "#33ccff";
   vipBox.style.textShadow =
   "0 0 10px #33ccff,0 0 20px white";
 }
 
-if (money >= 256001){
+if (topup >= 256001){
   vipBox.style.color = "#ffd700";
   vipBox.style.textShadow =
   "0 0 8px gold,0 0 18px black,0 0 30px gold";
 }
 
-if (money >= 512001){
+if (topup >= 512001){
   vipBox.style.color = "#66ccff";
   vipBox.style.textShadow =
   "0 0 10px #00aaff,0 0 22px white";
 }
 
-if (money >= 1024001){
+if (topup >= 1024001){
   vipBox.style.color = "#ffd700";
   vipBox.style.textShadow =
   "0 0 10px gold,0 0 25px black,0 0 40px gold";
@@ -1818,7 +1836,33 @@ setInterval(showFakeActivity, 2500);
 // 选择筹码
 function selectChip(amount) {
   selectedAmount = amount;
- document.getElementById("selected").innerText = amount;
+
+  document.getElementById("selected").innerText = amount;
+
+  document
+  .querySelectorAll(".chip")
+  .forEach(c=>{
+
+    c.style.border = "3px solid #ffd700";
+
+    c.style.filter = "brightness(1)";
+
+    c.style.boxShadow =
+    "0 0 10px #ffd700, inset 0 0 10px rgba(255,255,255,0.3), inset 0 -6px 10px rgba(0,0,0,0.6)";
+
+  });
+
+  const chip =
+  document.getElementById("chip" + amount);
+
+  chip.style.border =
+  "3px solid #00ff99";
+
+  chip.style.filter =
+  "brightness(1.35)";
+
+  chip.style.boxShadow =
+  "0 0 18px #00ff99, 0 0 38px #00ff99, inset 0 0 18px rgba(255,255,255,0.55)";
 }
 
 function flyChip(targetId) {
@@ -1963,11 +2007,8 @@ function showWin(amount){
 
   const el = document.getElementById("winPopup");
 
-  el.innerText =
-(currentLang==="th"
-?"🎉 คุณชนะ +"
-:"🎉 你赢了 +")
-+ amount;
+ el.innerText =
+T("winPopup") + amount;
 
   el.style.opacity = 1;
   el.style.transform = "translate(-50%,-50%) scale(1.2)";

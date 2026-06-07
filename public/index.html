@@ -440,29 +440,29 @@ box-shadow:0 0 30px gold;
 color:white;
 ">
 
-<h2 style="color:gold;">💼 ฝาก-ถอนเงิน</h2>
+<h2 id="walletTitle" style="color:gold;">💼 ฝาก-ถอนเงิน</h2>
 
-<button onclick="requestRecharge()" class="tool-btn line-btn" style="width:100%;margin:8px 0;">
+<button id="rechargeBtn" onclick="requestRecharge()" class="tool-btn line-btn" style="width:100%;margin:8px 0;">
 💳 แจ้งฝากเงิน
 </button>
 
-<button onclick="requestWithdraw()" class="tool-btn road-btn" style="width:100%;margin:8px 0;">
+<button id="withdrawBtn" onclick="requestWithdraw()" class="tool-btn road-btn" style="width:100%;margin:8px 0;">
 🏧 แจ้งถอนเงิน
 </button>
 
 <hr style="border:1px solid #333;margin:15px 0;">
 
-<h3 style="color:gold;font-size:16px;">ประวัติการฝากเงิน</h3>
+<h3 id="rechargeHistoryTitle" style="color:gold;font-size:16px;">ประวัติการฝากเงิน</h3>
 <div id="myRechargeList" style="font-size:12px;text-align:left;max-height:130px;overflow:auto;">
 ยังไม่มีประวัติการฝาก
 </div>
 
-<h3 style="color:gold;font-size:16px;">ประวัติการถอนเงิน</h3>
+<h3 id="withdrawHistoryTitle" style="color:gold;font-size:16px;">ประวัติการถอนเงิน</h3>
 <div id="myWithdrawList" style="font-size:12px;text-align:left;max-height:130px;overflow:auto;">
 ยังไม่มีประวัติการถอน
 </div>
 
-<button onclick="closeWalletCenter()" class="tool-btn" style="
+<button id="walletCloseBtn" onclick="closeWalletCenter()" class="tool-btn" style="
 width:100%;
 margin-top:12px;
 background:#333;
@@ -716,7 +716,8 @@ align-items:center;
 </div>
 
 <div>
-💰 เลือก : <span id="selected">0</span>
+<span id="selectLabel">💰 เลือก :</span>
+<span id="selected">0</span>
 </div>
 </div>
 
@@ -768,7 +769,10 @@ inset 0 0 15px rgba(255,215,0,0.2);
 transition:0.2s;
 ">
 
+<div id="playerText">
 🔵 PLAYER
+</div>
+  
 <div id="countP" style="font-size:11px;color:#fff;">👥0</div>
 <div id="totalP" style="font-size:10px;color:#ffd700;">฿0</div>
 </div>
@@ -795,7 +799,11 @@ box-shadow:
 inset 0 0 15px rgba(255,215,0,0.2);
 transition:0.2s;
 ">
+  
+<div id="tieText">
 🟢 TIE
+</div>
+  
 <div id="countT" style="font-size:11px;color:#fff;">👥0</div>
 <div id="totalT" style="font-size:10px;color:#ffd700;">฿0</div>
 </div>
@@ -823,7 +831,10 @@ inset 0 0 15px rgba(255,215,0,0.2);
 transition:0.2s;
 ">
 
+<div id="bankerText">
 🔴 BANKER
+</div>
+  
 <div id="countB" style="font-size:11px;color:#fff;">👥0</div>
 <div id="totalB" style="font-size:10px;color:#ffd700;">฿0</div>
 </div>
@@ -874,18 +885,18 @@ letter-spacing:1px;
 </div>
 <div class="bottom-tools">
 
-<button onclick="openWalletCenter()" class="tool-btn line-btn">
+<button id="walletBtn" onclick="openWalletCenter()" class="tool-btn line-btn">
 💼 ฝาก-ถอน
 </button>
 
 </div>
   <div class="bottom-tools">
 
-<button onclick="toggleRoad()" class="tool-btn road-btn">
+<button id="roadOpenBtn" onclick="toggleRoad()" class="tool-btn road-btn">
 📊 สถิติไพ่
 </button>
 
-<button onclick="openLine()" class="tool-btn line-btn">
+<button id="lineBtn" onclick="openLine()" class="tool-btn line-btn">
 💬 แอดมินไลน์
 </button>
 
@@ -948,7 +959,7 @@ btn.style.transform = "scale(1)";
 document.getElementById("betSound").play();
 
 document.getElementById("msg").innerText =
-"✔ ยืนยันเดิมพัน สำเร็จ";
+T("betSuccess");
 
 }
 
@@ -957,16 +968,75 @@ localStorage.getItem("lang") || "th";
 
 const LANG = {
   zh:{
-    bead:"🔮 珠盘路",
-    bigRoad:"🏮 大路",
+    beadTitle:"🔮 珠盘路",
+    bigRoadTitle:"🏮 大路",
     banker:"庄",
     player:"闲",
     tie:"和",
     betting:"🟢 开始下注 ",
     closed:"🔴 停止下注",
     confirmBet:"✔ 确认下注",
-    wallet:"💼 充值-提款",
-    roadBtn:"📊 路单",
+    betSuccess:"✔ 下注成功",
+    betClosedAlert:"❌ 已停止下注",
+    lineLoginAlert:"请通过LINE进入游戏",
+    selectChipAlert:"请选择筹码",
+    betSuccessMsg:"下注成功",
+    walletBtn:"💼 充值-提现",
+    walletTitle:"💼 充值-提现",
+    rechargeBtn:"💳 申请充值",
+    withdrawBtn:"🏧 申请提现",
+    rechargeHistoryTitle:"充值记录",
+    withdrawHistoryTitle:"提现记录",
+    walletCloseBtn:"关闭",
+    noRechargeHistory:"暂无充值记录",
+    noWithdrawHistory:"暂无提现记录",
+    depositAmount:"请输入充值金额",
+    depositInvalid:"请输入正确充值金额",
+    depositMethod:"请输入银行 / 钱包",
+    depositName:"请输入付款人名字",
+    depositNote:"备注（选填）",
+
+withdrawAmount:"请输入提现金额",
+withdrawInvalid:"请输入正确提现金额",
+withdrawBank:"请输入银行名称",
+withdrawAccount:"请输入银行卡号",
+
+depositSuccess:
+"充值申请成功，请联系LINE客服审核",
+depositFail:
+"充值申请失败",
+withdrawSuccess:
+"提现申请成功，请等待审核",
+withdrawFail:"提现申请失败",
+withdrawNote:"客户提交提现申请",
+recordDepositAmount:"充值金额",
+recordWithdrawAmount:"提现金额",
+recordMethod:"渠道",
+recordPayerName:"付款人",
+recordBank:"银行",
+recordAccount:"账号",
+recordStatus:"状态",
+recordTime:"时间",
+
+statusPending:"⏳ 待审核",
+statusApproved:"✅ 已批准",
+statusRejected:"❌ 已拒绝",
+
+vip10:"VIP10 新会员 🌱",
+vip9:"VIP9 会员 🔹",
+vip8:"VIP8 铜卡 🟤",
+vip7:"VIP7 银卡 🥈",
+vip6:"VIP6 金卡 🥇",
+vip5:"VIP5 白金 ✨",
+vip4:"VIP4 钻石 🔷",
+vip3:"VIP3 黑卡 ⚫",
+vip2:"VIP2 皇家 💎",
+vip1:"VIP1 至尊 👑",
+
+fakeDefault:"🔥 系统正在更新...",
+roundLabel:"🎯 第 ",
+selectLabel:"💰 已选：",
+roadBtn:"📊 路单",
     line:"💬 联系客服",
     result:"结果",
     bankerWin:"庄 WIN",
@@ -975,16 +1045,72 @@ const LANG = {
   },
 
   th:{
-    bead:"🔮 BEAD PLATE",
-    bigRoad:"🏮 BIG ROAD",
+    beadTitle:"🔮 BEAD PLATE",
+    bigRoadTitle:"🏮 BIG ROAD",
     banker:"เจ้า",
     player:"ผู้เล่น",
     tie:"เสมอ",
     betting:"🟢 เปิดรับเดิมพัน ",
     closed:"🔴 ปิดรับเดิมพัน",
     confirmBet:"✔ ยืนยันเดิมพัน",
-    wallet:"💼 ฝาก-ถอน",
-    roadBtn:"📊 สถิติไพ่",
+    betSuccess:"✔ ยืนยันเดิมพัน สำเร็จ",
+    betClosedAlert:"❌ ปิดรับเดิมพันแล้ว",
+    lineLoginAlert:"กรุณาเข้าเกมผ่าน LINE",
+    selectChipAlert:"กรุณาเลือกชิป",
+    betSuccessMsg:"เดิมพันสำเร็จ",
+    walletBtn:"💼 ฝาก-ถอน",
+    walletTitle:"💼 ฝาก-ถอนเงิน",
+    rechargeBtn:"💳 แจ้งฝากเงิน",
+    withdrawBtn:"🏧 แจ้งถอนเงิน",
+    rechargeHistoryTitle:"ประวัติการฝากเงิน",
+    withdrawHistoryTitle:"ประวัติการถอนเงิน",
+    walletCloseBtn:"ปิด",
+    noRechargeHistory:"ยังไม่มีประวัติการฝาก",
+    noWithdrawHistory:"ยังไม่มีประวัติการถอน",
+depositAmount:"กรุณากรอกจำนวนเงินฝาก",
+depositInvalid:"กรุณากรอกจำนวนเงินฝากให้ถูกต้อง",
+depositMethod:"กรุณากรอกธนาคาร / วอเลท",
+depositName:"กรุณากรอกชื่อผู้โอน",
+depositNote:"หมายเหตุ（ถ้ามี）",
+
+withdrawAmount:"กรุณากรอกจำนวนเงินถอน",
+withdrawInvalid:"กรุณากรอกจำนวนเงินถอนให้ถูกต้อง",
+withdrawBank:"กรุณากรอกชื่อธนาคาร",
+withdrawAccount:"กรุณากรอกเลขบัญชี",
+
+depositSuccess:"ส่งคำขอฝากสำเร็จ กรุณาติดต่อ LINE",
+depositFail:"ส่งคำขอฝากไม่สำเร็จ",
+withdrawSuccess:"ส่งคำขอถอนสำเร็จ กรุณารอตรวจสอบ",
+withdrawFail:"ส่งคำขอถอนไม่สำเร็จ",
+withdrawNote:"ลูกค้าส่งคำขอถอนเงิน",
+recordDepositAmount:"ยอดฝาก",
+recordWithdrawAmount:"ยอดถอน",
+recordMethod:"ช่องทาง",
+recordPayerName:"ชื่อผู้โอน",
+recordBank:"ธนาคาร",
+recordAccount:"เลขบัญชี",
+recordStatus:"สถานะ",
+recordTime:"เวลา",
+
+statusPending:"⏳ รอตรวจสอบ",
+statusApproved:"✅ อนุมัติแล้ว",
+statusRejected:"❌ ปฏิเสธแล้ว",
+
+vip10:"VIP10 มือใหม่ 🌱",
+vip9:"VIP9 สมาชิก 🔹",
+vip8:"VIP8 บรอนซ์ 🟤",
+vip7:"VIP7 เงิน 🥈",
+vip6:"VIP6 ทอง 🥇",
+vip5:"VIP5 แพลทินัม ✨",
+vip4:"VIP4 ไดมอนด์ 🔷",
+vip3:"VIP3 แบล็คการ์ด ⚫",
+vip2:"VIP2 รอยัล 💎",
+vip1:"VIP1 สูงสุด 👑",
+
+fakeDefault:"🔥 ระบบกำลังอัปเดต...",
+roundLabel:"🎯 รอบที่ ",
+selectLabel:"💰 เลือก :",
+roadBtn:"📊 สถิติไพ่",
     line:"💬 แอดมินไลน์",
     result:"RESULT",
     bankerWin:"BANKER WIN",
@@ -999,37 +1125,45 @@ function T(key){
 
 function applyLang(){
 
-// 路单标题
-document.getElementById(
-"beadTitle"
-).innerText =
-T("bead");
+  document.getElementById("beadTitle").innerText = T("beadTitle");
+  document.getElementById("bigRoadTitle").innerText = T("bigRoadTitle");
 
-document.getElementById(
-"bigRoadTitle"
-).innerText =
-T("bigRoad");
+  document.getElementById("walletBtn").innerText = T("walletBtn");
+  document.getElementById("walletTitle").innerText = T("walletTitle");
+document.getElementById("rechargeBtn").innerText = T("rechargeBtn");
+document.getElementById("withdrawBtn").innerText = T("withdrawBtn");
+document.getElementById("rechargeHistoryTitle").innerText = T("rechargeHistoryTitle");
+document.getElementById("withdrawHistoryTitle").innerText = T("withdrawHistoryTitle");
+document.getElementById("walletCloseBtn").innerText = T("walletCloseBtn");
+  document.getElementById("fakeActivityBox").innerText = T("fakeDefault");
+  document.getElementById("selectLabel").innerText = T("selectLabel");
+  document.getElementById("roadOpenBtn").innerText = T("roadBtn");
+  document.getElementById("lineBtn").innerText = T("line");
+  document.getElementById("confirmBtn").innerText =
+  T("confirmBet");
+  document.getElementById("bankerText").innerText =
+  "🔴 " + T("banker");
 
-// 按钮
-document.getElementById(
-"confirmBtn"
-).innerText =
-T("confirmBet");
+  document.getElementById("playerText").innerText =
+  "🔵 " + T("player");
 
-// 路单按钮
-document.querySelector(
-".road-btn"
-).innerText =
-T("roadBtn");
+  document.getElementById("tieText").innerText =
+"🟢 " + T("tie");
 
-// LINE按钮
-document.querySelector(
-".bottom-tools .line-btn"
-).innerText =
-T("line");
+/* 钱包打开自动刷新语言 */
+if(
+document.getElementById("walletModal")
+.style.display==="flex"
+){
+
+loadMyRechargeRecords();
+
+loadMyWithdrawRecords();
 
 }
-  
+
+}
+
 let lastResult = "";
 let countdown = 60;
 let timerInterval = null;
@@ -1043,7 +1177,7 @@ async function bet(side) {
   const state = await fetch("/state").then(r => r.json());
 
   if (!state.isBetting) {
-    alert("❌ 已停止下注");
+    alert(T("betClosedAlert"));
     return;
   }
 
@@ -1064,12 +1198,12 @@ amount
 );
 
 if (!userId) {
-  alert("请通过LINE进入游戏");
+  alert(T("lineLoginAlert"));
   return;
 }
 
 if (!amount) {
-  alert("请选择筹码");
+  alert(T("selectChipAlert"));
   return;
 }
 
@@ -1108,7 +1242,8 @@ ${playerName} 💰${amount}
 </div>`;
   }
 
-  document.getElementById("msg").innerText = data.msg || "下注成功";
+  document.getElementById("msg").innerText =
+data.msg || T("betSuccessMsg");
   document.getElementById("betSound").play();
 }
 
@@ -1117,7 +1252,7 @@ async function loadState() {
   const res = await fetch("/state");
   const data = await res.json();
   document.getElementById("roundNo").innerText =
-"🎯 รอบที่ " + data.round;
+T("roundLabel") + data.round;
 
   let countB = 0;
   let countP = 0;
@@ -1143,8 +1278,8 @@ const s = await fetch("/state");
 const live = await s.json();
 countdown = live.timeLeft;
       
-      document.getElementById("status").innerText =
-      "🟢 เปิดรับเดิมพัน " + countdown + " วิ"
+ document.getElementById("status").innerText =
+ T("betting") + countdown + (currentLang === "th" ? " วิ" : " 秒");
 
 /* 👇 加这一段（进度条核心） */
 let percent = (countdown / totalTime) * 100;
@@ -1184,7 +1319,7 @@ tick.play();
         clearInterval(timerInterval);
         timerInterval = null;
 
-        document.getElementById("status").innerText = "🔴 ปิดรับเดิมพัน";
+        document.getElementById("status").innerText = T("closed");
         document.getElementById("progressInner").style.width = "0%";
         document.getElementById("areaB").classList.add("disabled");
         document.getElementById("areaP").classList.add("disabled");
@@ -1198,7 +1333,7 @@ tick.play();
 
 } else {
 
-  document.getElementById("status").innerText = "🔴 ปิดรับเดิมพัน";
+  document.getElementById("status").innerText = T("closed");
   document.getElementById("areaB").classList.add("disabled");
   document.getElementById("areaP").classList.add("disabled");
   document.getElementById("areaT").classList.add("disabled");
@@ -1260,17 +1395,17 @@ async function loadHistory() {
     if (r.result === "P") countP++;
     if (r.result === "T") countT++;
 
-    let bg = "red";
-    let text = "庄";
+   let bg = "red";
+let text = T("banker");
 
     if (r.result === "P") {
       bg = "#0066ff";
-      text = "闲";
+     text = T("player");
     }
 
     if (r.result === "T") {
       bg = "#00aa44";
-      text = "和";
+      text = T("tie");
     }
 
     const isLast =
@@ -1348,9 +1483,9 @@ if(r.result === "T"){
   : "#0066ff";
 
   let text =
-  r.result === "B"
-  ? "庄"
-  : "闲";
+r.result === "B"
+? T("banker")
+: T("player");
 
   bigHtml += `
     <div style="
@@ -1403,17 +1538,17 @@ async function loadBalance() {
   document.getElementById("memberBalance").innerText =
   "💰" + money;
 
-  let vip = "VIP10 Rookie 🌱";
+  let vip = T("vip10");
 
-if (money >= 4001) vip = "VIP9 Member 🔹";
-if (money >= 8001) vip = "VIP8 Bronze 🟤";
-if (money >= 16001) vip = "VIP7 Silver 🥈";
-if (money >= 32001) vip = "VIP6 Gold 🥇";
-if (money >= 64001) vip = "VIP5 Platinum ✨";
-if (money >= 128001) vip = "VIP4 Diamond 🔷";
-if (money >= 256001) vip = "VIP3 Black Card ⚫";
-if (money >= 512001) vip = "VIP2 Royal 💎";
-if (money >= 1024001) vip = "VIP1 Supreme 👑";
+if (money >= 4001) vip = T("vip9");
+if (money >= 8001) vip = T("vip8");
+if (money >= 16001) vip = T("vip7");
+if (money >= 32001) vip = T("vip6");
+if (money >= 64001) vip = T("vip5");
+if (money >= 128001) vip = T("vip4");
+if (money >= 256001) vip = T("vip3");
+if (money >= 512001) vip = T("vip2");
+if (money >= 1024001) vip = T("vip1");
 
  const vipBox = document.getElementById("vipLevel");
 
@@ -1422,65 +1557,56 @@ vipBox.innerText = "👑 " + vip;
 vipBox.style.color = "#00ff66";
 vipBox.style.textShadow = "0 0 8px #00ff66";
 
-/* VIP9 */
-if (vip.includes("Member")) {
+if (money >= 4001){
   vipBox.style.color = "#33ccff";
   vipBox.style.textShadow = "0 0 8px #33ccff";
 }
 
-/* VIP8 */
-if (vip.includes("Bronze")) {
+if (money >= 8001){
   vipBox.style.color = "#cd7f32";
   vipBox.style.textShadow = "0 0 8px #cd7f32";
 }
 
-/* VIP7 */
-if (vip.includes("Silver")) {
+if (money >= 16001){
   vipBox.style.color = "#ffffff";
   vipBox.style.textShadow = "0 0 10px #ffffff";
 }
 
-/* VIP6 */
-if (vip.includes("Gold")) {
+if (money >= 32001){
   vipBox.style.color = "#ffd700";
   vipBox.style.textShadow = "0 0 12px gold";
 }
 
-/* VIP5 */
-if (vip.includes("Platinum")) {
+if (money >= 64001){
   vipBox.style.color = "#e5e4e2";
   vipBox.style.textShadow = "0 0 12px #ffffff";
 }
 
-/* VIP4 */
-if (vip.includes("Diamond")) {
+if (money >= 128001){
   vipBox.style.color = "#33ccff";
   vipBox.style.textShadow =
-  "0 0 10px #33ccff, 0 0 20px white";
+  "0 0 10px #33ccff,0 0 20px white";
 }
 
-/* VIP3 */
-if (vip.includes("Black Card")) {
+if (money >= 256001){
   vipBox.style.color = "#ffd700";
   vipBox.style.textShadow =
   "0 0 8px gold,0 0 18px black,0 0 30px gold";
 }
 
-/* VIP2 */
-if (vip.includes("Royal")) {
+if (money >= 512001){
   vipBox.style.color = "#66ccff";
   vipBox.style.textShadow =
   "0 0 10px #00aaff,0 0 22px white";
 }
 
-/* VIP1 */
-if (vip.includes("Supreme")) {
+if (money >= 1024001){
   vipBox.style.color = "#ffd700";
   vipBox.style.textShadow =
   "0 0 10px gold,0 0 25px black,0 0 40px gold";
-}
-}
 
+}
+}
 // ===== 统计 =====
 async function loadStats() {
   const res = await fetch("/stats");
@@ -1523,25 +1649,45 @@ function randomMoney(min,max){
 
 const activityTypes = [
 
-  () => `เข้าเดิมพัน BANKER ฿${randomMoney(100,5000)}`,
+  () => currentLang === "zh"
+  ? `下注 BANKER ฿${randomMoney(100,5000)}`
+  : `เข้าเดิมพัน BANKER ฿${randomMoney(100,5000)}`,
 
-  () => `เข้าเดิมพัน PLAYER ฿${randomMoney(100,5000)}`,
+  () => currentLang === "zh"
+  ? `下注 PLAYER ฿${randomMoney(100,5000)}`
+  : `เข้าเดิมพัน PLAYER ฿${randomMoney(100,5000)}`,
 
-  () => `ชนะรางวัล +฿${randomMoney(500,15000)}`,
+  () => currentLang === "zh"
+  ? `赢得奖励 +฿${randomMoney(500,15000)}`
+  : `ชนะรางวัล +฿${randomMoney(500,15000)}`,
 
-  () => `ได้รับโบนัส VIP ฿${randomMoney(50,3000)}`,
+  () => currentLang === "zh"
+  ? `获得 VIP 奖励 ฿${randomMoney(50,3000)}`
+  : `ได้รับโบนัส VIP ฿${randomMoney(50,3000)}`,
 
-  () => `สมัครสมาชิกสำเร็จ`,
+  () => currentLang === "zh"
+  ? `注册成功`
+  : `สมัครสมาชิกสำเร็จ`,
 
-  () => `กำลังเล่น บาคาร่า`,
+  () => currentLang === "zh"
+  ? `正在玩 บาคาร่า`
+  : `กำลังเล่น บาคาร่า`,
 
-  () => `เข้าเดิมพัน TIE ฿${randomMoney(50,1000)}`,
+  () => currentLang === "zh"
+  ? `下注 TIE ฿${randomMoney(50,1000)}`
+  : `เข้าเดิมพัน TIE ฿${randomMoney(50,1000)}`,
 
-  () => `ได้รับเครดิตฟรี ฿${randomMoney(20,500)}`,
+  () => currentLang === "zh"
+  ? `获得เครดิตฟรี ฿${randomMoney(20,500)}`
+  : `ได้รับเครดิตฟรี ฿${randomMoney(20,500)}`,
 
-  () => `อัปเกรดระดับ VIP`,
+  () => currentLang === "zh"
+  ? `升级 VIP 等级`
+  : `อัปเกรดระดับ VIP`,
 
-  () => `กำลังติดต่อแอดมิน`
+  () => currentLang === "zh"
+  ? `正在联系客服`
+  : `กำลังติดต่อแอดมิน`
 
 ];
 
@@ -1639,6 +1785,7 @@ return;
 currentUserId = userId;
 document.getElementById("memberName").innerText =
 "👤 " + name;
+applyLang();
 loadState();
 loadHistory();
 loadStats();
@@ -1703,10 +1850,11 @@ localStorage.getItem("myLastBet")
 
   const flash = document.getElementById("resultFlash");
 
-  let text = "RESULT";
-  if (result === "B") text = "庄 WIN";
-  if (result === "P") text = "闲 WIN";
-  if (result === "T") text = "和";
+let text = T("result");
+
+if (result === "B") text = T("bankerWin");
+if (result === "P") text = T("playerWin");
+if (result === "T") text = T("tieWin");
 
   flash.innerText = text;
   flash.style.opacity = 1;
@@ -1722,7 +1870,11 @@ function showWin(amount){
 
   const el = document.getElementById("winPopup");
 
-  el.innerText = "🎉 你赢了 +" + amount;
+  el.innerText =
+(currentLang==="th"
+?"🎉 คุณชนะ +"
+:"🎉 你赢了 +")
++ amount;
 
   el.style.opacity = 1;
   el.style.transform = "translate(-50%,-50%) scale(1.2)";
@@ -1746,30 +1898,37 @@ window.open("https://line.me/", "_blank");
 }
 
 function openWalletCenter(){
-  document.getElementById("walletModal").style.display = "flex";
-  loadMyRechargeRecords();
-  loadMyWithdrawRecords();
+
+applyLang();
+
+document.getElementById("walletModal").style.display="flex";
+
+loadMyRechargeRecords();
+
+loadMyWithdrawRecords();
+
 }
 
 function closeWalletCenter(){
   document.getElementById("walletModal").style.display = "none";
 }  
 async function requestRecharge(){
-  const amount = prompt("กรุณากรอกจำนวนเงินฝาก");
+  const amount =
+prompt(T("depositAmount"));
   if(!amount) return;
 
   if(isNaN(Number(amount)) || Number(amount) <= 0){
-    alert("กรุณากรอกจำนวนเงินฝากให้ถูกต้อง");
+    alert(T("depositInvalid"));
     return;
   }
 
-  const paymentMethod = prompt("กรุณากรอกธนาคาร / วอเลทที่โอน");
+  const paymentMethod = prompt(T("depositMethod"));
   if(!paymentMethod) return;
 
-  const payerName = prompt("กรุณากรอกชื่อผู้โอน");
+  const payerName = prompt(T("depositName"));
   if(!payerName) return;
 
-  const note = prompt("หมายเหตุ（ถ้ามี）") || "";
+  const note = prompt(T("depositNote"))|| "";
 
   const res = await fetch("/request-recharge",{
     method:"POST",
@@ -1786,33 +1945,29 @@ async function requestRecharge(){
 
   const data = await res.json();
 
-  if(!data.success){
-    alert(data.msg || "ส่งคำขอฝากไม่สำเร็จ");
+ if(!data.success){
+    alert(data.msg || T("depositFail"));
     return;
-  }
+}
 
-  alert(
-`ส่งคำขอฝากเงินเรียบร้อยแล้ว
-
-กรุณาส่งสลิปโอนเงินให้แอดมิน LINE เพื่อตรวจสอบ`
-  );
+ alert(T("depositSuccess"));
 
   loadMyRechargeRecords();
 }
 
 async function requestWithdraw(){
-  const amount = prompt("กรุณากรอกจำนวนเงินถอน");
+ const amount = prompt(T("withdrawAmount"));
   if(!amount) return;
 
   if(isNaN(Number(amount)) || Number(amount) <= 0){
-    alert("กรุณากรอกจำนวนเงินถอนให้ถูกต้อง");
+    alert(T("withdrawInvalid"));
     return;
   }
 
-  const bankName = prompt("กรุณากรอกชื่อธนาคาร");
+  const bankName = prompt(T("withdrawBank"));
   if(!bankName) return;
 
-  const bankAccount = prompt("กรุณากรอกเลขบัญชี");
+  const bankAccount = prompt(T("withdrawAccount"));
   if(!bankAccount) return;
 
   const res = await fetch("/request-withdraw",{
@@ -1824,25 +1979,27 @@ async function requestWithdraw(){
       amount: Number(amount),
       bankName,
       bankAccount,
-      note: "ลูกค้าส่งคำขอถอนเงิน"
+      note: T("withdrawNote")
     })
   });
 
   const data = await res.json();
 
   if(!data.success){
-    alert(data.msg || "ส่งคำขอถอนไม่สำเร็จ");
+   alert(data.msg || T("withdrawFail"));
     return;
   }
 
-  alert("ส่งคำขอถอนเงินเรียบร้อยแล้ว กรุณารอแอดมินตรวจสอบ");
+ alert(T("withdrawSuccess"));
 
   loadMyWithdrawRecords();
 }
-  function showStatus(status){
- if(status === "pending") return "⏳ รอตรวจสอบ";
-if(status === "approved") return "✅ อนุมัติแล้ว";
-if(status === "rejected") return "❌ ปฏิเสธแล้ว";
+ function showStatus(status){
+
+  if(status === "pending") return T("statusPending");
+  if(status === "approved") return T("statusApproved");
+  if(status === "rejected") return T("statusRejected");
+
   return status || "-";
 }
 
@@ -1860,17 +2017,18 @@ async function loadMyRechargeRecords(){
   const box = document.getElementById("myRechargeList");
 
   if(!list || list.length === 0){
-    box.innerHTML = "ยังไม่มีประวัติการฝาก";
+   box.innerHTML =
+T("noRechargeHistory");
     return;
   }
 
   box.innerHTML = list.map(r => `
     <div style="border:1px solid #555;padding:8px;margin:6px 0;border-radius:8px;background:#111;">
-      ยอดฝาก：$ ${r.amount}<br>
-ช่องทาง：${r.payment_method || "-"}<br>
-ชื่อผู้โอน：${r.payer_name || "-"}<br>
-สถานะ：${showStatus(r.status)}<br>
-เวลา：${formatTime(r.created_at)}
+     ${T("recordDepositAmount")}：$ ${r.amount}<br>
+${T("recordMethod")}：${r.payment_method || "-"}<br>
+${T("recordPayerName")}：${r.payer_name || "-"}<br>
+${T("recordStatus")}：${showStatus(r.status)}<br>
+${T("recordTime")}：${formatTime(r.created_at)}
     </div>
   `).join("");
 }
@@ -1884,17 +2042,18 @@ async function loadMyWithdrawRecords(){
   const box = document.getElementById("myWithdrawList");
 
   if(!list || list.length === 0){
-    box.innerHTML = "ยังไม่มีประวัติการถอน";
+    box.innerHTML =
+T("noWithdrawHistory");
     return;
   }
 
   box.innerHTML = list.map(r => `
     <div style="border:1px solid #555;padding:8px;margin:6px 0;border-radius:8px;background:#111;">
-      ยอดถอน：$ ${r.amount}<br>
-ธนาคาร：${r.bank_name || "-"}<br>
-เลขบัญชี：${r.bank_account || "-"}<br>
-สถานะ：${showStatus(r.status)}<br>
-เวลา：${formatTime(r.created_at)}
+      ${T("recordWithdrawAmount")}：$ ${r.amount}<br>
+${T("recordBank")}：${r.bank_name || "-"}<br>
+${T("recordAccount")}：${r.bank_account || "-"}<br>
+${T("recordStatus")}：${showStatus(r.status)}<br>
+${T("recordTime")}：${formatTime(r.created_at)}
     </div>
   `).join("");
 }

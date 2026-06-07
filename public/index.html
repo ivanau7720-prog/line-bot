@@ -122,7 +122,28 @@ linear-gradient(to bottom,
  background:radial-gradient(circle,#ffd700,#aa7700);
 }
 #chip500{
- background:radial-gradient(circle,#8a2be2,#23004d);
+
+background:
+
+radial-gradient(
+circle at 30% 30%,
+#00d5ff,
+transparent 35%
+),
+
+radial-gradient(
+circle at 70% 70%,
+#8a2be2,
+transparent 45%
+),
+
+linear-gradient(
+145deg,
+#001933,
+#370066,
+#001933
+);
+
 }
 
 #chip1000{
@@ -876,36 +897,44 @@ transition:0.2s;
 <div style="
 width:96%;
 max-width:900px;
-margin:18px auto 6px auto;
+margin:10px auto 4px auto;
 display:flex;
 justify-content:center;
 ">
 
 <button id="confirmBtn" onclick="confirmBet(event)" style="
-height:40px;
+height:38px;
 font-size:17px;
 width:88%;
 border:none;
-border-radius:18px;
+border-radius:14px;
 font-weight:bold;
 cursor:pointer;
 
 color:#ffffff;
 
 background:
+
+radial-gradient(
+circle at 25% 25%,
+rgba(255,215,0,.30),
+transparent 35%
+),
+
 linear-gradient(
 145deg,
-#2b1600,
-#ff9900,
-#3a1d00
+#1b002d 0%,
+#5a00a8 45%,
+#8a2be2 65%,
+#2b1a00 100%
 );
 
-border:2px solid #ffd27a;
+border:2px solid #ffd700;
 
 box-shadow:
-0 0 12px #ffb000,
-0 0 32px rgba(255,160,0,.45),
-inset 0 0 12px rgba(255,255,255,.22);
+0 8px 18px rgba(180,0,255,.30),
+0 12px 26px rgba(255,215,0,.20),
+inset 0 0 14px rgba(255,255,255,.16);
 transition:0.2s;
 letter-spacing:1px;
 text-shadow:

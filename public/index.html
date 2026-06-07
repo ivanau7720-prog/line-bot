@@ -8,8 +8,26 @@
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap" rel="stylesheet">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <style>
+
+.langBox{
+  position:fixed;
+  top:12px;
+  right:12px;
+  z-index:9999;
+  display:flex;
+  gap:6px;
+}
+
+.langBox button{
+  background:rgba(0,0,0,.65);
+  color:gold;
+  border:1px solid rgba(255,215,0,.6);
+  border-radius:14px;
+  padding:7px 10px;
+  font-size:12px;
+}
+
 html, body{
   height:100%;
   margin:0;  
@@ -370,7 +388,10 @@ filter:brightness(1.35);
 </head>
 
 <body>
-
+<div class="langBox">
+  <button onclick="setLang('zh')">中文</button>
+  <button onclick="setLang('th')">ไทย</button>
+</div>
 <audio id="betSound" src="https://www.soundjay.com/buttons/sounds/button-16.mp3"></audio>
 <audio id="winSound" src="https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3"></audio>
 <audio id="tickSound" src="https://www.soundjay.com/button/sounds/beep-07.mp3"></audio>  
@@ -1036,6 +1057,12 @@ vip1:"VIP1 至尊 👑",
 fakeDefault:"🔥 系统正在更新...",
 roundLabel:"🎯 第 ",
 selectLabel:"💰 已选：",
+
+liveBanker:"庄家",
+livePlayer:"闲家",
+liveTie:"和局",
+livePeople:"人",
+
 roadBtn:"📊 路单",
     line:"💬 联系客服",
     result:"结果",
@@ -1110,6 +1137,12 @@ vip1:"VIP1 สูงสุด 👑",
 fakeDefault:"🔥 ระบบกำลังอัปเดต...",
 roundLabel:"🎯 รอบที่ ",
 selectLabel:"💰 เลือก :",
+
+liveBanker:"เจ้า",
+livePlayer:"ผู้เล่น",
+liveTie:"เสมอ",
+livePeople:"คน",
+
 roadBtn:"📊 สถิติไพ่",
     line:"💬 แอดมินไลน์",
     result:"RESULT",
@@ -1137,6 +1170,22 @@ document.getElementById("withdrawHistoryTitle").innerText = T("withdrawHistoryTi
 document.getElementById("walletCloseBtn").innerText = T("walletCloseBtn");
   document.getElementById("fakeActivityBox").innerText = T("fakeDefault");
   document.getElementById("selectLabel").innerText = T("selectLabel");
+  if(timerInterval){
+
+document.getElementById("status").innerText =
+T("betting")
++ countdown
++ (currentLang==="th"
+?" วิ"
+:" 秒");
+
+}else{
+
+document.getElementById("status").innerText =
+T("closed");
+
+}
+loadBalance();
   document.getElementById("roadOpenBtn").innerText = T("roadBtn");
   document.getElementById("lineBtn").innerText = T("line");
   document.getElementById("confirmBtn").innerText =
@@ -1612,13 +1661,52 @@ async function loadStats() {
   const res = await fetch("/stats");
   const data = await res.json();
 
-document.getElementById("liveStats").innerHTML =
+  document.getElementById("liveStats").innerHTML =
 `
-<span style="color:#ff3333;text-shadow:0 0 8px #ff0000;">🔴 ${data.B}</span>
+<div style="
+flex:1;
+margin:0 4px;
+padding:6px 4px;
+border-radius:14px;
+background:rgba(255,0,0,0.12);
+border:1px solid rgba(255,0,0,0.45);
+color:#ff4444;
+text-shadow:0 0 8px red;
+font-size:13px;
+">
+🔴 ${T("liveBanker")}<br>
+<span style="font-size:20px;">${data.B}</span> ${T("livePeople")}
+</div>
 
-<span style="color:#33aaff;text-shadow:0 0 8px #00aaff;">🔵 ${data.P}</span>
+<div style="
+flex:1;
+margin:0 4px;
+padding:6px 4px;
+border-radius:14px;
+background:rgba(0,100,255,0.12);
+border:1px solid rgba(0,120,255,0.45);
+color:#33aaff;
+text-shadow:0 0 8px #00aaff;
+font-size:13px;
+">
+🔵 ${T("livePlayer")}<br>
+<span style="font-size:20px;">${data.P}</span> ${T("livePeople")}
+</div>
 
-<span style="color:#00ff66;">🟢 ${data.T}</span>
+<div style="
+flex:1;
+margin:0 4px;
+padding:6px 4px;
+border-radius:14px;
+background:rgba(0,255,100,0.12);
+border:1px solid rgba(0,255,100,0.45);
+color:#00ff66;
+text-shadow:0 0 8px #00ff66;
+font-size:13px;
+">
+🟢 ${T("liveTie")}<br>
+<span style="font-size:20px;">${data.T}</span> ${T("livePeople")}
+</div>
 `;
 }
 setInterval(() => {

@@ -581,7 +581,8 @@ border:2px solid gold;
 border-radius:20px;
 
 padding:12px;
-
+max-height:80vh;
+overflow:auto;
 z-index:999;
 
 box-shadow:
@@ -594,6 +595,18 @@ justify-content:space-between;
 margin-bottom:10px;
 ">
 
+<button onclick="toggleRoad()" style="
+background:red;
+color:white;
+border:none;
+border-radius:10px;
+padding:4px 10px;
+font-size:12px;
+font-weight:bold;
+">
+✕
+</button>
+  
 <div style="color:red">
 🔴 <span id="roadB">0</span>
 </div>
@@ -608,6 +621,15 @@ margin-bottom:10px;
 
 </div>
 
+<div style="
+color:gold;
+font-size:12px;
+margin:6px 0;
+text-align:left;
+">
+🔮 BEAD PLATE
+</div>
+  
 <div id="history"
 style="
 display:grid;
@@ -630,6 +652,31 @@ background:#111;
 padding:8px;
 
 border-radius:12px;
+">
+</div>
+
+<div style="
+color:gold;
+font-size:12px;
+margin:10px 0 6px;
+text-align:left;
+">
+🏮 BIG ROAD
+</div>
+
+<div id="bigRoad"
+style="
+display:grid;
+grid-template-rows:repeat(6,26px);
+grid-auto-flow:column;
+grid-auto-columns:26px;
+gap:2px;
+overflow:auto;
+height:170px;
+background:#050505;
+padding:8px;
+border-radius:12px;
+border:1px solid rgba(255,215,0,.35);
 ">
 </div>
 
@@ -904,9 +951,53 @@ document.getElementById("msg").innerText =
 "✔ ยืนยันเดิมพัน สำเร็จ";
 
 }
+
+let currentLang =
+localStorage.getItem("lang") || "th";
+
+const LANG = {
+  zh:{
+    bead:"🔮 珠盘路",
+    bigRoad:"🏮 大路",
+    banker:"庄",
+    player:"闲",
+    tie:"和",
+    betting:"🟢 开始下注 ",
+    closed:"🔴 停止下注",
+    confirmBet:"✔ 确认下注",
+    wallet:"💼 充值-提款",
+    roadBtn:"📊 路单",
+    line:"💬 联系客服",
+    result:"结果",
+    bankerWin:"庄 WIN",
+    playerWin:"闲 WIN",
+    tieWin:"和"
+  },
+
+  th:{
+    bead:"🔮 BEAD PLATE",
+    bigRoad:"🏮 BIG ROAD",
+    banker:"เจ้า",
+    player:"ผู้เล่น",
+    tie:"เสมอ",
+    betting:"🟢 เปิดรับเดิมพัน ",
+    closed:"🔴 ปิดรับเดิมพัน",
+    confirmBet:"✔ ยืนยันเดิมพัน",
+    wallet:"💼 ฝาก-ถอน",
+    roadBtn:"📊 สถิติไพ่",
+    line:"💬 แอดมินไลน์",
+    result:"RESULT",
+    bankerWin:"BANKER WIN",
+    playerWin:"PLAYER WIN",
+    tieWin:"TIE"
+  }
+};
+
+function T(key){
+  return LANG[currentLang][key] || key;
+}
   
 let lastResult = "";
-
 let countdown = 60;
 let timerInterval = null;
 let wasBetting = false; 
@@ -1118,65 +1209,153 @@ document.getElementById("countB").innerText = countB;
 document.getElementById("countP").innerText = countP;
 document.getElementById("countT").innerText = countT;
 }
-// 历史
+// 历史：赌场珠盘路 6行自动换列
 async function loadHistory() {
   const res = await fetch("/history");
   const data = await res.json();
 
-let columns = [];
-let col = [];
-let lastType = "";
-  
-data.forEach(r => {
-  if (!r.result) return;
+  let countB = 0;
+  let countP = 0;
+  let countT = 0;
 
-  if (r.result === lastType || lastType === "") {
-    col.push(r.result);
-  } else {
-    columns.push(col);
-    col = [r.result];
-  }
+  let html = "";
 
-  lastType = r.result;
-});
+  data.forEach((r, index) => {
+    if (!r.result) return;
 
-if (col.length > 0) columns.push(col);
+    if (r.result === "B") countB++;
+    if (r.result === "P") countP++;
+    if (r.result === "T") countT++;
 
-let html = '<div style="display:flex;align-items:flex-start">';
+    let bg = "red";
+    let text = "庄";
 
-columns.forEach(c => {
-  html += '<div style="display:flex;flex-direction:column;margin-right:3px">';
-  
-  c.forEach(r => {
-    let color = "red";
-    if (r === "P") color = "blue";
-    if (r === "T") color = "green";
+    if (r.result === "P") {
+      bg = "#0066ff";
+      text = "闲";
+    }
 
-    html += `<div style="
-      width:14px;
-      height:14px;
-      border-radius:50%;
-      background:${color};
-      margin-bottom:3px;
-    "></div>`;
+    if (r.result === "T") {
+      bg = "#00aa44";
+      text = "和";
+    }
+
+    const isLast =
+      index === data.length - 1;
+
+    html += `
+      <div style="
+        width:30px;
+        height:30px;
+        border-radius:50%;
+        background:${bg};
+        color:white;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        font-size:12px;
+        font-weight:bold;
+        box-shadow:${isLast ? "0 0 15px gold" : "none"};
+        border:${isLast ? "2px solid gold" : "1px solid rgba(255,255,255,.25)"};
+      ">
+        ${text}
+      </div>
+    `;
   });
 
-  html += '</div>';
+  document.getElementById("history").innerHTML = html;
+  let bigHtml = "";
+let last = "";
+let row = 0;
+let col = 0;
+
+data.forEach(r=>{
+
+  if(!r.result) return;
+
+// 和局不打断大路，只加绿色小标记
+if(r.result === "T"){
+
+  bigHtml += `
+    <div style="
+      grid-row:${row + 1};
+      grid-column:${col + 1};
+      width:10px;
+      height:10px;
+      border-radius:50%;
+      background:#00ff66;
+      align-self:flex-end;
+      justify-self:flex-end;
+      box-shadow:0 0 8px #00ff66;
+    "></div>
+  `;
+
+  return;
+}
+
+  if(last === ""){
+    last = r.result;
+  }else if(r.result === last){
+    row++;
+
+    if(row >= 6){
+      row = 5;
+      col++;
+    }
+
+  }else{
+    last = r.result;
+    col++;
+    row = 0;
+  }
+
+  let color =
+  r.result === "B"
+  ? "red"
+  : "#0066ff";
+
+  let text =
+  r.result === "B"
+  ? "庄"
+  : "闲";
+
+  bigHtml += `
+    <div style="
+      grid-row:${row + 1};
+      grid-column:${col + 1};
+      width:24px;
+      height:24px;
+      border-radius:50%;
+      border:2px solid ${color};
+      color:${color};
+      background:transparent;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:10px;
+      font-weight:bold;
+      box-shadow:0 0 8px ${color};
+    ">
+      ${text}
+    </div>
+  `;
+
 });
 
-html += '</div>';
-  
-if (data.length > 0) {
-  const last = data[data.length - 1];
+document.getElementById("bigRoad").innerHTML = bigHtml;
+  document.getElementById("roadB").innerText = countB;
+  document.getElementById("roadP").innerText = countP;
+  document.getElementById("roadT").innerText = countT;
 
- if (last.result && last.result !== lastResult) {
-  lastResult = last.result;
-  showResult(last.result);
-}
-}
-  document.getElementById("history").innerHTML = html;
-}
+  if (data.length > 0) {
+    const last = data[data.length - 1];
 
+    if (last.result && last.result !== lastResult) {
+      lastResult = last.result;
+      showResult(last.result);
+    }
+  }
+}
 // ===== 余额 =====
 async function loadBalance() {
   const userId = currentUserId;

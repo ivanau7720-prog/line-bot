@@ -1029,9 +1029,7 @@ text-shadow:
 </div>
 <div class="bottom-tools">
 
-<button id="walletBtn" onclick="openWalletCenter()" class="tool-btn line-btn">
-💼 ฝาก-ถอน
-</button>
+<button id="chatRoomBtn" onclick="openChatRoom()" class="tool-btn line-btn"> 💬 LIVE CHAT ROOM </button>
 
 </div>
   <div class="bottom-tools">
@@ -1192,7 +1190,11 @@ roadBtn:"📊 路单",
     bankerWin:"庄 WIN",
     playerWin:"闲 WIN",
    tieWin:"和",
-winPopup:"🎉 恭喜中奖 +"
+winPopup:"🎉 恭喜中奖 +",
+chatRoomBtn:"💬 聊天室",
+chatRoomTitle:"💬 聊天室",
+chatPlaceholder:"输入消息...",
+chatSend:"发送"
   },
 
   th:{
@@ -1273,7 +1275,11 @@ roadBtn:"📊 สถิติไพ่",
     bankerWin:"BANKER WIN",
     playerWin:"PLAYER WIN",
    tieWin:"TIE",
-winPopup:"🎉 คุณชนะ +"
+winPopup:"🎉 คุณชนะ +",
+chatRoomBtn:"💬 LIVE CHAT ROOM",
+chatRoomTitle:"💬 ห้องแชท",
+chatPlaceholder:"พิมพ์ข้อความ...",
+chatSend:"ส่ง"
   }
 };
 
@@ -1290,7 +1296,41 @@ function applyLang(){
   document.getElementById("beadTitle").innerText = T("beadTitle");
   document.getElementById("bigRoadTitle").innerText = T("bigRoadTitle");
 
-  document.getElementById("walletBtn").innerText = T("walletBtn");
+ if(document.getElementById("chatRoomBtn")){
+
+document
+.getElementById("chatRoomBtn")
+.innerText =
+T("chatRoomBtn");
+
+}
+
+if(document.getElementById("chatRoomTitle")){
+
+document
+.getElementById("chatRoomTitle")
+.innerText =
+T("chatRoomTitle");
+
+}
+
+if(document.getElementById("chatInput")){
+
+document
+.getElementById("chatInput")
+.placeholder =
+T("chatPlaceholder");
+
+}
+
+if(document.getElementById("chatSendBtn")){
+
+document
+.getElementById("chatSendBtn")
+.innerText =
+T("chatSend");
+
+}
   document.getElementById("walletTitle").innerText = T("walletTitle");
 document.getElementById("rechargeBtn").innerText = T("rechargeBtn");
 document.getElementById("withdrawBtn").innerText = T("withdrawBtn");
@@ -2309,12 +2349,568 @@ ${T("recordTime")}：${formatTime(r.created_at)}
   `).join("");
 }
   
-  function logout(){
+ function logout(){
 
 localStorage.clear();
-location.href = "/login.html";
+location.href="/login.html";
 
 }
+
+
+/* ========= LIVE CHAT ========= */
+
+function openChatRoom(){
+
+applyLang();
+
+document
+.getElementById(
+"chatModal"
+)
+.style.display=
+"block";
+
+loadChatCache();
+
+setTimeout(()=>{
+
+document
+.getElementById(
+"chatInput"
+)
+.focus();
+
+},100);
+
+}
+
+
+function closeChatRoom(){
+
+document
+.getElementById(
+"chatModal"
+)
+.style.display=
+"none";
+
+}
+
+
+
+function sendChat(){
+
+const input =
+document.getElementById(
+"chatInput"
+);
+
+if(
+!input.value.trim()
+)
+return;
+
+const name =
+
+localStorage.getItem(
+"name"
+)
+
+||
+
+"Player";
+
+
+
+addChatMessage(
+
+name,
+
+input.value.trim(),
+
+"real"
+
+);
+
+
+
+input.value="";
+
+}
+function getChatTime(){
+
+const now = new Date();
+
+return now
+.toLocaleTimeString(
+[],
+{
+hour:"2-digit",
+minute:"2-digit"
+}
+);
+
+}
+
+
+
+function getAvatarLetter(name){
+
+if(!name) return "P";
+
+return name
+.trim()
+.charAt(0)
+.toUpperCase();
+
+}
+
+
+
+function addChatMessage(name,message,type){
+
+const box =
+document.getElementById("chatBox");
+
+if(!box) return;
+
+const time = getChatTime();
+
+const avatar =
+getAvatarLetter(name);
+
+let html = "";
+
+if(type === "system"){
+
+html = `
+
+<div
+style="
+margin:10px 0;
+padding:10px;
+border-radius:14px;
+background:linear-gradient(90deg,rgba(255,215,0,.25),rgba(255,255,255,.06));
+border:1px solid rgba(255,215,0,.45);
+color:gold;
+font-size:12px;
+text-align:center;
+box-shadow:0 0 12px rgba(255,215,0,.25);
+">
+
+📢 ${message}
+
+<div
+style="
+font-size:10px;
+color:#ddd;
+margin-top:4px;
+">
+${time}
+</div>
+
+</div>
+
+`;
+
+}else{
+
+html = `
+
+<div
+class="chatItem"
+style="
+display:flex;
+gap:10px;
+margin-bottom:12px;
+align-items:flex-start;
+">
+
+<div
+style="
+width:34px;
+height:34px;
+border-radius:50%;
+background:linear-gradient(145deg,#5a00a8,#ffd700);
+display:flex;
+align-items:center;
+justify-content:center;
+font-weight:bold;
+color:white;
+box-shadow:0 0 10px rgba(255,215,0,.4);
+flex-shrink:0;
+">
+
+${avatar}
+
+</div>
+
+<div
+style="
+flex:1;
+text-align:left;
+">
+
+<div
+style="
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:4px;
+">
+
+<span
+style="
+color:gold;
+font-size:11px;
+font-weight:bold;
+">
+${name}
+</span>
+
+<span
+style="
+color:#aaa;
+font-size:10px;
+">
+${time}
+</span>
+
+</div>
+
+<div
+style="
+padding:10px 12px;
+background:rgba(255,255,255,.08);
+border-radius:14px;
+color:white;
+font-size:13px;
+line-height:1.4;
+word-break:break-word;
+">
+
+${message}
+
+</div>
+
+</div>
+
+</div>
+
+`;
+
+}
+
+box.innerHTML += html;
+
+
+/* 只保留最近50条 */
+while(box.children.length > 50){
+
+box.removeChild(
+box.children[0]
+);
+
+}
+
+
+/* 自动滚到底 */
+box.scrollTop =
+box.scrollHeight;
+
+saveChatCache();
+
+}
+function saveChatCache(){
+
+const box =
+document.getElementById("chatBox");
+
+if(!box) return;
+
+localStorage.setItem(
+"chatCache",
+box.innerHTML
+);
+
+}
+
+
+
+function loadChatCache(){
+
+const box =
+document.getElementById("chatBox");
+
+if(!box) return;
+
+const cache =
+localStorage.getItem("chatCache");
+
+if(cache){
+
+box.innerHTML = cache;
+
+box.scrollTop =
+box.scrollHeight;
+
+}else{
+
+addChatMessage(
+"System",
+currentLang === "zh"
+? "欢迎进入聊天室，请文明交流。"
+: "ยินดีต้อนรับเข้าสู่ห้องแชท กรุณาพูดคุยอย่างสุภาพ",
+"system"
+);
+
+}
+
+}
+function addSystemNotice(message){
+
+addChatMessage(
+"System",
+message,
+"system"
+);
+
+}
+/* ENTER发送 */
+
+document
+.addEventListener(
+"keydown",
+e=>{
+
+if(
+e.key==="Enter"
+&&
+document
+.getElementById(
+"chatModal"
+)
+.style.display==="block"
+){
+
+sendChat();
+
+}
+
+});
+
 </script>
+<!-- CHAT ROOM -->
+
+<div
+id="chatModal"
+
+style="
+
+display:none;
+
+position:fixed;
+
+left:0;
+top:0;
+
+width:100%;
+height:100%;
+
+background:
+rgba(0,0,0,.65);
+
+z-index:999;
+
+">
+
+<div
+style="
+
+position:absolute;
+
+left:50%;
+top:50%;
+
+transform:
+translate(
+-50%,
+-50%
+);
+
+width:92%;
+max-width:420px;
+
+height:70vh;
+
+background:
+
+linear-gradient(
+180deg,
+rgba(20,20,20,.95),
+rgba(0,0,0,.95)
+);
+
+border:
+
+1px solid
+rgba(255,215,0,.35);
+
+border-radius:26px;
+
+overflow:hidden;
+
+backdrop-filter:
+blur(30px);
+
+">
+
+<!-- TOP -->
+
+<div
+style="
+
+height:70px;
+
+display:flex;
+
+justify-content:
+space-between;
+
+align-items:center;
+
+padding:0 20px;
+
+background:
+
+linear-gradient(
+90deg,
+#7a2cff,
+#ffcc33
+);
+
+">
+
+<div
+id="chatRoomTitle"
+style="font-size:20px">
+
+💬 LIVE CHAT ROOM
+
+</div>
+
+<button
+onclick="closeChatRoom()"
+
+style="
+
+background:none;
+
+border:none;
+
+color:white;
+
+font-size:30px;
+
+">
+
+×
+
+</button>
+
+</div>
+
+<!-- MESSAGE -->
+
+<div
+id="chatBox"
+
+style="
+
+height:calc(100% - 140px);
+
+overflow:auto;
+
+padding:18px;
+
+">
+
+</div>
+
+<!-- INPUT -->
+
+<div
+
+style="
+
+height:70px;
+
+display:flex;
+
+padding:10px;
+
+gap:10px;
+
+">
+
+<input
+
+id="chatInput"
+
+placeholder="พิมพ์ข้อความ..."
+
+style="
+
+flex:1;
+
+border:none;
+
+border-radius:18px;
+
+padding-left:16px;
+
+background:
+
+rgba(255,255,255,.1);
+
+color:white;
+
+">
+
+<button
+
+id="chatSendBtn"
+
+onclick="sendChat()"
+
+style="
+
+width:90px;
+
+border:none;
+
+border-radius:18px;
+
+background:
+
+linear-gradient(
+90deg,
+#8b5cff,
+gold
+);
+
+font-weight:bold;
+
+">
+
+ส่ง
+
+</button>
+
+</div>
+
+</div>
+
+</div>
 </body>
 </html>

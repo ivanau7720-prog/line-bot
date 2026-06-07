@@ -621,7 +621,7 @@ font-weight:bold;
 
 </div>
 
-<div style="
+<div id="beadTitle" style="
 color:gold;
 font-size:12px;
 margin:6px 0;
@@ -655,7 +655,7 @@ border-radius:12px;
 ">
 </div>
 
-<div style="
+<div id="bigRoadTitle" style="
 color:gold;
 font-size:12px;
 margin:10px 0 6px;
@@ -995,6 +995,39 @@ const LANG = {
 
 function T(key){
   return LANG[currentLang][key] || key;
+}
+
+function applyLang(){
+
+// 路单标题
+document.getElementById(
+"beadTitle"
+).innerText =
+T("bead");
+
+document.getElementById(
+"bigRoadTitle"
+).innerText =
+T("bigRoad");
+
+// 按钮
+document.getElementById(
+"confirmBtn"
+).innerText =
+T("confirmBet");
+
+// 路单按钮
+document.querySelector(
+".road-btn"
+).innerText =
+T("roadBtn");
+
+// LINE按钮
+document.querySelector(
+".bottom-tools .line-btn"
+).innerText =
+T("line");
+
 }
   
 let lastResult = "";

@@ -1155,7 +1155,11 @@ roadBtn:"📊 สถิติไพ่",
 function T(key){
   return LANG[currentLang][key] || key;
 }
-
+function setLang(lang){
+  currentLang = lang;
+  localStorage.setItem("lang", lang);
+  applyLang();
+}
 function applyLang(){
 
   document.getElementById("beadTitle").innerText = T("beadTitle");
@@ -1186,6 +1190,7 @@ T("closed");
 
 }
 loadBalance();
+loadStats();
   document.getElementById("roadOpenBtn").innerText = T("roadBtn");
   document.getElementById("lineBtn").innerText = T("line");
   document.getElementById("confirmBtn").innerText =

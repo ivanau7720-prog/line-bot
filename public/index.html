@@ -115,11 +115,41 @@ linear-gradient(to bottom,
 }
 
 #chip50{
- background:radial-gradient(circle,#00aaff,#0033aa);
+
+background:
+
+radial-gradient(
+circle at 30% 30%,
+#ffffff,
+transparent 35%
+),
+
+linear-gradient(
+145deg,
+#00d5ff,
+#0077ff,
+#001144
+);
+
 }
 
 #chip100{
- background:radial-gradient(circle,#ffd700,#aa7700);
+
+background:
+
+radial-gradient(
+circle at 30% 30%,
+#fff5b0,
+transparent 35%
+),
+
+linear-gradient(
+145deg,
+#ffd700,
+#ff9900,
+#663300
+);
+
 }
 #chip500{
 
@@ -147,7 +177,40 @@ linear-gradient(
 }
 
 #chip1000{
- background:radial-gradient(circle,#ff2d2d,#5a0000);
+
+background:
+
+radial-gradient(
+circle at 28% 28%,
+rgba(255,220,120,.55),
+transparent 18%
+),
+
+radial-gradient(
+circle at 72% 70%,
+rgba(255,0,0,.40),
+transparent 28%
+),
+
+linear-gradient(
+145deg,
+#120000 0%,
+#550000 28%,
+#c30000 55%,
+#4a0000 78%,
+#050505 100%
+);
+
+box-shadow:
+
+0 0 10px #ff0000,
+
+0 0 22px rgba(255,40,40,.55),
+
+inset 0 0 18px rgba(255,255,255,.22),
+
+inset 0 -8px 14px rgba(0,0,0,.55);
+
 }
 /* 旋转 */
 @keyframes chipSpin{

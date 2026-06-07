@@ -2444,39 +2444,66 @@ function openChatRoom(){
 
 applyLang();
 
-document
-.getElementById(
-"chatModal"
-)
-.style.display=
+const modal =
+document.getElementById("chatModal");
+
+const panel =
+document.getElementById("chatPanel");
+
+modal.style.display =
 "block";
+
+setTimeout(()=>{
+
+modal.style.opacity =
+"1";
+
+panel.style.opacity =
+"1";
+
+panel.style.transform =
+"translate(-50%,-50%) scale(1)";
+
+},20);
 
 loadChatCache();
 
 setTimeout(()=>{
 
 document
-.getElementById(
-"chatInput"
-)
+.getElementById("chatInput")
 .focus();
 
-},100);
+},150);
 
 }
 
 
 function closeChatRoom(){
 
-document
-.getElementById(
-"chatModal"
-)
-.style.display=
+const modal =
+document.getElementById("chatModal");
+
+const panel =
+document.getElementById("chatPanel");
+
+panel.style.opacity =
+"0";
+
+panel.style.transform =
+"translate(-50%,-45%) scale(.96)";
+
+modal.style.opacity =
+"0";
+
+setTimeout(()=>{
+
+modal.style.display =
 "none";
 
-}
+},250);
 
+}
 
 
 function sendChat(){
@@ -2800,12 +2827,17 @@ height:100%;
 
 background:
 rgba(0,0,0,.65);
+opacity:0;
 
+transition:
+opacity .25s ease;
 z-index:999;
 
 ">
 
 <div
+id="chatPanel"
+
 style="
 
 position:absolute;
@@ -2816,8 +2848,9 @@ top:50%;
 transform:
 translate(
 -50%,
--50%
-);
+-45%
+)
+scale(.96);
 
 width:92%;
 max-width:420px;
@@ -2852,9 +2885,44 @@ inset 0 0 40px
 rgba(255,255,255,.04);
 backdrop-filter:
 blur(30px);
+opacity:0;
+
+transition:
+.25s ease;
+">
+<button
+onclick="closeChatRoom()"
+
+style="
+
+position:absolute;
+
+top:10px;
+right:10px;
+
+width:32px;
+height:32px;
+
+border:none;
+border-radius:50%;
+
+background:
+rgba(0,0,0,.55);
+
+color:white;
+
+font-size:18px;
+
+z-index:10;
+
+box-shadow:
+0 0 10px rgba(255,215,0,.45);
 
 ">
 
+✕
+
+</button>
 <!-- TOP -->
 
 <div
@@ -2905,24 +2973,6 @@ text-shadow:
 
 </div>
 
-<button
-onclick="closeChatRoom()"
-
-style="
-
-background:none;
-
-border:none;
-
-color:white;
-
-font-size:30px;
-
-">
-
-×
-
-</button>
 
 </div>
 

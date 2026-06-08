@@ -2897,39 +2897,47 @@ style="
 
 position:fixed;
 
-left:50%;
-bottom:115px;
+right:18px;
+top:50%;
 
-transform:translateX(-50%);
+transform:translateY(-50%);
 
 z-index:999999;
 
-height:42px;
-padding:0 26px;
+width:44px;
+height:44px;
 
 border:none;
-border-radius:30px;
+border-radius:50%;
 
 background:
-linear-gradient(
-135deg,
-#00e5ff,
+radial-gradient(
+circle at 30% 30%,
 #ffffff,
-#00e5ff
+#00e5ff 38%,
+#003b46 75%,
+#020202 100%
 );
 
-color:#000;
+color:white;
 
-font-size:15px;
+font-size:22px;
 font-weight:bold;
 
+display:flex;
+align-items:center;
+justify-content:center;
+
 box-shadow:
-0 0 15px #00e5ff,
-0 0 35px white;
+0 0 12px #00e5ff,
+0 0 30px white;
+
+text-shadow:
+0 0 8px black;
 
 ">
 
-✕ 返回游戏
+✕
 
 </button>
 <div

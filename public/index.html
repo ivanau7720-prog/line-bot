@@ -1053,11 +1053,17 @@ letter-spacing:1px;
 
 background:
 
+radial-gradient(
+circle at 25% 25%,
+rgba(255,255,255,.18),
+transparent 28%
+),
+
 linear-gradient(
 135deg,
-#090909,
-#4300aa,
-#ff5edb
+#020202 0%,
+#00e5ff 52%,
+#f5f7ff 100%
 );
 
 border:
@@ -1072,39 +1078,23 @@ rgba(
 
 box-shadow:
 
-0 0 18px
-rgba(
-255,
-80,
-255,
-.50
-),
+0 0 14px
+rgba(0,229,255,.45),
 
-0 0 36px
-rgba(
-180,
-0,
-255,
-.25
-),
+0 0 34px
+rgba(245,247,255,.22),
 
-inset 0 1px 8px
-rgba(
-255,
-255,
-255,
-.18
-);
+inset 0 0 14px
+rgba(255,255,255,.10);
+
 
 text-shadow:
 
-0 0 8px
-rgba(
-255,
-255,
-255,
-.75
-);
+0 0 10px
+rgba(255,255,255,.95),
+
+0 0 18px
+rgba(0,229,255,.45);
 
 ">
 
@@ -2897,31 +2887,55 @@ style="
 
 position:absolute;
 
-top:10px;
-right:10px;
+top:9px;
+right:9px;
 
-width:32px;
-height:32px;
+width:34px;
+height:34px;
 
 border:none;
 border-radius:50%;
 
 background:
-rgba(0,0,0,.55);
+
+radial-gradient(
+circle at 30% 30%,
+#ffffff,
+#00e5ff 35%,
+#003b46 70%,
+#020202 100%
+);
 
 color:white;
 
 font-size:18px;
 
+font-weight:bold;
+
 z-index:10;
 
 box-shadow:
-0 0 10px rgba(255,215,0,.45);
 
-">
+0 0 10px
+rgba(255,255,255,.8),
+
+0 0 22px
+rgba(0,229,255,.75),
+
+inset 0 0 10px
+rgba(0,0,0,.45);
+
+text-shadow:
+
+0 0 8px
+black;
+
+"
+
+>
 
 ✕
-
+  
 </button>
 <!-- TOP -->
 
@@ -2941,12 +2955,18 @@ padding:0 20px;
 
 background:
 
+radial-gradient(
+circle at 25% 25%,
+rgba(255,255,255,.20),
+transparent 30%
+),
+
 linear-gradient(
-90deg,
-#090909,
-#4300aa,
-#ff5edb,
-#ffd700
+135deg,
+#020202 0%,
+#003b46 45%,
+#00e5ff 72%,
+#f5f7ff 100%
 );
 
 ">
@@ -2964,9 +2984,17 @@ width:100%;
 
 text-align:center;
 
-text-shadow:
-0 0 10px white;
+color:white;
 
+letter-spacing:1px;
+
+text-shadow:
+
+0 0 10px
+rgba(255,255,255,.95),
+
+0 0 20px
+rgba(0,229,255,.65);
 ">
 
 💬 LIVE CHAT ROOM

@@ -120,6 +120,14 @@ created_at TIMESTAMP DEFAULT NOW()
 ALTER TABLE exchange_records
 ADD COLUMN IF NOT EXISTS shipping_note TEXT;
 
+CREATE TABLE IF NOT EXISTS chat_messages (
+id BIGSERIAL PRIMARY KEY,
+user_id TEXT,
+username TEXT,
+message TEXT,
+type TEXT DEFAULT 'real',
+created_at TIMESTAMP DEFAULT NOW()
+);
 `
 });
 
@@ -155,6 +163,7 @@ let betCooldown = {};
 let rechargeCooldown = {};
 let withdrawCooldown = {};
 let onlineUsers = {};
+let chatCooldown = {};
 // ===== 恢复进行中的局 =====
 async function restoreActiveRound(){
 
@@ -2097,6 +2106,96 @@ await supabase
   } catch (err) {
     console.error("done exchange error:", err);
     res.json({ success:false });
+  }
+});
+
+// ===== LIVE CHAT：发送消息 =====
+app.post("/chat/send", async (req, res) => {
+  try {
+
+    const {
+      userId,
+      username,
+      message
+    } = req.body;
+
+    if (!userId || !username) {
+      return res.json({
+        success:false,
+        msg:"玩家资料错误"
+      });
+    }
+
+    if (!message || !message.trim()) {
+      return res.json({
+        success:false,
+        msg:"消息不能为空"
+      });
+    }
+
+    const cleanMsg =
+    message
+    .trim()
+    .slice(0, 80);
+
+    const now = Date.now();
+
+    if (
+      chatCooldown[userId] &&
+      now - chatCooldown[userId] < 3000
+    ) {
+      return res.json({
+        success:false,
+        msg:"请3秒后再发送"
+      });
+    }
+
+    chatCooldown[userId] = now;
+
+    await supabase
+    .from("chat_messages")
+    .insert([
+      {
+        user_id:userId,
+        username,
+        message:cleanMsg,
+        type:"real"
+      }
+    ]);
+
+    res.json({
+      success:true
+    });
+
+  } catch (err) {
+    console.error("chat send error:", err);
+    res.json({
+      success:false,
+      msg:"发送失败"
+    });
+  }
+});
+
+
+// ===== LIVE CHAT：读取最近消息 =====
+app.get("/chat/list", async (req, res) => {
+  try {
+
+    const { data } = await supabase
+    .from("chat_messages")
+    .select("*")
+    .order("id", {
+      ascending:false
+    })
+    .limit(50);
+
+    res.json(
+      (data || []).reverse()
+    );
+
+  } catch (err) {
+    console.error("chat list error:", err);
+    res.json([]);
   }
 });
 // ===== 启动 =====

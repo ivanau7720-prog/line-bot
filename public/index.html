@@ -2456,8 +2456,8 @@ panel.style.transform =
 
 },20);
 
-loadChatCache();
-
+loadChatMessages();
+startChatRefresh();
 setTimeout(()=>{
 
 document
@@ -2470,7 +2470,11 @@ document
 
 
 function closeChatRoom(){
-
+  
+if(chatRefreshTimer){
+clearInterval(chatRefreshTimer);
+chatRefreshTimer = null;
+}
 const modal =
 document.getElementById("chatModal");
 
@@ -2496,7 +2500,7 @@ modal.style.display =
 }
 
 
-function sendChat(){
+async function sendChat(){
 
 const input =
 document.getElementById(
@@ -2508,31 +2512,41 @@ if(
 )
 return;
 
-const name =
-
-localStorage.getItem(
-"name"
-)
-
-||
-
-"Player";
-
-
-
-addChatMessage(
-
-name,
-
-input.value.trim(),
-
-"real"
-
-);
-
-
+const msg =
+input.value.trim();
 
 input.value="";
+
+const res =
+await fetch(
+"/chat/send",
+{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+userId: currentUserId,
+username: localStorage.getItem("name") || "Player",
+message: msg
+})
+}
+);
+
+const data =
+await res.json();
+
+if(!data.success){
+
+alert(
+data.msg || "Send failed"
+);
+
+return;
+
+}
+
+loadChatMessages();
 
 }
 function getChatTime(){
@@ -2565,7 +2579,7 @@ return name
 
 
 
-function addChatMessage(name,message,type){
+function addChatMessage(name,message,type,save=true){
 
 const box =
 document.getElementById("chatBox");
@@ -2716,7 +2730,9 @@ box.children[0]
 box.scrollTop =
 box.scrollHeight;
 
+if(save){
 saveChatCache();
+}
 
 }
 function saveChatCache(){
@@ -2735,36 +2751,59 @@ box.innerHTML
 
 
 
-function loadChatCache(){
+async function loadChatMessages(){
 
 const box =
-document.getElementById("chatBox");
+document.getElementById(
+"chatBox"
+);
 
 if(!box) return;
 
-const cache =
-localStorage.getItem("chatCache");
+const res =
+await fetch(
+"/chat/list"
+);
 
-if(cache){
+const list =
+await res.json();
 
-box.innerHTML = cache;
+box.innerHTML = "";
 
-box.scrollTop =
-box.scrollHeight;
-
-}else{
+if(
+!list ||
+list.length === 0
+){
 
 addChatMessage(
 "System",
 currentLang === "zh"
 ? "欢迎进入聊天室，请文明交流。"
 : "ยินดีต้อนรับเข้าสู่ห้องแชท กรุณาพูดคุยอย่างสุภาพ",
-"system"
+"system",
+false
 );
 
-}
+return;
 
 }
+
+list.forEach(m=>{
+
+addChatMessage(
+m.username || "Player",
+m.message || "",
+m.type || "real",
+false
+);
+
+});
+
+box.scrollTop =
+box.scrollHeight;
+
+}
+  
 function addSystemNotice(message){
 
 addChatMessage(
@@ -2772,6 +2811,33 @@ addChatMessage(
 message,
 "system"
 );
+
+}
+
+let chatRefreshTimer = null;
+
+function startChatRefresh(){
+
+if(chatRefreshTimer){
+clearInterval(chatRefreshTimer);
+}
+
+chatRefreshTimer =
+setInterval(()=>{
+
+const modal =
+document.getElementById("chatModal");
+
+if(
+modal &&
+modal.style.display === "block"
+){
+
+loadChatMessages();
+
+}
+
+},3000);
 
 }
 /* ENTER发送 */

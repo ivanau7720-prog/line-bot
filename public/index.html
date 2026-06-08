@@ -2946,67 +2946,7 @@ opacity:0;
 transition:
 .25s ease;
 ">
-<button
-onclick="closeChatRoom()"
 
-style="
-
-position:absolute;
-
-top:9px;
-right:9px;
-
-width:34px;
-height:34px;
-
-border:none;
-border-radius:50%;
-
-background:
-
-radial-gradient(
-circle at 30% 30%,
-#ffffff,
-#00e5ff 35%,
-#003b46 70%,
-#020202 100%
-);
-
-color:white;
-
-font-size:18px;
-
-font-weight:bold;
-
-z-index:9999;
-
-display:flex;
-align-items:center;
-justify-content:center;
-
-box-shadow:
-
-0 0 10px
-rgba(255,255,255,.8),
-
-0 0 22px
-rgba(0,229,255,.75),
-
-inset 0 0 10px
-rgba(0,0,0,.45);
-
-text-shadow:
-
-0 0 8px
-black;
-
-"
-
->
-
-✕
-  
-</button>
 <!-- TOP -->
 
 <div
@@ -3041,7 +2981,34 @@ linear-gradient(
 );
 
 ">
+<button
+onclick="closeChatRoom()"
 
+style="
+
+width:34px;
+height:34px;
+
+border:none;
+border-radius:50%;
+
+background:
+#00e5ff;
+
+color:#000;
+
+font-size:18px;
+font-weight:bold;
+
+box-shadow:
+0 0 12px #00e5ff,
+0 0 25px white;
+
+">
+
+✕
+
+</button>
 <div
 id="chatRoomTitle"
 

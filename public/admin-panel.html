@@ -45,6 +45,68 @@ button:hover{
 .blinkAlert{
   animation: blinkAlert 1s infinite;
 }
+
+.championBadge{
+  position:relative;
+  overflow:hidden;
+  animation: championShine 1.8s infinite;
+}
+
+.championBadge::after{
+  content:"";
+  position:absolute;
+  top:0;
+  left:-80%;
+  width:50%;
+  height:100%;
+  background:linear-gradient(
+    120deg,
+    transparent,
+    rgba(255,255,255,.8),
+    transparent
+  );
+  animation: badgeLight 2.2s infinite;
+}
+
+@keyframes badgeLight{
+  0%{
+    left:-80%;
+  }
+  60%{
+    left:130%;
+  }
+  100%{
+    left:130%;
+  }
+}
+
+@keyframes championShine{
+  0%{
+    opacity:.8;
+  }
+  50%{
+    opacity:1;
+    transform:scale(1.04);
+  }
+  100%{
+    opacity:.8;
+  }
+}
+.topAgentGlow{
+  animation: topAgentPulse 1.5s infinite;
+}
+
+@keyframes topAgentPulse{
+  0%{
+    box-shadow:0 0 12px rgba(255,215,0,.35);
+  }
+  50%{
+    box-shadow:0 0 35px rgba(255,215,0,.95);
+  }
+  100%{
+    box-shadow:0 0 12px rgba(255,215,0,.35);
+  }
+}
 .commissionGlow{
   animation: commissionPulse 1.2s infinite;
 }
@@ -603,6 +665,7 @@ agentLevel:"🏆 代理等级：",
 commissionRate:"💎 佣金比例：",
 
 commission:"💵 预计佣金：",
+monthlyChampion:"🏆 本月冠军代理",
 nextLevel:"🚀 距离下一级：",
 maxLevel:"👑 已是最高等级",
 needValid:"有效会员",
@@ -727,6 +790,7 @@ agentLevel:"🏆 ระดับเอเย่นต์：",
 commissionRate:"💎 อัตราค่าคอม：",
 
 commission:"💵 ค่าคอมโดยประมาณ：",
+monthlyChampion:"🏆 เอเย่นต์แชมป์ประจำเดือน",
 nextLevel:"🚀 เหลืออีกถึงระดับถัดไป：",
 maxLevel:"👑 ระดับสูงสุดแล้ว",
 needValid:"สมาชิกที่มีผล",
@@ -1216,24 +1280,69 @@ ${t.maxLevel}
 }
 html += `
 
-<div style="
+<div class="${
+index===0
+&&
+Number(a.commission || 0)>0
+?
+'topAgentGlow'
+:
+''
+}" style="
 
 padding:14px;
 
 margin-bottom:12px;
 
 background:
-rgba(0,0,0,.35);
+
+index===0
+?
+
+"linear-gradient(90deg,rgba(255,215,0,.18),rgba(0,0,0,.35))"
+
+:
+
+index===1
+?
+
+"linear-gradient(90deg,rgba(220,220,220,.15),rgba(0,0,0,.35))"
+
+:
+
+index===2
+?
+
+"linear-gradient(90deg,rgba(205,127,50,.15),rgba(0,0,0,.35))"
+
+:
+
+"rgba(0,0,0,.35)";
 
 border:
 
-1px solid
-rgba(
-255,
-215,
-0,
-.35
-);
+index===0
+?
+
+"2px solid gold"
+
+:
+
+index===1
+?
+
+"2px solid #dddddd"
+
+:
+
+index===2
+?
+
+"2px solid #cd7f32"
+
+:
+
+"1px solid rgba(255,215,0,.35)";
 
 border-radius:18px;
 
@@ -1241,7 +1350,16 @@ border-radius:18px;
 
 <div style="
 
-color:gold;
+color:
+
+index===0
+?
+
+"#ffe066"
+
+:
+
+"gold";
 
 font-size:18px;
 
@@ -1249,9 +1367,41 @@ font-weight:bold;
 
 margin-bottom:8px;
 
+text-shadow:
+
+index===0
+
+?
+
+"0 0 10px gold,0 0 25px orange"
+
+:
+
+"none";
+
 ">
 
-${index===0 && Number(a.commission || 0)>0 ? "👑 TOP 1" : "🤝"}
+${
+Number(a.commission || 0)>0
+?
+(
+index===0
+?
+"👑 TOP 1"
+:
+index===1
+?
+"🥈 TOP 2"
+:
+index===2
+?
+"🥉 TOP 3"
+:
+"🤝"
+)
+:
+"🤝"
+}
 
 ${a.agent_code}
 
@@ -1260,7 +1410,47 @@ ${a.agent_code}
 ${a.agent_name}
 
 </div>
+${
+index===0 && Number(a.commission || 0)>0
+?
+`
+<div class="championBadge" style="
+display:inline-block;
 
+margin:0 0 10px;
+
+padding:6px 12px;
+
+border-radius:999px;
+
+background:
+linear-gradient(
+90deg,
+rgba(255,215,0,.25),
+rgba(255,120,0,.15)
+);
+
+border:
+1px solid rgba(255,215,0,.7);
+
+color:#ffe066;
+
+font-size:13px;
+
+font-weight:bold;
+
+text-shadow:
+0 0 10px gold;
+
+">
+
+${t.monthlyChampion}
+
+</div>
+`
+:
+""
+}
 <div style="
 
 font-size:18px;

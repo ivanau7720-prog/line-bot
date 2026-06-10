@@ -1027,7 +1027,50 @@ app.post("/admin/create-agent", checkAdmin, async (req, res) => {
     res.json({ success:false });
   }
 });
+function getAgentLevel(validPlayers,totalTopup){
 
+if(
+validPlayers >= 400 &&
+totalTopup >= 10000000
+){
+
+return {
+level:"DIAMOND",
+rate:35
+};
+
+}
+
+if(
+validPlayers >= 151 &&
+totalTopup >= 2000001
+){
+
+return {
+level:"GOLD",
+rate:30
+};
+
+}
+
+if(
+validPlayers >= 51 &&
+totalTopup >= 500001
+){
+
+return {
+level:"SILVER",
+rate:25
+};
+
+}
+
+return {
+level:"BRONZE",
+rate:20
+};
+
+}
 // ===== 管理员：代理列表 + 流水 =====
 app.get("/admin/agents", checkAdmin, async (req, res) => {
   try {
@@ -1054,12 +1097,79 @@ app.get("/admin/agents", checkAdmin, async (req, res) => {
         totalTurnover += Number(t.amount || 0);
       });
 
-      list.push({
-        agent_code: a.agent_code,
-        agent_name: a.agent_name,
-        player_count: players ? players.length : 0,
-        total_turnover: totalTurnover
-      });
+      let totalTopup = 0;
+let validPlayers = 0;
+let totalPlayerLoss = 0;
+
+for(const p of players || []){
+
+const playerTopup =
+Number(p.total_topup || 0);
+
+const playerBalance =
+Number(p.balance || 0);
+
+const playerWithdraw =
+Number(p.total_withdraw || 0);
+
+const playerLoss =
+Math.max(
+playerTopup - playerBalance - playerWithdraw,
+0
+);
+
+totalTopup += playerTopup;
+totalPlayerLoss += playerLoss;
+
+const playerBetCount =
+(turnover || [])
+.filter(t => t.user_id === p.user_id)
+.length;
+
+if(
+playerTopup >= 1000 &&
+playerBetCount >= 5
+){
+
+validPlayers++;
+
+}
+
+}
+
+const levelData =
+getAgentLevel(
+validPlayers,
+totalTopup
+);
+
+const commission =
+Math.floor(
+totalPlayerLoss *
+levelData.rate /
+100
+);
+
+list.push({
+agent_code: a.agent_code,
+agent_name: a.agent_name,
+
+player_count: players ? players.length : 0,
+
+valid_players: validPlayers,
+
+total_turnover: totalTurnover,
+
+total_topup: totalTopup,
+
+player_loss: totalPlayerLoss,
+
+level: levelData.level,
+
+commission_rate: levelData.rate,
+
+commission: commission
+});
     }
 
     res.json(list);

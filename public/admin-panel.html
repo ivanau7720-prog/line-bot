@@ -45,7 +45,49 @@ button:hover{
 .blinkAlert{
   animation: blinkAlert 1s infinite;
 }
+.commissionGlow{
+  animation: commissionPulse 1.2s infinite;
+}
+.commissionNumber{
 
+display:inline-block;
+
+animation:
+moneyFloat
+2s
+infinite;
+
+}
+
+@keyframes moneyFloat{
+
+0%{
+transform:
+translateY(0);
+}
+
+50%{
+transform:
+translateY(-2px);
+}
+
+100%{
+transform:
+translateY(0);
+}
+
+}
+@keyframes commissionPulse{
+  0%{
+    transform:scale(1);
+  }
+  50%{
+    transform:scale(1.03);
+  }
+  100%{
+    transform:scale(1);
+  }
+}
 @keyframes blinkAlert{
   0%{
     box-shadow:0 0 5px red;
@@ -545,8 +587,27 @@ loseLabel:"输:",
 roundLabel:"第",
 roundUnit:"局",
 agentEmpty:"暂无代理资料",
+
 playerCount:"👥 玩家数：",
+
 totalTurnover:"💧 总流水：",
+
+validPlayers:"✅ 有效会员：",
+
+teamTopup:"💰 团队充值：",
+
+playerLoss:"📉 玩家净输：",
+
+agentLevel:"🏆 代理等级：",
+
+commissionRate:"💎 佣金比例：",
+
+commission:"💵 预计佣金：",
+nextLevel:"🚀 距离下一级：",
+maxLevel:"👑 已是最高等级",
+needValid:"有效会员",
+needTopup:"团队充值",
+remaining:"还差",
 profitToday:"今日盈利：",
 profitTotal:"总盈利：",
 rechargeAmount:"💰 充值金额：",
@@ -650,8 +711,27 @@ loseLabel:"แพ้:",
 roundLabel:"รอบที่ ",
 roundUnit:"",
 agentEmpty:"ยังไม่มีข้อมูลเอเย่นต์",
+
 playerCount:"👥 จำนวนผู้เล่น：",
+
 totalTurnover:"💧 ยอดเทิร์นโอเวอร์：",
+
+validPlayers:"✅ สมาชิกที่มีผล：",
+
+teamTopup:"💰 ยอดเติมทีม：",
+
+playerLoss:"📉 ยอดเสียสุทธิ：",
+
+agentLevel:"🏆 ระดับเอเย่นต์：",
+
+commissionRate:"💎 อัตราค่าคอม：",
+
+commission:"💵 ค่าคอมโดยประมาณ：",
+nextLevel:"🚀 เหลืออีกถึงระดับถัดไป：",
+maxLevel:"👑 ระดับสูงสุดแล้ว",
+needValid:"สมาชิกที่มีผล",
+needTopup:"ยอดเติมทีม",
+remaining:"เหลืออีก",
 profitToday:"กำไรวันนี้：",
 profitTotal:"กำไรรวม：",
 rechargeAmount:"💰 จำนวนเติมเงิน：",
@@ -857,39 +937,497 @@ async function createAgent(){
   body: JSON.stringify({agentCode, agentName})
 });
 
-  alert("代理已新增");
-  loadAgents();
+alert(
+localStorage.getItem("adminLang")==="th"
+?
+"เพิ่มเอเย่นต์เรียบร้อยแล้ว"
+:
+"代理已新增"
+);
+
+loadAgents();
+
+}
+function getAgentLevelStyle(level){
+
+if(level==="DIAMOND"){
+
+return `
+color:#66e6ff;
+
+text-shadow:
+
+0 0 10px #66e6ff,
+
+0 0 25px white,
+
+0 0 50px #00ddff;
+
+`;
+
 }
 
+if(level==="GOLD"){
+
+return `
+color:#ffd700;
+
+text-shadow:
+
+0 0 8px gold,
+
+0 0 20px gold,
+
+0 0 40px orange;
+
+`;
+
+}
+
+if(level==="SILVER"){
+
+return `
+color:#ffffff;
+
+text-shadow:
+
+0 0 10px white,
+
+0 0 22px #cccccc;
+
+`;
+
+}
+
+return `
+
+color:#cd7f32;
+
+text-shadow:
+
+0 0 8px #cd7f32,
+
+0 0 20px #ffcc99;
+
+`;
+
+}
+
+
+
+function renderAgentLevel(level){
+
+if(level==="DIAMOND")
+return "◆ DIAMOND ELITE";
+
+if(level==="GOLD")
+return "✪ GOLD AGENT";
+
+if(level==="SILVER")
+return "✦ SILVER AGENT";
+
+return "◈ BRONZE AGENT";
+
+}
 async function loadAgents(){
-  const lang = localStorage.getItem("adminLang") || "zh";
-const t = LANG[lang];
-  const res = await fetch("/admin/agents",{
-  headers: adminGetHeaders()
-});
-  const data = await res.json();
 
-  let html = "";
+const lang =
+localStorage.getItem(
+"adminLang"
+)
+|| "zh";
 
-  if(data.length === 0){
-    html = t.agentEmpty;
-  }
+const t =
+LANG[lang];
 
-  data.forEach(a=>{
-    html += `
-      <div style="padding:8px;border-bottom:1px solid rgba(255,255,255,0.15)">
-        🤝 ${a.agent_code} ｜ ${a.agent_name}
-        <br>
-        ${t.playerCount}${a.player_count}
-<br>
-${t.totalTurnover}${a.total_turnover}
-      </div>
-    `;
-  });
-
-  document.getElementById("agents").innerHTML = html;
+const res =
+await fetch(
+"/admin/agents",
+{
+headers:
+adminGetHeaders()
 }
-  
+);
+
+const data =
+await res.json();
+
+let html="";
+
+if(
+data.length===0
+){
+
+html=
+t.agentEmpty;
+
+}
+
+data.sort((a,b)=>{
+return Number(b.commission || 0) - Number(a.commission || 0);
+});
+
+data.forEach((a,index)=>{
+const nextTarget =
+getNextAgentTarget(
+a.level
+);
+
+let progressHtml = "";
+let validPercent = 0;
+
+let topupPercent = 0;
+if(nextTarget){
+
+const needValid =
+Math.max(
+nextTarget.valid - Number(a.valid_players || 0),
+0
+);
+
+const needTopup =
+Math.max(
+nextTarget.topup - Number(a.total_topup || 0),
+0
+);
+validPercent =
+Math.min(
+Math.floor(
+Number(a.valid_players || 0) / nextTarget.valid * 100
+),
+100
+);
+
+topupPercent =
+Math.min(
+Math.floor(
+Number(a.total_topup || 0) / nextTarget.topup * 100
+),
+100
+);
+progressHtml = `
+
+<div style="
+margin-top:10px;
+padding:10px;
+border-radius:12px;
+background:rgba(255,255,255,.06);
+border:1px solid rgba(255,255,255,.12);
+font-size:13px;
+">
+
+<div style="
+color:#66e6ff;
+font-weight:bold;
+font-size:15px;
+margin-bottom:10px;
+text-shadow:0 0 10px #66e6ff;
+">
+${t.nextLevel}${nextTarget.next}
+</div>
+
+<div>
+${t.needValid}：
+${a.valid_players || 0}
+/${nextTarget.valid}
+（${t.remaining} ${needValid}）
+</div>
+
+<div style="
+height:10px;
+background:rgba(255,255,255,.15);
+border-radius:20px;
+overflow:hidden;
+margin:6px 0 10px;
+">
+<div style="
+height:100%;
+width:${validPercent}%;
+background:linear-gradient(90deg,#00ff99,#66e6ff);
+box-shadow:0 0 12px #00ffcc;
+"></div>
+</div>
+
+<div style="
+display:flex;
+justify-content:space-between;
+color:#00ffcc;
+font-size:12px;
+margin-bottom:8px;
+">
+<span>${t.needValid}</span>
+<span>${validPercent}%</span>
+</div>
+
+<div>
+${t.needTopup}：
+฿${Number(a.total_topup || 0).toLocaleString()}
+/฿${Number(nextTarget.topup).toLocaleString()}
+（${t.remaining} ฿${Number(needTopup).toLocaleString()}）
+</div>
+
+<div style="
+height:10px;
+background:rgba(255,255,255,.15);
+border-radius:20px;
+overflow:hidden;
+margin:6px 0 10px;
+">
+<div style="
+height:100%;
+width:${topupPercent}%;
+background:linear-gradient(90deg,#ffd700,#ff9900);
+box-shadow:0 0 12px gold;
+"></div>
+</div>
+
+<div style="
+display:flex;
+justify-content:space-between;
+color:gold;
+font-size:12px;
+">
+<span>${t.needTopup}</span>
+<span>${topupPercent}%</span>
+</div>
+
+</div>
+
+`;
+
+}else{
+
+progressHtml = `
+
+<div style="
+margin-top:10px;
+padding:10px;
+border-radius:12px;
+background:rgba(0,255,150,.08);
+border:1px solid rgba(0,255,150,.35);
+color:#00ff99;
+font-weight:bold;
+">
+${t.maxLevel}
+</div>
+
+`;
+
+}
+html += `
+
+<div style="
+
+padding:14px;
+
+margin-bottom:12px;
+
+background:
+rgba(0,0,0,.35);
+
+border:
+
+1px solid
+rgba(
+255,
+215,
+0,
+.35
+);
+
+border-radius:18px;
+
+">
+
+<div style="
+
+color:gold;
+
+font-size:18px;
+
+font-weight:bold;
+
+margin-bottom:8px;
+
+">
+
+${index===0 && Number(a.commission || 0)>0 ? "👑 TOP 1" : "🤝"}
+
+${a.agent_code}
+
+｜
+
+${a.agent_name}
+
+</div>
+
+<div style="
+
+font-size:18px;
+
+font-weight:bold;
+
+letter-spacing:1px;
+
+${getAgentLevelStyle(
+a.level
+)}
+
+">
+
+${t.agentLevel}
+
+${renderAgentLevel(
+a.level
+)}
+
+</div>
+
+<div>
+${t.playerCount}
+${a.player_count}
+</div>
+
+<div>
+${t.validPlayers}
+${a.valid_players}
+</div>
+
+<div>
+${t.totalTurnover}
+
+${Number(
+a.total_turnover
+||0
+).toLocaleString()}
+
+</div>
+
+<div>
+${t.teamTopup}
+
+${Number(
+a.total_topup
+||0
+).toLocaleString()}
+
+</div>
+
+<div>
+${t.playerLoss}
+
+${Number(
+a.player_loss
+||0
+).toLocaleString()}
+
+</div>
+
+<div>
+
+${t.commissionRate}
+
+${a.commission_rate}%
+
+</div>
+
+<div class="${Number(a.commission || 0) > 0 ? 'commissionGlow' : ''}" style="
+
+margin-top:12px;
+
+padding:12px;
+
+border-radius:16px;
+
+background:
+linear-gradient(
+90deg,
+rgba(0,255,120,.08),
+rgba(0,255,255,.08)
+);
+
+border:
+1px solid rgba(0,255,150,.35);
+
+font-size:22px;
+
+font-weight:900;
+
+color:#00ff99;
+
+text-shadow:
+0 0 12px #00ff99;
+
+box-shadow:
+0 0 18px rgba(0,255,150,.25);
+
+">
+
+${t.commission}
+
+<span class="
+${Number(a.commission||0)>0
+?
+'commissionNumber'
+:
+''
+}
+">
+
+฿
+
+${Number(
+a.commission
+||0
+).toLocaleString()}
+
+</span>
+
+</div>
+${progressHtml}
+</div>
+
+`;
+
+});
+
+document
+.getElementById(
+"agents"
+)
+.innerHTML=
+html;
+
+}
+function getNextAgentTarget(level){
+
+if(level==="DIAMOND"){
+return null;
+}
+
+if(level==="GOLD"){
+return {
+next:"DIAMOND ELITE",
+valid:400,
+topup:10000000
+};
+}
+
+if(level==="SILVER"){
+return {
+next:"GOLD AGENT",
+valid:151,
+topup:2000001
+};
+}
+
+return {
+next:"SILVER AGENT",
+valid:51,
+topup:500001
+};
+
+}  
 async function loadPlayers(){
   const lang = localStorage.getItem("adminLang") || "zh";
 const t = LANG[lang];

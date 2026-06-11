@@ -1227,6 +1227,49 @@ success:false
 }
 
 });
+
+// ===== 管理员：代理佣金历史 =====
+app.get("/admin/agent-commission-history/:agentCode", checkAdmin, async (req, res) => {
+
+try{
+
+const {
+agentCode
+}
+=
+req.params;
+
+const {
+data
+}
+=
+await supabase
+.from("transactions")
+.select("*")
+.eq("user_id", agentCode)
+.eq("type", "agent_commission_settled")
+.order("created_at", {
+ascending:false
+})
+.limit(20);
+
+res.json({
+success:true,
+records:data || []
+});
+
+}catch(err){
+
+console.log(err);
+
+res.json({
+success:false,
+records:[]
+});
+
+}
+
+});
 // ===== 管理员：代理详情 =====
 app.get("/admin/agent-detail/:agentCode", checkAdmin, async (req, res) => {
   try {

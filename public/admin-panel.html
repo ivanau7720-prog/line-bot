@@ -2112,6 +2112,40 @@ a.commission
 </span>
 
 </div>
+
+${
+Number(a.commission || 0) > 0
+?
+`
+<button onclick="settleAgentCommission('${a.agent_code}', ${Number(a.commission || 0)})" style="
+margin-top:10px;
+padding:8px 14px;
+border-radius:999px;
+background:
+linear-gradient(
+90deg,
+#00ff99,
+#00cc66
+);
+color:black;
+font-size:12px;
+font-weight:900;
+box-shadow:
+0 0 14px rgba(0,255,150,.45);
+">
+💵 ${
+lang==="th"
+?
+"จ่ายค่าคอม"
+:
+"结算佣金"
+}
+</button>
+`
+:
+""
+}
+
 ${
 index===0
 &&
@@ -3858,7 +3892,63 @@ url
 });
 
 }
+async function settleAgentCommission(agentCode, commission){
 
+const lang =
+localStorage.getItem("adminLang")
+|| "zh";
+
+if(
+!confirm(
+lang==="th"
+?
+"ยืนยันจ่ายค่าคอมให้เอเย่นต์ " + agentCode + " จำนวน ฿" + Number(commission).toLocaleString() + " ?"
+:
+"确定结算代理 " + agentCode + " 佣金 ฿" + Number(commission).toLocaleString() + " 吗？"
+)
+){
+return;
+}
+
+const res =
+await fetch("/admin/settle-agent-commission",{
+method:"POST",
+headers:adminHeaders(),
+body:JSON.stringify({
+agentCode,
+commission
+})
+});
+
+const data =
+await res.json();
+
+alert(
+data.success
+?
+(
+lang==="th"
+?
+"จ่ายค่าคอมเรียบร้อยแล้ว"
+:
+"佣金已结算"
+)
+:
+(
+data.msg ||
+(
+lang==="th"
+?
+"จ่ายค่าคอมไม่สำเร็จ"
+:
+"结算失败"
+)
+)
+);
+
+loadAgents();
+
+}
 </script>
 
 </body>

@@ -4029,136 +4029,7 @@ modal.style.display =
 }
 
 function copyAgentLink(agentCode){
-async function showCommissionHistory(agentCode){
 
-const lang =
-localStorage.getItem("adminLang")
-|| "zh";
-
-const modal =
-document.getElementById("commissionModal");
-
-const title =
-document.getElementById("commissionModalTitle");
-
-const body =
-document.getElementById("commissionModalBody");
-
-title.innerText =
-lang==="th"
-?
-"📜 ประวัติค่าคอม"
-:
-"📜 佣金记录";
-
-body.innerHTML =
-lang==="th"
-?
-"กำลังโหลด..."
-:
-"加载中...";
-
-modal.style.display =
-"flex";
-
-const res =
-await fetch(
-
-"/admin/agent-commission-history/"
-+
-
-encodeURIComponent(
-agentCode
-),
-
-{
-headers:
-adminGetHeaders()
-}
-
-);
-
-const data =
-await res.json();
-
-if(
-!data.success
-||
-!data.records
-||
-data.records.length===0
-){
-
-body.innerHTML =
-lang==="th"
-?
-"ยังไม่มีประวัติค่าคอม"
-:
-"暂无佣金记录";
-
-return;
-
-}
-
-let html="";
-
-data.records.forEach(r=>{
-
-html+=`
-
-<div style="
-padding:12px;
-
-margin-bottom:10px;
-
-border-radius:14px;
-
-background:
-rgba(255,255,255,.05);
-
-border:
-1px solid rgba(255,215,0,.25);
-
-line-height:1.8;
-">
-
-📅 ${
-r.created_at || "-"
-}
-
-<br>
-
-💰
-
-฿${Number(
-r.amount || 0
-).toLocaleString()}
-
-<br>
-
-📝
-
-${r.note || "-"}
-
-</div>
-
-`;
-
-});
-
-body.innerHTML =
-html;
-
-}
-
-function closeCommissionHistory(){
-
-document.getElementById(
-"commissionModal"
-).style.display =
-"none";
-
-}
 const lang =
 localStorage.getItem("adminLang")
 || "zh";
@@ -4195,6 +4066,114 @@ url
 );
 
 });
+
+}
+
+async function showCommissionHistory(agentCode){
+
+const lang =
+localStorage.getItem(
+"adminLang"
+)
+||
+"zh";
+
+document
+.getElementById(
+"commissionModal"
+)
+.style.display =
+"flex";
+
+document
+.getElementById(
+"commissionModalBody"
+)
+.innerHTML =
+lang==="th"
+?
+"กำลังโหลด..."
+:
+"加载中...";
+
+const res =
+await fetch(
+"/admin/commission-history/"
++
+encodeURIComponent(agentCode),
+{
+headers:
+adminGetHeaders()
+}
+);
+
+const data =
+await res.json();
+
+if(
+!data.success
+||
+!data.records
+||
+data.records.length===0
+){
+
+document
+.getElementById(
+"commissionModalBody"
+)
+.innerHTML =
+lang==="th"
+?
+"ยังไม่มีประวัติ"
+:
+"暂无佣金记录";
+
+return;
+
+}
+
+let html="";
+
+data.records.forEach(r=>{
+
+html+=`
+
+<div style="
+padding:12px;
+margin-bottom:10px;
+border-radius:14px;
+background:rgba(255,255,255,.04);
+border:1px solid rgba(255,215,0,.2);
+">
+
+💵 ฿${Number(r.amount || 0).toLocaleString()}
+
+<br><br>
+
+📅 ${r.created_at || "-"}
+
+</div>
+
+`;
+
+});
+
+document
+.getElementById(
+"commissionModalBody"
+)
+.innerHTML =
+html;
+
+}
+
+function closeCommissionHistory(){
+
+document.getElementById(
+"commissionModal"
+).style.display =
+"none";
 
 }
 async function settleAgentCommission(agentCode, commission){

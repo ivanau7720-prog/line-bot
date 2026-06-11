@@ -3725,6 +3725,48 @@ modal.style.display =
 "none";
 
 }
+
+function copyAgentLink(agentCode){
+
+const lang =
+localStorage.getItem("adminLang")
+|| "zh";
+
+const url =
+location.origin
++
+"/register.html?agent="
++
+encodeURIComponent(agentCode);
+
+navigator.clipboard
+.writeText(url)
+.then(()=>{
+
+alert(
+lang==="th"
+?
+"คัดลอกลิงก์สมัครสำเร็จ"
+:
+"注册链接已复制"
+);
+
+})
+.catch(()=>{
+
+prompt(
+lang==="th"
+?
+"คัดลอกลิงก์นี้"
+:
+"复制这个链接",
+url
+);
+
+});
+
+}
+
 </script>
 
 </body>

@@ -522,7 +522,7 @@ onclick="createAgent()">
 </h3>
 <input
 id="agentSearchInput"
-placeholder="搜索代理编号 / 名字"
+placeholder="搜索代理编号 / 名字 / ค้นหารหัสเอเย่นต์ / ชื่อ"
 oninput="loadAgents()"
 style="
 width:100%;
@@ -545,10 +545,10 @@ background:#111;
 color:gold;
 box-sizing:border-box;
 ">
-<option value="commission">按佣金排序</option>
-<option value="total_topup">按团队充值排序</option>
-<option value="valid_players">按有效会员排序</option>
-<option value="total_turnover">按总流水排序</option>
+<option value="commission">佣金 / ค่าคอม</option>
+<option value="total_topup">团队充值 / ยอดเติมทีม</option>
+<option value="valid_players">有效会员 / สมาชิกที่มีผล</option>
+<option value="total_turnover">总流水 / เทิร์นโอเวอร์</option>
 </select>
   
 <div id="agents">
@@ -701,7 +701,7 @@ padding:6px 10px;
 </div>
 
 <div id="playerModalBody">
-加载中...
+Loading...
 </div>
 
 </div>
@@ -1099,7 +1099,7 @@ localStorage.setItem(
 "adminLang",
 lang
 );
-  
+loadAgents(); 
 }
 
 window.onload=()=>{
@@ -3336,12 +3336,16 @@ return;
 box.style.display =
 "block";
 
-box.innerHTML =
-"加载中...";
-
 const lang =
 localStorage.getItem("adminLang")
 || "zh";
+
+box.innerHTML =
+lang==="th"
+?
+"กำลังโหลด..."
+:
+"加载中...";
 
 const res =
 await fetch(

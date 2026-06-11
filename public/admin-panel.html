@@ -656,6 +656,57 @@ onclick="clearTxFilter()">
 
   <div id="tx"></div>
 </div>
+<div id="playerModal" style="
+display:none;
+position:fixed;
+inset:0;
+background:rgba(0,0,0,.75);
+z-index:9999;
+align-items:center;
+justify-content:center;
+padding:20px;
+">
+
+<div style="
+width:100%;
+max-width:420px;
+background:linear-gradient(145deg,#111,#000);
+border:1px solid gold;
+border-radius:20px;
+padding:18px;
+box-shadow:0 0 30px rgba(255,215,0,.5);
+color:white;
+">
+
+<div style="
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:12px;
+">
+
+<h3 id="playerModalTitle" style="margin:0;color:gold;">
+👤 玩家详情
+</h3>
+
+<button onclick="closePlayerDetail()" style="
+background:red;
+color:white;
+border-radius:999px;
+padding:6px 10px;
+">
+✕
+</button>
+
+</div>
+
+<div id="playerModalBody">
+加载中...
+</div>
+
+</div>
+
+</div>
 
 <script>
 const LANG={
@@ -3328,25 +3379,113 @@ let html = "";
 
 data.players.forEach(p=>{
 
+const vip =
+Number(p.vip || 10);
+
+const vipColor =
+vip <= 3
+?
+"linear-gradient(90deg,#ffd700,#ff9900)"
+:
+vip <= 6
+?
+"linear-gradient(90deg,#66e6ff,#0066ff)"
+:
+"linear-gradient(90deg,#999,#444)";
+
+const registerDate =
+p.register_date
+?
+new Date(p.register_date).toLocaleString()
+:
+"-";
+
+const lastLogin =
+p.last_login
+?
+new Date(p.last_login).toLocaleString()
+:
+(
+lang==="th"
+?
+"ยังไม่มีข้อมูล"
+:
+"暂无记录"
+);
+
 html += `
 
 <div style="
-padding:10px;
-margin-bottom:8px;
-border-radius:10px;
-background:rgba(0,0,0,.35);
-border:1px solid rgba(255,215,0,.18);
+padding:12px;
+margin-bottom:10px;
+border-radius:14px;
+background:
+linear-gradient(
+145deg,
+rgba(0,0,0,.55),
+rgba(255,255,255,.04)
+);
+border:1px solid rgba(255,215,0,.22);
 font-size:13px;
-line-height:1.7;
+line-height:1.8;
+box-shadow:0 0 12px rgba(255,215,0,.12);
 ">
 
-👤 ${p.username}
+<div style="
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:8px;
+">
 
-<br>
+<div style="
+font-size:16px;
+font-weight:bold;
+color:gold;
+text-shadow:0 0 8px gold;
+">
+👤 ${p.username}
+</div>
+
+<div style="
+padding:4px 10px;
+border-radius:999px;
+background:${vipColor};
+color:${vip <= 6 ? "black" : "white"};
+font-size:12px;
+font-weight:900;
+box-shadow:0 0 12px rgba(255,215,0,.35);
+">
+👑 VIP${vip}
+</div>
+
+</div>
 
 🆔 ${p.user_id}
 
 <br>
+
+📅 ${
+lang==="th"
+?
+"วันที่สมัคร："
+:
+"注册日期："
+}
+${registerDate}
+
+<br>
+
+🟢 ${
+lang==="th"
+?
+"เข้าสู่ระบบล่าสุด："
+:
+"最近登录："
+}
+${lastLogin}
+
+<br><br>
 
 💰 ${
 lang==="th"
@@ -3373,7 +3512,7 @@ lang==="th"
 ✅ ${
 lang==="th"
 ?
-"ชนะ："
+"ชนะรวม："
 :
 "总赢："
 }
@@ -3384,7 +3523,7 @@ lang==="th"
 ❌ ${
 lang==="th"
 ?
-"แพ้："
+"แพ้รวม："
 :
 "总输："
 }
@@ -3397,9 +3536,34 @@ lang==="th"
 ?
 "ยอดคงเหลือ："
 :
-"余额："
+"当前余额："
 }
 ฿${Number(p.balance || 0).toLocaleString()}
+
+<br><br>
+
+<button onclick="openPlayerDetail('${p.user_id}')" style="
+padding:7px 12px;
+border-radius:999px;
+background:
+linear-gradient(
+90deg,
+#ffd700,
+#ff9900
+);
+color:black;
+font-size:12px;
+font-weight:bold;
+box-shadow:0 0 12px rgba(255,215,0,.35);
+">
+🔍 ${
+lang==="th"
+?
+"ดูข้อมูลผู้เล่น"
+:
+"查看玩家"
+}
+</button>
 
 </div>
 
@@ -3410,7 +3574,157 @@ lang==="th"
 box.innerHTML =
 html;
 
-}  
+}
+
+async function openPlayerDetail(userId){
+
+const lang =
+localStorage.getItem("adminLang")
+|| "zh";
+
+const modal =
+document.getElementById("playerModal");
+
+const title =
+document.getElementById("playerModalTitle");
+
+const body =
+document.getElementById("playerModalBody");
+
+title.innerText =
+lang==="th"
+?
+"👤 รายละเอียดผู้เล่น"
+:
+"👤 玩家详情";
+
+body.innerHTML =
+lang==="th"
+?
+"กำลังโหลด..."
+:
+"加载中...";
+
+modal.style.display =
+"flex";
+
+const res =
+await fetch(
+"/admin/player-detail/" + encodeURIComponent(userId),
+{
+headers:
+adminGetHeaders()
+}
+);
+
+const p =
+await res.json();
+
+if(!p.success){
+
+body.innerHTML =
+lang==="th"
+?
+"ไม่พบข้อมูลผู้เล่น"
+:
+"找不到玩家资料";
+
+return;
+
+}
+
+body.innerHTML = `
+
+<div style="
+padding:12px;
+border-radius:14px;
+background:rgba(255,255,255,.05);
+border:1px solid rgba(255,215,0,.25);
+line-height:1.9;
+font-size:14px;
+">
+
+👤 ${p.username || "-"}
+
+<br>
+
+🆔 ${p.user_id || "-"}
+
+<br>
+
+👑 VIP${p.vip || 10}
+
+<br>
+
+🤝 ${
+lang==="th" ? "เอเย่นต์：" : "所属代理："
+}
+${p.agent_code || "-"}
+
+<br>
+
+💳 ${
+lang==="th" ? "ยอดคงเหลือ：" : "当前余额："
+}
+฿${Number(p.balance || 0).toLocaleString()}
+
+<br>
+
+💰 ${
+lang==="th" ? "ยอดเติมรวม：" : "累计充值："
+}
+฿${Number(p.total_topup || 0).toLocaleString()}
+
+<br>
+
+🏧 ${
+lang==="th" ? "ยอดถอนรวม：" : "累计提款："
+}
+฿${Number(p.total_withdraw || 0).toLocaleString()}
+
+<br>
+
+✅ ${
+lang==="th" ? "ชนะรวม：" : "总赢："
+}
+฿${Number(p.total_win || 0).toLocaleString()}
+
+<br>
+
+❌ ${
+lang==="th" ? "แพ้รวม：" : "总输："
+}
+฿${Number(p.total_lose || 0).toLocaleString()}
+
+<br>
+
+📅 ${
+lang==="th" ? "วันที่สมัคร：" : "注册日期："
+}
+${p.register_date || "-"}
+
+<br>
+
+🟢 ${
+lang==="th" ? "เข้าสู่ระบบล่าสุด：" : "最近登录："
+}
+${p.last_login || "-"}
+
+</div>
+
+`;
+
+}
+
+function closePlayerDetail(){
+
+const modal =
+document.getElementById("playerModal");
+
+modal.style.display =
+"none";
+
+}
 </script>
 
 </body>

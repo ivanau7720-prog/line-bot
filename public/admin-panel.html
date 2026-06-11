@@ -707,7 +707,57 @@ Loading...
 </div>
 
 </div>
+<div id="commissionModal" style="
+display:none;
+position:fixed;
+inset:0;
+background:rgba(0,0,0,.75);
+z-index:9999;
+align-items:center;
+justify-content:center;
+padding:20px;
+">
 
+<div style="
+width:100%;
+max-width:460px;
+background:linear-gradient(145deg,#111,#000);
+border:1px solid gold;
+border-radius:20px;
+padding:18px;
+box-shadow:0 0 30px rgba(255,215,0,.5);
+color:white;
+">
+
+<div style="
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:12px;
+">
+
+<h3 id="commissionModalTitle" style="margin:0;color:gold;">
+📜 佣金记录
+</h3>
+
+<button onclick="closeCommissionHistory()" style="
+background:red;
+color:white;
+border-radius:999px;
+padding:6px 10px;
+">
+✕
+</button>
+
+</div>
+
+<div id="commissionModalBody">
+Loading...
+</div>
+
+</div>
+
+</div>
 <script>
 const LANG={
 
@@ -2221,7 +2271,57 @@ lang==="th"
 
 ""
 }
+<button
+onclick="
+showCommissionHistory(
+'${a.agent_code}'
+)
+"
 
+style="
+
+margin-top:8px;
+
+margin-left:6px;
+
+padding:8px 14px;
+
+border-radius:999px;
+
+background:
+
+linear-gradient(
+90deg,
+#2196f3,
+#00ccff
+);
+
+color:white;
+
+font-size:12px;
+
+font-weight:bold;
+
+box-shadow:
+0 0 12px
+rgba(
+0,
+180,
+255,
+.35
+);
+
+">
+
+📜 ${
+lang==="th"
+?
+"ประวัติค่าคอม"
+:
+"佣金记录"
+}
+
+</button>
 ${
 index===0
 &&
@@ -3929,7 +4029,136 @@ modal.style.display =
 }
 
 function copyAgentLink(agentCode){
+async function showCommissionHistory(agentCode){
 
+const lang =
+localStorage.getItem("adminLang")
+|| "zh";
+
+const modal =
+document.getElementById("commissionModal");
+
+const title =
+document.getElementById("commissionModalTitle");
+
+const body =
+document.getElementById("commissionModalBody");
+
+title.innerText =
+lang==="th"
+?
+"📜 ประวัติค่าคอม"
+:
+"📜 佣金记录";
+
+body.innerHTML =
+lang==="th"
+?
+"กำลังโหลด..."
+:
+"加载中...";
+
+modal.style.display =
+"flex";
+
+const res =
+await fetch(
+
+"/admin/agent-commission-history/"
++
+
+encodeURIComponent(
+agentCode
+),
+
+{
+headers:
+adminGetHeaders()
+}
+
+);
+
+const data =
+await res.json();
+
+if(
+!data.success
+||
+!data.records
+||
+data.records.length===0
+){
+
+body.innerHTML =
+lang==="th"
+?
+"ยังไม่มีประวัติค่าคอม"
+:
+"暂无佣金记录";
+
+return;
+
+}
+
+let html="";
+
+data.records.forEach(r=>{
+
+html+=`
+
+<div style="
+padding:12px;
+
+margin-bottom:10px;
+
+border-radius:14px;
+
+background:
+rgba(255,255,255,.05);
+
+border:
+1px solid rgba(255,215,0,.25);
+
+line-height:1.8;
+">
+
+📅 ${
+r.created_at || "-"
+}
+
+<br>
+
+💰
+
+฿${Number(
+r.amount || 0
+).toLocaleString()}
+
+<br>
+
+📝
+
+${r.note || "-"}
+
+</div>
+
+`;
+
+});
+
+body.innerHTML =
+html;
+
+}
+
+function closeCommissionHistory(){
+
+document.getElementById(
+"commissionModal"
+).style.display =
+"none";
+
+}
 const lang =
 localStorage.getItem("adminLang")
 || "zh";

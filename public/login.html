@@ -346,7 +346,20 @@ font-size:14px;
 </div>
 
 <script>
+const urlParams =
+new URLSearchParams(window.location.search);
 
+const inviteAgent =
+urlParams.get("agent");
+
+if(inviteAgent){
+
+localStorage.setItem(
+"inviteAgent",
+inviteAgent
+);
+
+}
 async function login(){
 
 const username =
@@ -458,6 +471,19 @@ function openRegisterBox(){
 document.getElementById(
 "registerBox"
 ).style.display="flex";
+
+const savedAgent =
+localStorage.getItem("inviteAgent");
+
+if(savedAgent){
+
+document.getElementById("regAgentCode").value =
+savedAgent;
+
+document.getElementById("regAgentCode").readOnly =
+true;
+
+}
 
 }
 

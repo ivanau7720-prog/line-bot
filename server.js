@@ -1538,7 +1538,23 @@ totalPlayerLoss *
 levelData.rate /
 100
 );
+const today =
+new Date()
+.toISOString()
+.slice(0,10);
 
+const { data: settledToday } =
+await supabase
+.from("transactions")
+.select("*")
+.eq("user_id", a.agent_code)
+.eq("type", "agent_commission_settled")
+.gte("created_at", today + "T00:00:00")
+.lte("created_at", today + "T23:59:59");
+
+const todaySettled =
+settledToday &&
+settledToday.length > 0;
 list.push({
 
 agent_code: a.agent_code,
@@ -1567,7 +1583,9 @@ level: levelData.level,
 
 commission_rate: levelData.rate,
 
-commission: commission
+commission: commission,
+
+today_settled: todaySettled
 });
     }
 

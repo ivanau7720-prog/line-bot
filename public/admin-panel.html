@@ -1627,6 +1627,41 @@ ${a.agent_code}
 ${a.agent_name}
 
 </div>
+
+<div style="
+margin:6px 0 10px;
+font-size:13px;
+font-weight:bold;
+color:${a.status==="inactive" ? "#ff4444" : "#00ff99"};
+">
+${
+a.status==="inactive"
+?
+(lang==="th" ? "⛔ ปิดใช้งาน" : "⛔ 已停用")
+:
+(lang==="th" ? "✅ เปิดใช้งาน" : "✅ 启用中")
+}
+</div>
+
+<button onclick="toggleAgentStatus('${a.agent_code}','${a.status || "active"}')" style="
+margin:0 0 10px;
+padding:7px 12px;
+border-radius:999px;
+background:${a.status==="inactive" ? "linear-gradient(90deg,#00ff99,#00cc66)" : "linear-gradient(90deg,#ff4444,#aa0000)"};
+color:white;
+font-size:12px;
+font-weight:bold;
+box-shadow:0 0 12px rgba(255,255,255,.25);
+">
+${
+a.status==="inactive"
+?
+(lang==="th" ? "✅ เปิดใช้งานเอเย่นต์" : "✅ 启用代理")
+:
+(lang==="th" ? "⛔ ปิดใช้งานเอเย่นต์" : "⛔ 停用代理")
+}
+</button>
+
 <button onclick="copyAgentLink('${a.agent_code}')" style="
 margin:6px 0 10px;
 padding:7px 12px;
@@ -3007,6 +3042,29 @@ loadWithdrawRequests();
 loadExchangeRequests();
 loadReviewBadges();
 loadAdminTimer();
+
+async function toggleAgentStatus(agentCode,currentStatus){
+
+const newStatus =
+currentStatus === "inactive"
+?
+"active"
+:
+"inactive";
+
+await fetch("/admin/update-agent-status",{
+method:"POST",
+headers:adminHeaders(),
+body:JSON.stringify({
+agentCode,
+status:newStatus
+})
+});
+
+loadAgents();
+
+}
+  
 </script>
 
 </body>

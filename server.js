@@ -1111,42 +1111,121 @@ app.post("/admin/update-agent-status", checkAdmin, async (req, res) => {
 });
 // ===== 管理员：代理佣金结算 =====
 app.post("/admin/settle-agent-commission", checkAdmin, async (req, res) => {
-  try {
 
-    const {
-      agentCode,
-      commission
-    } = req.body;
+try{
 
-    if (!agentCode || Number(commission || 0) <= 0) {
-      return res.json({
-        success:false,
-        msg:"资料错误"
-      });
-    }
+const {
+agentCode,
+commission
+}
+=
+req.body;
 
-    await supabase
-      .from("transactions")
-      .insert([{
-        user_id: agentCode,
-        amount: Number(commission),
-        type: "agent_commission_settled",
-        note: "Agent commission settled"
-      }]);
+if(
+!agentCode
+||
+Number(commission)<=0
+){
 
-    res.json({
-      success:true
-    });
+return res.json({
+success:false,
+msg:"资料错误"
+});
 
-  } catch (err) {
+}
 
-    console.error("settle-agent-commission error:", err);
+const today =
+new Date()
+.toISOString()
+.slice(
+0,
+10
+);
 
-    res.json({
-      success:false
-    });
+const {
+data:exist
+}
+=
+await supabase
+.from(
+"transactions"
+)
+.select("*")
+.eq(
+"user_id",
+agentCode
+)
+.eq(
+"type",
+"agent_commission_settled"
+)
+.gte(
+"created_at",
+today+"T00:00:00"
+)
+.lte(
+"created_at",
+today+"T23:59:59"
+);
 
-  }
+if(
+exist
+&&
+exist.length>0
+){
+
+return res.json({
+
+success:false,
+
+msg:"今天已经结算过这个代理"
+
+});
+
+}
+
+await supabase
+.from(
+"transactions"
+)
+.insert([{
+
+user_id:
+agentCode,
+
+amount:
+Number(
+commission
+),
+
+type:
+"agent_commission_settled",
+
+note:
+"Agent commission settled"
+
+}]);
+
+res.json({
+
+success:true
+
+});
+
+}
+
+catch(err){
+
+console.log(err);
+
+res.json({
+
+success:false
+
+});
+
+}
+
 });
 // ===== 管理员：代理详情 =====
 app.get("/admin/agent-detail/:agentCode", checkAdmin, async (req, res) => {

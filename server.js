@@ -1109,7 +1109,45 @@ app.post("/admin/update-agent-status", checkAdmin, async (req, res) => {
     });
   }
 });
+// ===== 管理员：代理佣金结算 =====
+app.post("/admin/settle-agent-commission", checkAdmin, async (req, res) => {
+  try {
 
+    const {
+      agentCode,
+      commission
+    } = req.body;
+
+    if (!agentCode || Number(commission || 0) <= 0) {
+      return res.json({
+        success:false,
+        msg:"资料错误"
+      });
+    }
+
+    await supabase
+      .from("transactions")
+      .insert([{
+        user_id: agentCode,
+        amount: Number(commission),
+        type: "agent_commission_settled",
+        note: "Agent commission settled"
+      }]);
+
+    res.json({
+      success:true
+    });
+
+  } catch (err) {
+
+    console.error("settle-agent-commission error:", err);
+
+    res.json({
+      success:false
+    });
+
+  }
+});
 // ===== 管理员：代理详情 =====
 app.get("/admin/agent-detail/:agentCode", checkAdmin, async (req, res) => {
   try {
@@ -1238,10 +1276,20 @@ app.get("/admin/player-detail/:userId", checkAdmin, async (req, res) => {
       String(t.created_at || "").slice(0,10) === today
     );
 
-    const todayWinLose =
-    todayTxs.reduce((sum, t) => {
-      return sum + Number(t.change || 0);
-    }, 0);
+   const todayWinLose =
+todayTxs.reduce((sum, t) => {
+
+  if(t.type === "win"){
+    return sum + Number(t.win_amount || 0) - Number(t.amount || 0);
+  }
+
+  if(t.type === "lose"){
+    return sum - Number(t.amount || 0);
+  }
+
+  return sum + Number(t.change || 0);
+
+}, 0);
 
     res.json({
       success:true,

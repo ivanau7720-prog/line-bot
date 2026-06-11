@@ -1109,6 +1109,59 @@ app.post("/admin/update-agent-status", checkAdmin, async (req, res) => {
     });
   }
 });
+
+// ===== 管理员：代理详情 =====
+app.get("/admin/agent-detail/:agentCode", checkAdmin, async (req, res) => {
+  try {
+
+    const { agentCode } = req.params;
+
+    const { data: players } = await supabase
+      .from("players")
+      .select("*")
+      .eq("agent_code", agentCode);
+
+    const { data: turnover } = await supabase
+      .from("turnover_records")
+      .select("*")
+      .eq("agent_code", agentCode);
+
+    const list = (players || []).map(p => {
+
+      const playerTurnover = (turnover || [])
+        .filter(t => t.user_id === p.user_id)
+        .reduce((sum, t) => {
+          return sum + Number(t.amount || 0);
+        }, 0);
+
+      return {
+        user_id: p.user_id,
+        username: p.username || p.name || "-",
+        balance: Number(p.balance || 0),
+        total_topup: Number(p.total_topup || 0),
+        total_win: Number(p.total_win || 0),
+        total_lose: Number(p.total_lose || 0),
+        turnover: playerTurnover
+      };
+
+    });
+
+    res.json({
+      success:true,
+      players:list
+    });
+
+  } catch (err) {
+
+    console.error("agent-detail error:", err);
+
+    res.json({
+      success:false,
+      players:[]
+    });
+
+  }
+});
 // ===== 管理员：代理列表 + 流水 =====
 app.get("/admin/agents", checkAdmin, async (req, res) => {
   try {

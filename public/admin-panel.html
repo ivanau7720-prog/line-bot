@@ -4098,15 +4098,20 @@ lang==="th"
 
 const res =
 await fetch(
-"/admin/commission-history/"
+
+"/admin/agent-commission-history/"
 +
-encodeURIComponent(agentCode),
+
+encodeURIComponent(
+agentCode
+),
+
 {
 headers:
 adminGetHeaders()
 }
-);
 
+);
 const data =
 await res.json();
 

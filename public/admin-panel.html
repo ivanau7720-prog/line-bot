@@ -2114,25 +2114,97 @@ a.commission
 </div>
 
 ${
-Number(a.commission || 0) > 0
+Number(a.commission || 0)>0
 ?
+
+a.today_settled
+
+?
+
 `
-<button id="settle_${a.agent_code}" onclick="settleAgentCommission('${a.agent_code}', ${Number(a.commission || 0)})" style="
+
+<div style="
 margin-top:10px;
+
 padding:8px 14px;
+
 border-radius:999px;
+
 background:
+rgba(0,255,150,.08);
+
+border:
+1px solid rgba(0,255,150,.35);
+
+color:#00ff99;
+
+font-size:12px;
+
+font-weight:bold;
+
+">
+
+✅ ${
+lang==="th"
+?
+"จ่ายค่าคอมแล้ววันนี้"
+:
+"今日已结算"
+}
+
+</div>
+
+`
+
+:
+
+`
+
+<button
+
+id="settle_${a.agent_code}"
+
+onclick="
+settleAgentCommission(
+'${a.agent_code}',
+${Number(a.commission||0)}
+)
+"
+
+style="
+
+margin-top:10px;
+
+padding:8px 14px;
+
+border-radius:999px;
+
+background:
+
 linear-gradient(
 90deg,
 #00ff99,
 #00cc66
 );
+
 color:black;
+
 font-size:12px;
+
 font-weight:900;
+
 box-shadow:
-0 0 14px rgba(0,255,150,.45);
+
+0 0 14px
+rgba(
+0,
+255,
+150,
+.45
+);
+
 ">
+
 💵 ${
 lang==="th"
 ?
@@ -2140,9 +2212,13 @@ lang==="th"
 :
 "结算佣金"
 }
+
 </button>
+
 `
+
 :
+
 ""
 }
 

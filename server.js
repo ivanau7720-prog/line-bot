@@ -1196,6 +1196,7 @@ playerTurnover
 });
 
 // ===== 管理员：玩家详情弹窗 =====
+// ===== 管理员：玩家详情弹窗 =====
 app.get("/admin/player-detail/:userId", checkAdmin, async (req, res) => {
   try {
 
@@ -1212,6 +1213,35 @@ app.get("/admin/player-detail/:userId", checkAdmin, async (req, res) => {
         success:false
       });
     }
+
+    const { data: txs } = await supabase
+      .from("transactions")
+      .select("*")
+      .eq("user_id", userId);
+
+    const transactions =
+    txs || [];
+
+    const totalTurnover =
+    transactions.reduce((sum, t) => {
+      return sum + Number(t.amount || 0);
+    }, 0);
+
+    const totalBets =
+    transactions.length;
+
+    const today =
+    new Date().toISOString().slice(0,10);
+
+    const todayTxs =
+    transactions.filter(t =>
+      String(t.created_at || "").slice(0,10) === today
+    );
+
+    const todayWinLose =
+    todayTxs.reduce((sum, t) => {
+      return sum + Number(t.change || 0);
+    }, 0);
 
     res.json({
       success:true,
@@ -1243,11 +1273,23 @@ app.get("/admin/player-detail/:userId", checkAdmin, async (req, res) => {
       total_lose:
       Number(player.total_lose || 0),
 
+      total_turnover:
+      Number(totalTurnover || 0),
+
+      total_bets:
+      Number(totalBets || 0),
+
+      today_winlose:
+      Number(todayWinLose || 0),
+
       register_date:
       player.created_at || "-",
 
       last_login:
-      player.last_login || "-"
+      player.last_login || "-",
+
+      status:
+      player.status || "active"
     });
 
   } catch (err) {
@@ -1257,7 +1299,6 @@ app.get("/admin/player-detail/:userId", checkAdmin, async (req, res) => {
     res.json({
       success:false
     });
-
   }
 });
 // ===== 管理员：代理列表 + 流水 =====

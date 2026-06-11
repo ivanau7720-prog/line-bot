@@ -92,8 +92,69 @@ button:hover{
     opacity:.8;
   }
 }
+.championTag{
+animation:
+championTagGlow
+2s
+infinite;
+}
+
+@keyframes championTagGlow{
+
+0%{
+transform:
+translateY(0);
+
+box-shadow:
+0 0 15px gold;
+}
+
+50%{
+transform:
+translateY(-3px);
+
+box-shadow:
+0 0 35px gold;
+}
+
+100%{
+transform:
+translateY(0);
+
+box-shadow:
+0 0 15px gold;
+}
+
+}
 .topAgentGlow{
+  position:relative;
+  overflow:hidden;
   animation: topAgentPulse 1.5s infinite;
+}
+
+.topAgentGlow::before{
+  content:"";
+  position:absolute;
+  inset:-2px;
+  border-radius:20px;
+  background:linear-gradient(
+    120deg,
+    transparent,
+    gold,
+    orange,
+    transparent
+  );
+  z-index:-1;
+  animation: borderMove 3s linear infinite;
+}
+
+@keyframes borderMove{
+  0%{
+    transform:translateX(-100%);
+  }
+  100%{
+    transform:translateX(100%);
+  }
 }
 
 @keyframes topAgentPulse{
@@ -1117,7 +1178,53 @@ const data =
 await res.json();
 
 let html="";
+html += `
 
+<div style="
+margin-bottom:14px;
+
+padding:14px;
+
+border-radius:18px;
+
+background:
+linear-gradient(
+90deg,
+rgba(255,215,0,.16),
+rgba(255,153,0,.08),
+rgba(0,0,0,.35)
+);
+
+border:
+1px solid rgba(255,215,0,.45);
+
+box-shadow:
+0 0 20px rgba(255,215,0,.22);
+
+text-align:center;
+
+">
+
+<div style="
+color:#ffe066;
+font-size:20px;
+font-weight:900;
+text-shadow:0 0 12px gold;
+">
+🏆 ${lang==="th" ? "อันดับเอเย่นต์ประจำเดือน" : "本月代理排行榜"}
+</div>
+
+<div style="
+margin-top:6px;
+color:rgba(255,255,255,.75);
+font-size:12px;
+">
+${lang==="th" ? "จัดอันดับตามค่าคอมมิชชั่นโดยประมาณ" : "根据预计佣金自动排名"}
+</div>
+
+</div>
+
+`;
 if(
 data.length===0
 ){
@@ -1292,6 +1399,8 @@ Number(a.commission || 0)>0
 
 padding:14px;
 
+position:relative;
+
 margin-bottom:12px;
 
 background:
@@ -1346,8 +1455,116 @@ index===2
 
 border-radius:18px;
 
+z-index:1;
+
 ">
 
+${
+Number(a.commission || 0)>0
+?
+`
+<div class="championTag" style="
+
+position:absolute;
+
+top:10px;
+
+right:10px;
+
+padding:6px 12px;
+
+border-radius:999px;
+
+background:
+
+${
+index===0
+?
+
+"linear-gradient(90deg,#ffd700,#ff9900)"
+
+:
+
+index===1
+?
+
+"linear-gradient(90deg,#eeeeee,#bbbbbb)"
+
+:
+
+index===2
+?
+
+"linear-gradient(90deg,#cd7f32,#a35c20)"
+
+:
+
+"rgba(0,0,0,.3)"
+
+};
+
+color:
+
+${
+index===0
+?
+
+"black"
+
+:
+
+"white"
+
+};
+
+font-size:11px;
+
+font-weight:900;
+
+box-shadow:
+
+${
+index===0
+?
+
+"0 0 20px gold"
+
+:
+
+index===1
+?
+
+"0 0 18px #ddd"
+
+:
+
+"0 0 18px #cd7f32"
+
+};
+
+">
+
+${
+index===0
+?
+(lang==="th" ? "👑 แชมป์" : "👑 冠军")
+:
+index===1
+?
+(lang==="th" ? "🥈 อันดับ 2" : "🥈 第二名")
+:
+index===2
+?
+(lang==="th" ? "🥉 อันดับ 3" : "🥉 第三名")
+:
+""
+}
+
+</div>
+`
+:
+""
+}
 <div style="
 
 color:
@@ -1444,7 +1661,7 @@ text-shadow:
 
 ">
 
-${t.monthlyChampion}
+👑 ${t.monthlyChampion} ✨
 
 </div>
 `
@@ -1492,7 +1709,30 @@ a.total_turnover
 ).toLocaleString()}
 
 </div>
+<div style="
+margin-top:8px;
+padding:8px 10px;
+border-radius:12px;
+background:rgba(0,255,150,.08);
+border:1px solid rgba(0,255,150,.25);
+color:#00ff99;
+font-size:13px;
+font-weight:bold;
+">
 
+📈 ${lang==="th" ? "เติบโต 7 วัน" : "最近7天增长"}
+
+<br>
+
+👥 ${lang==="th" ? "สมาชิกเพิ่ม：" : "会员增长："}
+${a.weekly_new_players || 0}
+
+｜
+
+💰 ${lang==="th" ? "เติมเงินเพิ่ม：" : "充值增长："}
+฿${Number(a.weekly_topup || 0).toLocaleString()}
+
+</div>
 <div>
 ${t.teamTopup}
 
@@ -1574,6 +1814,67 @@ a.commission
 </span>
 
 </div>
+${
+index===0
+&&
+Number(a.commission || 0)>0
+?
+`
+<div style="
+margin-top:12px;
+
+padding:10px;
+
+border-radius:14px;
+
+background:
+linear-gradient(
+90deg,
+rgba(255,215,0,.12),
+rgba(255,153,0,.08)
+);
+
+border:
+1px solid rgba(255,215,0,.35);
+
+color:#ffe066;
+
+font-size:13px;
+
+font-weight:bold;
+
+text-shadow:
+0 0 8px gold;
+
+">
+
+${lang==="th"
+?
+"🏆 สรุปแชมป์"
+:
+"🏆 冠军表现"}
+
+<br>
+
+${t.validPlayers}
+${a.valid_players || 0}
+
+｜
+
+${t.teamTopup}
+฿${Number(a.total_topup || 0).toLocaleString()}
+
+｜
+
+${t.commission}
+฿${Number(a.commission || 0).toLocaleString()}
+
+</div>
+`
+:
+""
+}
+
 ${progressHtml}
 </div>
 

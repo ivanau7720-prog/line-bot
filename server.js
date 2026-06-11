@@ -1194,6 +1194,72 @@ playerTurnover
 
   }
 });
+
+// ===== 管理员：玩家详情弹窗 =====
+app.get("/admin/player-detail/:userId", checkAdmin, async (req, res) => {
+  try {
+
+    const { userId } = req.params;
+
+    const { data: player } = await supabase
+      .from("players")
+      .select("*")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (!player) {
+      return res.json({
+        success:false
+      });
+    }
+
+    res.json({
+      success:true,
+
+      user_id:
+      player.user_id,
+
+      username:
+      player.username || player.name || "-",
+
+      agent_code:
+      player.agent_code || "-",
+
+      vip:
+      Number(player.vip_level || 10),
+
+      balance:
+      Number(player.balance || 0),
+
+      total_topup:
+      Number(player.total_topup || 0),
+
+      total_withdraw:
+      Number(player.total_withdraw || 0),
+
+      total_win:
+      Number(player.total_win || 0),
+
+      total_lose:
+      Number(player.total_lose || 0),
+
+      register_date:
+      player.created_at || "-",
+
+      last_login:
+      player.last_login || "-"
+    });
+
+  } catch (err) {
+
+    console.error("player-detail error:", err);
+
+    res.json({
+      success:false
+    });
+
+  }
+});
 // ===== 管理员：代理列表 + 流水 =====
 app.get("/admin/agents", checkAdmin, async (req, res) => {
   try {

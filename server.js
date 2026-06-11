@@ -92,6 +92,9 @@ ADD COLUMN IF NOT EXISTS password TEXT;
 ALTER TABLE players
 ADD COLUMN IF NOT EXISTS agent_code TEXT;
 
+ALTER TABLE agents
+ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'active';
+
 CREATE TABLE IF NOT EXISTS point_records (
 id BIGSERIAL PRIMARY KEY,
 user_id TEXT,
@@ -1014,11 +1017,12 @@ app.post("/admin/create-agent", checkAdmin, async (req, res) => {
     }
 
     await supabase.from("agents").insert([
-      {
-        agent_code: agentCode,
-        agent_name: agentName
-      }
-    ]);
+  {
+    agent_code: agentCode,
+    agent_name: agentName,
+    status: "active"
+  }
+]);
 
     res.json({ success:true });
 
@@ -1071,6 +1075,40 @@ rate:20
 };
 
 }
+
+// ===== 管理员：启用 / 停用代理 =====
+app.post("/admin/update-agent-status", checkAdmin, async (req, res) => {
+  try {
+    const { agentCode, status } = req.body;
+
+    if(
+      !agentCode ||
+      !["active","inactive"].includes(status)
+    ){
+      return res.json({
+        success:false,
+        msg:"资料错误"
+      });
+    }
+
+    await supabase
+      .from("agents")
+      .update({
+        status
+      })
+      .eq("agent_code", agentCode);
+
+    res.json({
+      success:true
+    });
+
+  } catch (err) {
+    console.error("update-agent-status error:", err);
+    res.json({
+      success:false
+    });
+  }
+});
 // ===== 管理员：代理列表 + 流水 =====
 app.get("/admin/agents", checkAdmin, async (req, res) => {
   try {
@@ -1187,6 +1225,8 @@ list.push({
 agent_code: a.agent_code,
 
 agent_name: a.agent_name,
+
+status: a.status || "active",
 
 player_count: players ? players.length : 0,
 
@@ -1477,14 +1517,39 @@ return res.json({success:false,msg:"ID已存在"});
 }
 
 const userId = "P" + Date.now();
+let finalAgent = null;
 
+if(agentCode){
+
+const { data: existAgent } =
+await supabase
+.from("agents")
+.select("agent_code,status")
+.eq(
+"agent_code",
+agentCode
+)
+.maybeSingle();
+
+if(
+existAgent
+&&
+existAgent.status === "active"
+){
+
+finalAgent =
+agentCode;
+
+}
+
+}
 await supabase.from("players").insert([{
   user_id:userId,
   username,
   password,
   name:username,
   balance:1000,
-  agent_code: agentCode || null
+  agent_code:finalAgent
 }]);
 
 res.json({success:true});

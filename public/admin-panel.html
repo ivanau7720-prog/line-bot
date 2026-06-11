@@ -520,7 +520,37 @@ onclick="createAgent()">
 <h3 id="agentTurnoverTitle">
 📊 代理流水
 </h3>
-
+<input
+id="agentSearchInput"
+placeholder="搜索代理编号 / 名字"
+oninput="loadAgents()"
+style="
+width:100%;
+padding:12px;
+margin:8px 0 12px;
+border-radius:12px;
+border:1px solid gold;
+background:#111;
+color:gold;
+box-sizing:border-box;
+"
+>
+<select id="agentSortSelect" onchange="loadAgents()" style="
+width:100%;
+padding:12px;
+margin:0 0 12px;
+border-radius:12px;
+border:1px solid gold;
+background:#111;
+color:gold;
+box-sizing:border-box;
+">
+<option value="commission">按佣金排序</option>
+<option value="total_topup">按团队充值排序</option>
+<option value="valid_players">按有效会员排序</option>
+<option value="total_turnover">按总流水排序</option>
+</select>
+  
 <div id="agents">
 暂无代理资料
 </div>
@@ -1234,11 +1264,80 @@ t.agentEmpty;
 
 }
 
-data.sort((a,b)=>{
-return Number(b.commission || 0) - Number(a.commission || 0);
-});
+const sortBy =
 
-data.forEach((a,index)=>{
+document.getElementById(
+"agentSortSelect"
+)
+
+?
+
+document.getElementById(
+"agentSortSelect"
+).value
+
+:
+
+"commission";
+
+data.sort((a,b)=>{
+
+return Number(
+b[sortBy]
+||0
+)
+
+-
+
+Number(
+a[sortBy]
+||0
+);
+
+});
+const searchText =
+
+document.getElementById(
+"agentSearchInput"
+)
+
+?
+
+document.getElementById(
+"agentSearchInput"
+)
+.value
+.trim()
+.toLowerCase()
+
+:
+
+"";
+
+const filteredData =
+
+data.filter(a=>{
+
+return (
+
+(a.agent_code || "")
+.toLowerCase()
+.includes(
+searchText
+)
+
+||
+
+(a.agent_name || "")
+.toLowerCase()
+.includes(
+searchText
+)
+
+);
+
+});
+filteredData.forEach((a,index)=>{
 const nextTarget =
 getNextAgentTarget(
 a.level
@@ -1662,18 +1761,61 @@ a.status==="inactive"
 }
 </button>
 
+${
+a.status==="active"
+?
+`
 <button onclick="copyAgentLink('${a.agent_code}')" style="
 margin:6px 0 10px;
 padding:7px 12px;
 border-radius:999px;
-background:linear-gradient(90deg,#00ff99,#00ccff);
+background:
+linear-gradient(
+90deg,
+#00ff99,
+#00ccff
+);
+
 color:black;
+
 font-size:12px;
+
 font-weight:bold;
-box-shadow:0 0 12px rgba(0,255,180,.45);
+
+box-shadow:
+0 0 12px rgba(0,255,180,.45);
+
 ">
-🔗 ${lang==="th" ? "คัดลอกลิงก์เอเย่นต์" : "复制代理注册链接"}
+
+🔗 ${
+lang==="th"
+?
+"คัดลอกลิงก์เอเย่นต์"
+:
+"复制代理注册链接"
+}
+
 </button>
+`
+:
+`
+<div style="
+margin:8px 0;
+color:#ff6666;
+font-size:12px;
+">
+
+⛔ ${
+lang==="th"
+?
+"เอเย่นต์ถูกปิดใช้งาน"
+:
+"代理已停用"
+}
+
+</div>
+`
+}
 
 ${
 index===0 && Number(a.commission || 0)>0

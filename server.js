@@ -1090,17 +1090,42 @@ app.get("/admin/agents", checkAdmin, async (req, res) => {
         .from("turnover_records")
         .select("*")
         .eq("agent_code", a.agent_code);
-
+      
+const sevenDaysAgo = new Date();
+sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
       let totalTurnover = 0;
 
       (turnover || []).forEach(t => {
         totalTurnover += Number(t.amount || 0);
       });
 
-      let totalTopup = 0;
+ let totalTopup = 0;
 let validPlayers = 0;
 let totalPlayerLoss = 0;
 
+let weeklyNewPlayers = 0;
+let weeklyTopup = 0;
+const playerIds =
+(players || []).map(p => p.user_id);
+
+let weeklyRecharge = [];
+
+if(playerIds.length > 0){
+
+  const { data } = await supabase
+    .from("transactions")
+    .select("user_id, amount, created_at")
+    .in("user_id", playerIds)
+    .eq("type", "recharge_approved")
+    .gte("created_at", sevenDaysAgo.toISOString());
+
+  weeklyRecharge = data || [];
+
+}
+
+weeklyRecharge.forEach(r=>{
+  weeklyTopup += Number(r.amount || 0);
+});
 for(const p of players || []){
 
 const playerTopup =
@@ -1120,6 +1145,13 @@ playerTopup - playerBalance - playerWithdraw,
 
 totalTopup += playerTopup;
 totalPlayerLoss += playerLoss;
+if(
+  p.created_at &&
+  new Date(p.created_at) >= sevenDaysAgo
+){
+  weeklyNewPlayers++;
+}
+
 
 const playerBetCount =
 (turnover || [])
@@ -1151,7 +1183,9 @@ levelData.rate /
 );
 
 list.push({
+
 agent_code: a.agent_code,
+
 agent_name: a.agent_name,
 
 player_count: players ? players.length : 0,
@@ -1161,6 +1195,12 @@ valid_players: validPlayers,
 total_turnover: totalTurnover,
 
 total_topup: totalTopup,
+
+weekly_new_players:
+weeklyNewPlayers,
+
+weekly_topup:
+weeklyTopup,
 
 player_loss: totalPlayerLoss,
 

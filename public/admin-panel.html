@@ -1816,7 +1816,64 @@ lang==="th"
 </div>
 `
 }
+<button onclick="toggleAgentDetail('${a.agent_code}')" style="
 
+margin:0 0 10px;
+
+padding:8px 12px;
+
+border:none;
+
+border-radius:999px;
+
+background:
+linear-gradient(
+90deg,
+#2196f3,
+#00ccff
+);
+
+color:white;
+
+font-size:12px;
+
+font-weight:bold;
+
+box-shadow:
+0 0 12px rgba(0,150,255,.35);
+
+">
+
+👥 ${
+lang==="th"
+?
+"ดูรายละเอียด"
+:
+"查看详情"
+}
+
+</button>
+
+<div id="detail_${a.agent_code}" style="
+display:none;
+
+margin-top:10px;
+
+padding:12px;
+
+border-radius:12px;
+
+background:
+rgba(255,255,255,.04);
+
+border:
+1px solid rgba(255,255,255,.12);
+
+">
+
+加载中…
+
+</div>
 ${
 index===0 && Number(a.commission || 0)>0
 ?
@@ -3206,7 +3263,154 @@ status:newStatus
 loadAgents();
 
 }
-  
+async function toggleAgentDetail(agentCode){
+
+const box =
+document.getElementById(
+"detail_" + agentCode
+);
+
+if(!box){
+return;
+}
+
+if(box.style.display === "block"){
+
+box.style.display =
+"none";
+
+return;
+
+}
+
+box.style.display =
+"block";
+
+box.innerHTML =
+"加载中...";
+
+const lang =
+localStorage.getItem("adminLang")
+|| "zh";
+
+const res =
+await fetch(
+"/admin/agent-detail/" + encodeURIComponent(agentCode),
+{
+headers:
+adminGetHeaders()
+}
+);
+
+const data =
+await res.json();
+
+if(
+!data.success
+||
+!data.players
+||
+data.players.length === 0
+){
+
+box.innerHTML =
+lang==="th"
+?
+"ยังไม่มีผู้เล่นในเอเย่นต์นี้"
+:
+"这个代理暂无旗下玩家";
+
+return;
+
+}
+
+let html = "";
+
+data.players.forEach(p=>{
+
+html += `
+
+<div style="
+padding:10px;
+margin-bottom:8px;
+border-radius:10px;
+background:rgba(0,0,0,.35);
+border:1px solid rgba(255,215,0,.18);
+font-size:13px;
+line-height:1.7;
+">
+
+👤 ${p.username}
+
+<br>
+
+🆔 ${p.user_id}
+
+<br>
+
+💰 ${
+lang==="th"
+?
+"ยอดเติมรวม："
+:
+"累计充值："
+}
+฿${Number(p.total_topup || 0).toLocaleString()}
+
+<br>
+
+💧 ${
+lang==="th"
+?
+"ยอดเทิร์นโอเวอร์："
+:
+"总流水："
+}
+฿${Number(p.turnover || 0).toLocaleString()}
+
+<br>
+
+✅ ${
+lang==="th"
+?
+"ชนะ："
+:
+"总赢："
+}
+฿${Number(p.total_win || 0).toLocaleString()}
+
+｜
+
+❌ ${
+lang==="th"
+?
+"แพ้："
+:
+"总输："
+}
+฿${Number(p.total_lose || 0).toLocaleString()}
+
+<br>
+
+💳 ${
+lang==="th"
+?
+"ยอดคงเหลือ："
+:
+"余额："
+}
+฿${Number(p.balance || 0).toLocaleString()}
+
+</div>
+
+`;
+
+});
+
+box.innerHTML =
+html;
+
+}  
 </script>
 
 </body>

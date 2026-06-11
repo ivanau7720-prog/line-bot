@@ -3639,23 +3639,56 @@ return;
 body.innerHTML = `
 
 <div style="
-padding:12px;
-border-radius:14px;
-background:rgba(255,255,255,.05);
-border:1px solid rgba(255,215,0,.25);
+padding:14px;
+border-radius:18px;
+background:
+linear-gradient(
+145deg,
+rgba(0,0,0,.65),
+rgba(255,255,255,.05)
+);
+border:1px solid rgba(255,215,0,.35);
 line-height:1.9;
 font-size:14px;
+box-shadow:0 0 18px rgba(255,215,0,.18);
 ">
 
-👤 ${p.username || "-"}
+<div style="
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:12px;
+">
 
-<br>
+<div style="
+font-size:18px;
+font-weight:900;
+color:gold;
+text-shadow:0 0 10px gold;
+">
+👤 ${p.username || "-"}
+</div>
+
+<div style="
+padding:5px 12px;
+border-radius:999px;
+background:
+linear-gradient(
+90deg,
+#ffd700,
+#ff9900
+);
+color:black;
+font-size:12px;
+font-weight:900;
+box-shadow:0 0 12px gold;
+">
+👑 VIP${p.vip || 10}
+</div>
+
+</div>
 
 🆔 ${p.user_id || "-"}
-
-<br>
-
-👑 VIP${p.vip || 10}
 
 <br>
 
@@ -3665,6 +3698,28 @@ lang==="th" ? "เอเย่นต์：" : "所属代理："
 ${p.agent_code || "-"}
 
 <br>
+
+📌 ${
+lang==="th" ? "สถานะ：" : "状态："
+}
+<span style="
+color:${p.status==="inactive" ? "#ff4444" : "#00ff99"};
+font-weight:bold;
+">
+${
+p.status==="inactive"
+?
+(lang==="th" ? "ปิดใช้งาน" : "已停用")
+:
+(lang==="th" ? "ปกติ" : "正常")
+}
+</span>
+
+<hr style="
+border:none;
+border-top:1px solid rgba(255,215,0,.25);
+margin:12px 0;
+">
 
 💳 ${
 lang==="th" ? "ยอดคงเหลือ：" : "当前余额："
@@ -3687,6 +3742,24 @@ lang==="th" ? "ยอดถอนรวม：" : "累计提款："
 
 <br>
 
+💧 ${
+lang==="th" ? "ยอดเทิร์นโอเวอร์：" : "总流水："
+}
+฿${Number(p.total_turnover || 0).toLocaleString()}
+
+<br>
+
+🎯 ${
+lang==="th" ? "จำนวนเดิมพันรวม：" : "总下注次数："
+}
+${Number(p.total_bets || 0).toLocaleString()}
+
+<hr style="
+border:none;
+border-top:1px solid rgba(255,215,0,.25);
+margin:12px 0;
+">
+
 ✅ ${
 lang==="th" ? "ชนะรวม：" : "总赢："
 }
@@ -3700,6 +3773,22 @@ lang==="th" ? "แพ้รวม：" : "总输："
 ฿${Number(p.total_lose || 0).toLocaleString()}
 
 <br>
+
+📈 ${
+lang==="th" ? "กำไร/ขาดทุนวันนี้：" : "今日输赢："
+}
+<span style="
+color:${Number(p.today_winlose || 0) >= 0 ? "#00ff99" : "#ff4444"};
+font-weight:bold;
+">
+฿${Number(p.today_winlose || 0).toLocaleString()}
+</span>
+
+<hr style="
+border:none;
+border-top:1px solid rgba(255,215,0,.25);
+margin:12px 0;
+">
 
 📅 ${
 lang==="th" ? "วันที่สมัคร：" : "注册日期："

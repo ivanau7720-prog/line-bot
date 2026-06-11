@@ -1134,15 +1134,47 @@ app.get("/admin/agent-detail/:agentCode", checkAdmin, async (req, res) => {
           return sum + Number(t.amount || 0);
         }, 0);
 
-      return {
-        user_id: p.user_id,
-        username: p.username || p.name || "-",
-        balance: Number(p.balance || 0),
-        total_topup: Number(p.total_topup || 0),
-        total_win: Number(p.total_win || 0),
-        total_lose: Number(p.total_lose || 0),
-        turnover: playerTurnover
-      };
+    return {
+
+user_id: p.user_id,
+
+username: p.username || p.name || "-",
+
+vip:
+Number(
+p.vip_level || 10
+),
+
+register_date:
+p.created_at || "",
+
+last_login:
+p.last_login || "",
+
+balance:
+Number(
+p.balance || 0
+),
+
+total_topup:
+Number(
+p.total_topup || 0
+),
+
+total_win:
+Number(
+p.total_win || 0
+),
+
+total_lose:
+Number(
+p.total_lose || 0
+),
+
+turnover:
+playerTurnover
+
+};
 
     });
 

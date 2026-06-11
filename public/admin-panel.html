@@ -2117,7 +2117,7 @@ ${
 Number(a.commission || 0) > 0
 ?
 `
-<button onclick="settleAgentCommission('${a.agent_code}', ${Number(a.commission || 0)})" style="
+<button id="settle_${a.agent_code}" onclick="settleAgentCommission('${a.agent_code}', ${Number(a.commission || 0)})" style="
 margin-top:10px;
 padding:8px 14px;
 border-radius:999px;
@@ -3923,31 +3923,65 @@ commission
 const data =
 await res.json();
 
-alert(
-data.success
-?
-(
+let msg = "";
+
+if(data.success){
+
+msg =
 lang==="th"
 ?
 "จ่ายค่าคอมเรียบร้อยแล้ว"
 :
-"佣金已结算"
-)
+"佣金已结算";
+
+}else{
+
+if(
+data.msg ===
+"今天已经结算过这个代理"
+){
+
+msg =
+lang==="th"
+?
+"วันนี้เอเย่นต์นี้รับค่าคอมแล้ว"
 :
-(
-data.msg ||
-(
+"今天已经结算过这个代理";
+
+}else{
+
+msg =
 lang==="th"
 ?
 "จ่ายค่าคอมไม่สำเร็จ"
 :
+(
+data.msg
+||
 "结算失败"
-)
-)
 );
 
-loadAgents();
+}
 
+}
+
+alert(msg);
+
+if(data.success){
+
+const btn =
+document.getElementById(
+"settle_" + agentCode
+);
+
+if(btn){
+btn.style.display =
+"none";
+}
+
+}
+
+loadAgents();
 }
 </script>
 

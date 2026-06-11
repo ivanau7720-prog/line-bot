@@ -1627,6 +1627,19 @@ ${a.agent_code}
 ${a.agent_name}
 
 </div>
+<button onclick="copyAgentLink('${a.agent_code}')" style="
+margin:6px 0 10px;
+padding:7px 12px;
+border-radius:999px;
+background:linear-gradient(90deg,#00ff99,#00ccff);
+color:black;
+font-size:12px;
+font-weight:bold;
+box-shadow:0 0 12px rgba(0,255,180,.45);
+">
+🔗 ${lang==="th" ? "คัดลอกลิงก์เอเย่นต์" : "复制代理注册链接"}
+</button>
+
 ${
 index===0 && Number(a.commission || 0)>0
 ?

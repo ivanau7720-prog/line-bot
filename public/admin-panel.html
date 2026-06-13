@@ -455,6 +455,57 @@ onclick="showAdminLogs()">
 </div>
 <div class="card">
 
+<h3 id="announcementTitle">
+📢 公告海报设置
+</h3>
+
+<input
+id="annTitle"
+placeholder="公告标题"
+style="width:100%;padding:10px;margin:6px 0;"
+>
+
+<input
+id="annImage"
+placeholder="图片URL，例如 /promo.jpg"
+style="width:100%;padding:10px;margin:6px 0;"
+>
+
+<textarea
+id="annContent"
+placeholder="公告内容"
+style="width:100%;height:90px;padding:10px;margin:6px 0;"
+></textarea>
+
+<select
+id="annShowTo"
+style="width:100%;padding:10px;margin:6px 0;"
+>
+<option value="player">玩家登入弹出</option>
+<option value="admin">后台登入弹出</option>
+<option value="all">全部弹出</option>
+</select>
+
+<button onclick="saveAnnouncement()">
+💾 保存公告
+</button>
+<button
+onclick="previewAnnouncement()"
+style="
+background:
+linear-gradient(
+90deg,
+#2196f3,
+#00ccff
+);
+">
+
+👁 预览公告
+
+</button>
+</div>
+<div class="card">
+
 <h3 id="gameTitle">
 🎰 游戏控制
 </h3>
@@ -925,6 +976,47 @@ Loading...
 </div>
 
 </div>
+<div id="announcementModal" style="
+display:none;
+position:fixed;
+inset:0;
+background:rgba(0,0,0,.75);
+z-index:99999;
+padding:20px;
+">
+
+<div style="
+max-width:500px;
+margin:auto;
+background:#111;
+border-radius:18px;
+padding:18px;
+border:1px solid gold;
+">
+
+<div style="
+display:flex;
+justify-content:space-between;
+align-items:center;
+">
+
+<h3>
+📢 公告预览
+</h3>
+
+<button onclick="closeAnnouncement()">
+✕
+</button>
+
+</div>
+
+<div id="announcementPreview">
+加载中...
+</div>
+
+</div>
+
+</div>
 <script>
 const LANG={
 
@@ -1352,7 +1444,20 @@ localStorage.getItem("adminLang")
 loadTodayRecharge();
 loadTodayWithdraw();
 };
+window.onload=()=>{
 
+switchLang(
+localStorage.getItem("adminLang")
+||"zh"
+);
+
+loadTodayRecharge();
+
+loadTodayWithdraw();
+
+loadAnnouncement();
+
+};
 const adminToken = localStorage.getItem("adminToken");
 
 if(!adminToken){
@@ -3528,7 +3633,181 @@ document.getElementById("todayWithdrawContent").innerHTML =
 html;
 
 }
+async function saveAnnouncement(){
 
+const lang =
+localStorage.getItem("adminLang")
+|| "zh";
+
+const title =
+document.getElementById("annTitle").value;
+
+const image_url =
+document.getElementById("annImage").value;
+
+const content =
+document.getElementById("annContent").value;
+
+const show_to =
+document.getElementById("annShowTo").value;
+
+if(!title && !image_url && !content){
+
+alert(
+lang==="th"
+?
+"กรุณากรอกประกาศ"
+:
+"请填写公告内容"
+);
+
+return;
+
+}
+
+const res =
+await fetch("/admin/announcement",{
+method:"POST",
+headers:adminHeaders(),
+body:JSON.stringify({
+title,
+image_url,
+content,
+show_to
+})
+});
+
+const data =
+await res.json();
+
+if(data.success){
+
+alert(
+lang==="th"
+?
+"บันทึกประกาศเรียบร้อย"
+:
+"公告已保存"
+);
+
+}else{
+
+alert(
+lang==="th"
+?
+"บันทึกไม่สำเร็จ"
+:
+"保存失败"
+);
+
+}
+
+}
+function previewAnnouncement(){
+
+const title =
+document.getElementById("annTitle").value;
+
+const image =
+document.getElementById("annImage").value;
+
+const content =
+document.getElementById("annContent").value;
+
+document.getElementById("announcementModal").style.display =
+"block";
+
+document.getElementById("announcementPreview").innerHTML =
+`
+<h2 style="color:gold;">
+${title}
+</h2>
+
+${
+image
+?
+`<img src="${image}" style="width:100%;border-radius:12px;">`
+:
+""
+}
+
+<div style="margin-top:12px;white-space:pre-wrap;">
+${content}
+</div>
+`;
+
+}
+
+function closeAnnouncement(){
+
+document.getElementById("announcementModal").style.display =
+"none";
+
+}
+async function loadAnnouncement(){
+
+const res =
+await fetch(
+"/announcement?showTo=admin"
+);
+
+const data =
+await res.json();
+
+if(!data){
+return;
+}
+
+document
+.getElementById(
+"announcementModal"
+)
+.style.display=
+"block";
+
+document
+.getElementById(
+"announcementPreview"
+)
+.innerHTML=
+`
+
+<h2 style="
+color:gold;
+">
+${data.title || ""}
+</h2>
+
+${
+data.image_url
+?
+
+`<img
+src="${data.image_url}"
+
+style="
+width:100%;
+border-radius:12px;
+margin-top:10px;
+">`
+
+:
+
+""
+}
+
+<div style="
+margin-top:14px;
+white-space:pre-wrap;
+">
+
+${data.content || ""}
+
+</div>
+
+`;
+
+}
 async function loadTx(){
   const lang =
 localStorage.getItem("adminLang")

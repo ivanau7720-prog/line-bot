@@ -175,6 +175,14 @@ transition:all .25s ease;
 box-shadow:0 0 14px rgba(255,215,0,.18);
 }
 
+.agentSummaryCard.activeSummary{
+border:2px solid gold !important;
+box-shadow:
+0 0 22px gold,
+0 0 42px rgba(255,215,0,.65);
+transform:scale(1.04);
+}
+  
 .agentSummaryCard:hover{
 transform:translateY(-3px) scale(1.03);
 box-shadow:0 0 28px rgba(255,215,0,.65);
@@ -592,6 +600,7 @@ box-sizing:border-box;
 <option value="total_topup">团队充值 / ยอดเติมทีม</option>
 <option value="valid_players">有效会员 / สมาชิกที่มีผล</option>
 <option value="total_turnover">总流水 / เทิร์นโอเวอร์</option>
+<option value="player_loss">玩家净输 / ยอดเสียสุทธิ</option>
 </select>
   
 <div id="agents">
@@ -1338,7 +1347,12 @@ localStorage.getItem(
 
 const t =
 LANG[lang];
-
+const currentSort =
+document.getElementById("agentSortSelect")
+?
+document.getElementById("agentSortSelect").value
+:
+"commission";
 const res =
 await fetch(
 "/admin/agents",
@@ -1394,7 +1408,7 @@ document.getElementById(
 "agentSummaryBox"
 ).innerHTML=`
 
-<div class="agentSummaryCard" onclick="document.getElementById('agentSearchInput').value='';loadAgents();" style="padding:10px;border-radius:14px;background:rgba(255,215,0,.08);border:1px solid rgba(255,215,0,.35);cursor:pointer;">${lang==="th"
+<div class="agentSummaryCard" onclick="document.getElementById('agentSearchInput').value='';document.getElementById('agentSortSelect').value='';loadAgents();" style="padding:10px;border-radius:14px;background:rgba(255,215,0,.08);border:1px solid rgba(255,215,0,.35);cursor:pointer;">${lang==="th"
 ?
 "👥 เอเย่นต์ทั้งหมด"
 :
@@ -1409,32 +1423,28 @@ ${lang==="th"
 "✅ 启用代理"}<br><b>${activeAgents}</b>
 </div>
 
-<div class="agentSummaryCard" onclick="document.getElementById('agentSortSelect').value='valid_players';loadAgents();" style="padding:10px;border-radius:14px;background:rgba(0,180,255,.08);border:1px solid rgba(0,180,255,.35);cursor:pointer;">
-${lang==="th"
+<div class="agentSummaryCard ${currentSort==="valid_players" ? "activeSummary" : ""}" onclick="document.getElementById('agentSortSelect').value='valid_players';loadAgents();" style="padding:10px;border-radius:14px;background:rgba(0,180,255,.08);border:1px solid rgba(0,180,255,.35);cursor:pointer;">${lang==="th"
 ?
 "👤 ผู้เล่นทั้งหมด"
 :
 "👤 总玩家数"}<br><b>${totalPlayers}</b>
 </div>
 
-<div class="agentSummaryCard" onclick="document.getElementById('agentSortSelect').value='total_topup';loadAgents();" style="padding:10px;border-radius:14px;background:rgba(255,215,0,.08);border:1px solid rgba(255,215,0,.35);cursor:pointer;">
-${lang==="th"
+<div class="agentSummaryCard ${currentSort==="total_topup" ? "activeSummary" : ""}" onclick="document.getElementById('agentSortSelect').value='total_topup';loadAgents();" style="padding:10px;border-radius:14px;background:rgba(255,215,0,.08);border:1px solid rgba(255,215,0,.35);cursor:pointer;">${lang==="th"
 ?
 "💰 ยอดเติมทีมรวม"
 :
 "💰 总团队充值"}<br><b>฿${totalTopup.toLocaleString()}</b>
 </div>
 
-<div class="agentSummaryCard" style="padding:10px;border-radius:14px;background:rgba(255,80,80,.08);border:1px solid rgba(255,80,80,.35);">
-${lang==="th"
+<div class="agentSummaryCard ${currentSort==="player_loss" ? "activeSummary" : ""}" onclick="document.getElementById('agentSortSelect').value='player_loss';loadAgents();" style="padding:10px;border-radius:14px;background:rgba(255,80,80,.08);border:1px solid rgba(255,80,80,.35);cursor:pointer;">${lang==="th"
 ?
 "📉 ผู้เล่นเสียสุทธิรวม"
 :
 "📉 总玩家净输"}<br><b>฿${totalLoss.toLocaleString()}</b>
 </div>
 
-<div class="agentSummaryCard" onclick="document.getElementById('agentSortSelect').value='commission';loadAgents();" style="padding:10px;border-radius:14px;background:rgba(255,215,0,.08);border:1px solid rgba(255,215,0,.35);cursor:pointer;">
-${lang==="th"
+<div class="agentSummaryCard ${currentSort==="commission" ? "activeSummary" : ""}" onclick="document.getElementById('agentSortSelect').value='commission';loadAgents();" style="padding:10px;border-radius:14px;background:rgba(255,215,0,.08);border:1px solid rgba(255,215,0,.35);cursor:pointer;">${lang==="th"
 ?
 "💵 ค่าคอมรวมโดยประมาณ"
 :

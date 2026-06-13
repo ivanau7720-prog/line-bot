@@ -168,6 +168,39 @@ box-shadow:
     box-shadow:0 0 12px rgba(255,215,0,.35);
   }
 }
+.agentSummaryCard{
+position:relative;
+overflow:hidden;
+transition:all .25s ease;
+box-shadow:0 0 14px rgba(255,215,0,.18);
+}
+
+.agentSummaryCard:hover{
+transform:translateY(-3px) scale(1.03);
+box-shadow:0 0 28px rgba(255,215,0,.65);
+}
+
+.agentSummaryCard::after{
+content:"";
+position:absolute;
+top:0;
+left:-80%;
+width:45%;
+height:100%;
+background:linear-gradient(
+120deg,
+transparent,
+rgba(255,255,255,.45),
+transparent
+);
+animation:summaryLight 3s infinite;
+}
+
+@keyframes summaryLight{
+0%{left:-80%;}
+55%{left:130%;}
+100%{left:130%;}
+}
 .commissionGlow{
   animation: commissionPulse 1.2s infinite;
 }
@@ -520,6 +553,16 @@ onclick="createAgent()">
 <h3 id="agentTurnoverTitle">
 📊 代理流水
 </h3>
+<div id="agentSummaryBox" style="
+display:grid;
+grid-template-columns:repeat(2,1fr);
+gap:10px;
+margin:10px 0 14px;
+">
+
+加载中...
+
+</div>
 <input
 id="agentSearchInput"
 placeholder="搜索代理编号 / 名字 / ค้นหารหัสเอเย่นต์ / ชื่อ"
@@ -1307,7 +1350,99 @@ adminGetHeaders()
 
 const data =
 await res.json();
+let totalAgents =
+data.length;
 
+let activeAgents =
+data.filter(
+a=>a.status!=="inactive"
+).length;
+
+let totalPlayers=0;
+
+let totalTopup=0;
+
+let totalLoss=0;
+
+let totalCommission=0;
+
+data.forEach(a=>{
+
+totalPlayers +=
+Number(
+a.player_count||0
+);
+
+totalTopup +=
+Number(
+a.total_topup||0
+);
+
+totalLoss +=
+Number(
+a.player_loss||0
+);
+
+totalCommission +=
+Number(
+a.commission||0
+);
+
+});
+
+document.getElementById(
+"agentSummaryBox"
+).innerHTML=`
+
+<div class="agentSummaryCard" style="padding:10px;border-radius:14px;background:rgba(255,215,0,.08);border:1px solid rgba(255,215,0,.35);">
+${lang==="th"
+?
+"👥 เอเย่นต์ทั้งหมด"
+:
+"👥 总代理数"}<br><b>${totalAgents}</b>
+</div>
+
+<div class="agentSummaryCard" style="padding:10px;border-radius:14px;background:rgba(0,255,150,.08);border:1px solid rgba(0,255,150,.35);">
+${lang==="th"
+?
+"✅ เอเย่นต์เปิดใช้งาน"
+:
+"✅ 启用代理"}<br><b>${activeAgents}</b>
+</div>
+
+<div class="agentSummaryCard" onclick="document.getElementById('agentSortSelect').value='valid_players';loadAgents();" style="padding:10px;border-radius:14px;background:rgba(0,180,255,.08);border:1px solid rgba(0,180,255,.35);cursor:pointer;">
+${lang==="th"
+?
+"👤 ผู้เล่นทั้งหมด"
+:
+"👤 总玩家数"}<br><b>${totalPlayers}</b>
+</div>
+
+<div class="agentSummaryCard" onclick="document.getElementById('agentSortSelect').value='total_topup';loadAgents();" style="padding:10px;border-radius:14px;background:rgba(255,215,0,.08);border:1px solid rgba(255,215,0,.35);cursor:pointer;">
+${lang==="th"
+?
+"💰 ยอดเติมทีมรวม"
+:
+"💰 总团队充值"}<br><b>฿${totalTopup.toLocaleString()}</b>
+</div>
+
+<div class="agentSummaryCard" style="padding:10px;border-radius:14px;background:rgba(255,80,80,.08);border:1px solid rgba(255,80,80,.35);">
+${lang==="th"
+?
+"📉 ผู้เล่นเสียสุทธิรวม"
+:
+"📉 总玩家净输"}<br><b>฿${totalLoss.toLocaleString()}</b>
+</div>
+
+<div class="agentSummaryCard" onclick="document.getElementById('agentSearchInput').value='';loadAgents();" style="padding:10px;border-radius:14px;background:rgba(255,215,0,.08);border:1px solid rgba(255,215,0,.35);cursor:pointer;">
+${lang==="th"
+?
+"💵 ค่าคอมรวมโดยประมาณ"
+:
+"💵 总预计佣金"}<br><b>฿${totalCommission.toLocaleString()}</b>
+</div>
+
+`;
 let html="";
 html += `
 

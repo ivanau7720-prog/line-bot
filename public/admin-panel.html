@@ -415,6 +415,14 @@ display:none;
 <button id="logoutBtn" onclick="logoutAdmin()">
 🚪 退出登录
 </button>
+
+<button
+id="adminLogsBtn"
+onclick="showAdminLogs()">
+
+📜 操作日志
+
+</button>
 <div class="card">
   <h3 id="profitTitle">
 📊 盈利统计
@@ -842,6 +850,59 @@ Loading...
 </div>
 
 </div>
+<div id="adminLogsModal" style="
+display:none;
+position:fixed;
+inset:0;
+background:rgba(0,0,0,.75);
+z-index:9999;
+align-items:center;
+justify-content:center;
+padding:20px;
+">
+
+<div style="
+width:100%;
+max-width:520px;
+max-height:80vh;
+overflow:auto;
+background:linear-gradient(145deg,#111,#000);
+border:1px solid gold;
+border-radius:20px;
+padding:18px;
+box-shadow:0 0 30px rgba(255,215,0,.5);
+color:white;
+">
+
+<div style="
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:12px;
+">
+
+<h3 id="adminLogsModalTitle" style="margin:0;color:gold;">
+📜 操作日志
+</h3>
+
+<button onclick="closeAdminLogs()" style="
+background:red;
+color:white;
+border-radius:999px;
+padding:6px 10px;
+">
+✕
+</button>
+
+</div>
+
+<div id="adminLogsModalBody">
+Loading...
+</div>
+
+</div>
+
+</div>
 <script>
 const LANG={
 
@@ -857,6 +918,7 @@ exchangeTitle:"🎁 商品兑换申请",
 noExchange:"暂无兑换申请",
 doneExchange:"📦 已发货",
 logout:"🚪 退出登录",
+adminLogs:"📜 操作日志",
 profit:"📊 盈利统计",
 game:"🎰 游戏控制",
 start:"▶ 开始下注",
@@ -982,6 +1044,7 @@ exchangeTitle:"🎁 คำขอแลกรางวัล",
 noExchange:"ยังไม่มีคำขอแลก",
 doneExchange:"📦 จัดส่งแล้ว",
 logout:"🚪 ออกจากระบบ",
+adminLogs:"📜 บันทึกการทำงาน",
 profit:"📊 สถิติกำไร",
 game:"🎰 ควบคุมเกม",
 start:"▶ เปิดรับเดิมพัน",
@@ -1120,6 +1183,8 @@ LANG[lang]
   
 document.getElementById("logoutBtn").innerText =
 LANG[lang].logout;
+document.getElementById("adminLogsBtn").innerText =
+LANG[lang].adminLogs;
 document.getElementById("profitTitle").innerText =
 LANG[lang].profit;
 document.getElementById("gameTitle").innerText =
@@ -4798,7 +4863,96 @@ document.getElementById(
 "none";
 
 }
+async function showAdminLogs(){
 
+const lang =
+localStorage.getItem("adminLang")
+|| "zh";
+
+document.getElementById("adminLogsModal").style.display =
+"flex";
+
+document.getElementById("adminLogsModalBody").innerHTML =
+lang==="th"
+?
+"กำลังโหลด..."
+:
+"加载中...";
+
+const res =
+await fetch("/admin/logs",{
+headers: adminGetHeaders()
+});
+
+const data =
+await res.json();
+
+let html = "";
+
+if(
+!data.logs ||
+data.logs.length === 0
+){
+
+html =
+lang==="th"
+?
+"ยังไม่มีบันทึกการทำงาน"
+:
+"暂无操作日志";
+
+}
+
+(data.logs || []).forEach(log=>{
+
+html += `
+<div style="
+padding:12px;
+margin-bottom:10px;
+border-radius:14px;
+background:rgba(255,215,0,.06);
+border:1px solid rgba(255,215,0,.25);
+line-height:1.8;
+">
+
+<div style="color:gold;font-weight:900;font-size:16px;">
+📜 ${log.action_type || "-"}
+</div>
+
+👤 Admin：${log.admin_name || "-"}
+
+<br>
+
+🎯 User：${log.target_user || "-"}
+
+<br>
+
+💰 Amount：฿${Number(log.amount || 0).toLocaleString()}
+
+<br>
+
+📝 Note：${log.note || "-"}
+
+<br>
+
+🕒 ${log.created_at || "-"}
+
+</div>
+`;
+
+});
+
+document.getElementById("adminLogsModalBody").innerHTML =
+html;
+
+}
+
+function closeAdminLogs(){
+
+document.getElementById("adminLogsModal").style.display =
+"none";
+
+}
 async function showAgentLevelHistory(agentCode){
 
 const lang =

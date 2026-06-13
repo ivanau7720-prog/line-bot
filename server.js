@@ -207,8 +207,7 @@ message TEXT,
 type TEXT DEFAULT 'real',
 created_at TIMESTAMP DEFAULT NOW()
 );
-`
-});
+
 CREATE TABLE IF NOT EXISTS admin_logs (
 
 id BIGSERIAL PRIMARY KEY,
@@ -226,6 +225,10 @@ note TEXT,
 created_at TIMESTAMP DEFAULT NOW()
 
 );
+
+`
+});
+
 }catch(err){
 console.log("DB init skip");
 }
@@ -1312,7 +1315,14 @@ admin_note: adminNote || "",
 settled_by: "admin"
 
 }]);
-
+  
+await logAdminAction(
+"admin",
+"结算代理佣金",
+agentCode,
+commissionBefore,
+adminNote || "Agent commission settled"
+);
 res.json({
 success:true
 });
@@ -1986,7 +1996,13 @@ await supabase.from("transactions").insert([
   type: "admin_add"
 }
 ]);
-
+await logAdminAction(
+"admin",
+"管理员加钱",
+userId,
+amount,
+"Admin add balance"
+);
 res.json({ success: true });
 
   } catch (err) {
@@ -2009,7 +2025,13 @@ await supabase.from("transactions").insert([
   type: "admin_minus"
 }
 ]);
-
+await logAdminAction(
+"admin",
+"管理员扣钱",
+userId,
+amount,
+"Admin minus balance"
+);
 res.json({ success: true });
 
   } catch (err) {
@@ -2204,7 +2226,13 @@ await supabase
       amount: Number(request.amount),
       type: "recharge_approved"
     }]);
-    
+    await logAdminAction(
+"admin",
+"批准充值",
+request.user_id,
+request.amount,
+"Recharge approved"
+);
 if(addPoint > 0){
 await supabase.from("point_records").insert([{
   user_id: request.user_id,
@@ -2225,12 +2253,28 @@ await supabase.from("point_records").insert([{
 // ===== 管理员：拒绝充值 =====
 app.post("/admin/reject-recharge", checkAdmin, async (req, res) => {
   try {
+
     const { id } = req.body;
 
-    await supabase
-      .from("recharge_requests")
-      .update({ status:"rejected" })
-      .eq("id", id);
+const { data: request } =
+await supabase
+.from("recharge_requests")
+.select("*")
+.eq("id", id)
+.single();
+
+await supabase
+.from("recharge_requests")
+.update({ status:"rejected" })
+.eq("id", id);
+
+await logAdminAction(
+"admin",
+"拒绝充值",
+request?.user_id || "",
+request?.amount || 0,
+"Recharge rejected"
+);
 
     res.json({ success:true });
 
@@ -2283,7 +2327,13 @@ app.post("/admin/approve-withdraw", checkAdmin, async (req, res) => {
       amount: Number(request.amount),
       type: "withdraw_approved"
     }]);
-
+await logAdminAction(
+"admin",
+"批准提款",
+request.user_id,
+request.amount,
+"Withdraw approved"
+);
     res.json({ success:true });
 
   } catch (err) {
@@ -2295,20 +2345,46 @@ app.post("/admin/approve-withdraw", checkAdmin, async (req, res) => {
 
 // ===== 管理员：拒绝提款 =====
 app.post("/admin/reject-withdraw", checkAdmin, async (req, res) => {
-  try {
-    const { id } = req.body;
+try{
 
-    await supabase
-      .from("withdraw_requests")
-      .update({ status:"rejected" })
-      .eq("id", id);
+const { id } = req.body;
 
-    res.json({ success:true });
+const { data: request } =
+await supabase
+.from("withdraw_requests")
+.select("*")
+.eq("id", id)
+.single();
 
-  } catch (err) {
-    console.error(err);
-    res.json({ success:false });
-  }
+await supabase
+.from("withdraw_requests")
+.update({
+status:"rejected"
+})
+.eq("id", id);
+
+await logAdminAction(
+"admin",
+"拒绝提款",
+request?.user_id || "",
+request?.amount || 0,
+"Withdraw rejected"
+);
+
+res.json({
+success:true
+});
+
+}catch(err){
+
+console.error(err);
+
+res.json({
+success:false
+});
+
+}
+
 });
 
 // ===== 玩家：我的充值记录 =====

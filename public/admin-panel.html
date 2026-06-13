@@ -1394,8 +1394,7 @@ document.getElementById(
 "agentSummaryBox"
 ).innerHTML=`
 
-<div class="agentSummaryCard" style="padding:10px;border-radius:14px;background:rgba(255,215,0,.08);border:1px solid rgba(255,215,0,.35);">
-${lang==="th"
+<div class="agentSummaryCard" onclick="document.getElementById('agentSearchInput').value='';loadAgents();" style="padding:10px;border-radius:14px;background:rgba(255,215,0,.08);border:1px solid rgba(255,215,0,.35);cursor:pointer;">${lang==="th"
 ?
 "👥 เอเย่นต์ทั้งหมด"
 :
@@ -1434,7 +1433,7 @@ ${lang==="th"
 "📉 总玩家净输"}<br><b>฿${totalLoss.toLocaleString()}</b>
 </div>
 
-<div class="agentSummaryCard" onclick="document.getElementById('agentSearchInput').value='';loadAgents();" style="padding:10px;border-radius:14px;background:rgba(255,215,0,.08);border:1px solid rgba(255,215,0,.35);cursor:pointer;">
+<div class="agentSummaryCard" onclick="document.getElementById('agentSortSelect').value='commission';loadAgents();" style="padding:10px;border-radius:14px;background:rgba(255,215,0,.08);border:1px solid rgba(255,215,0,.35);cursor:pointer;">
 ${lang==="th"
 ?
 "💵 ค่าคอมรวมโดยประมาณ"

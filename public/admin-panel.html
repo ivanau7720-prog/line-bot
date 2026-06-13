@@ -1770,7 +1770,10 @@ const nextTarget =
 getNextAgentTarget(
 a.level
 );
-
+const nextPreview =
+getNextAgentPreview(
+a.level
+);
 let progressHtml = "";
 let validPercent = 0;
 
@@ -2435,7 +2438,57 @@ ${t.commissionRate}
 ${a.commission_rate}%
 
 </div>
+${
+nextPreview
+?
+`
+<div style="
+margin-top:8px;
+padding:10px;
+border-radius:14px;
+background:rgba(255,215,0,.08);
+border:1px solid rgba(255,215,0,.35);
+color:#ffe066;
+font-size:13px;
+font-weight:bold;
+">
 
+⬆ ${lang==="th" ? "ระดับถัดไป" : "下一等级"}：
+${nextPreview.next}
+
+<br>
+
+💎 ${lang==="th" ? "ค่าคอมหลังอัปเกรด" : "升级后佣金"}：
+${nextPreview.currentRate}%
+→
+${nextPreview.nextRate}%
+
+<br>
+
+<span style="color:#00ff99;">
++${nextPreview.nextRate - nextPreview.currentRate}%
+</span>
+
+</div>
+`
+:
+`
+<div style="
+margin-top:8px;
+padding:10px;
+border-radius:14px;
+background:rgba(0,255,150,.08);
+border:1px solid rgba(0,255,150,.35);
+color:#00ff99;
+font-size:13px;
+font-weight:bold;
+">
+
+👑 ${lang==="th" ? "ระดับสูงสุดแล้ว" : "已是最高等级"}
+
+</div>
+`
+}
 <div class="${Number(a.commission || 0) > 0 ? 'commissionGlow' : ''}" style="
 
 margin-top:12px;
@@ -2723,6 +2776,35 @@ document
 )
 .innerHTML=
 html;
+
+}
+function getNextAgentPreview(level){
+
+if(level==="DIAMOND"){
+return null;
+}
+
+if(level==="GOLD"){
+return {
+next:"DIAMOND ELITE",
+currentRate:30,
+nextRate:35
+};
+}
+
+if(level==="SILVER"){
+return {
+next:"GOLD AGENT",
+currentRate:25,
+nextRate:30
+};
+}
+
+return {
+next:"SILVER AGENT",
+currentRate:20,
+nextRate:25
+};
 
 }
 function getNextAgentTarget(level){

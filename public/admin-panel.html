@@ -1347,6 +1347,10 @@ localStorage.getItem(
 
 const t =
 LANG[lang];
+
+const agentStatusFilter =
+window.agentStatusFilter || "";
+  
 const currentSort =
 document.getElementById("agentSortSelect")
 ?
@@ -1371,7 +1375,10 @@ let activeAgents =
 data.filter(
 a=>a.status!=="inactive"
 ).length;
-
+let inactiveAgents =
+data.filter(
+a=>a.status==="inactive"
+).length;
 let totalPlayers=0;
 
 let totalTopup=0;
@@ -1408,21 +1415,35 @@ document.getElementById(
 "agentSummaryBox"
 ).innerHTML=`
 
-<div class="agentSummaryCard" onclick="document.getElementById('agentSearchInput').value='';document.getElementById('agentSortSelect').value='';loadAgents();" style="padding:10px;border-radius:14px;background:rgba(255,215,0,.08);border:1px solid rgba(255,215,0,.35);cursor:pointer;">${lang==="th"
+<div class="agentSummaryCard" onclick="document.getElementById('agentSearchInput').value='';document.getElementById('agentSortSelect').value='commission';window.agentStatusFilter='';loadAgents();" style="padding:10px;border-radius:14px;background:rgba(255,215,0,.08);border:1px solid rgba(255,215,0,.35);cursor:pointer;">
+
+${lang==="th"
 ?
 "👥 เอเย่นต์ทั้งหมด"
 :
-"👥 总代理数"}<br><b>${totalAgents}</b>
+"👥 总代理数"}
+
+<br>
+
+<b>
+${totalAgents}
+</b>
+
 </div>
 
-<div class="agentSummaryCard" style="padding:10px;border-radius:14px;background:rgba(0,255,150,.08);border:1px solid rgba(0,255,150,.35);">
-${lang==="th"
+<div class="agentSummaryCard ${agentStatusFilter==="active" ? "activeSummary" : ""}" onclick="window.agentStatusFilter='active';loadAgents();" style="padding:10px;border-radius:14px;background:rgba(0,255,150,.08);border:1px solid rgba(0,255,150,.35);cursor:pointer;">${lang==="th"
 ?
 "✅ เอเย่นต์เปิดใช้งาน"
 :
 "✅ 启用代理"}<br><b>${activeAgents}</b>
 </div>
-
+<div class="agentSummaryCard ${agentStatusFilter==="inactive" ? "activeSummary" : ""}" onclick="document.getElementById('agentSearchInput').value='';window.agentStatusFilter='inactive';loadAgents();" style="padding:10px;border-radius:14px;background:rgba(255,80,80,.08);border:1px solid rgba(255,80,80,.35);cursor:pointer;">
+${lang==="th"
+?
+"⛔ เอเย่นต์ปิดใช้งาน"
+:
+"⛔ 已停用代理"}<br><b>${inactiveAgents}</b>
+</div>
 <div class="agentSummaryCard ${currentSort==="valid_players" ? "activeSummary" : ""}" onclick="document.getElementById('agentSortSelect').value='valid_players';loadAgents();" style="padding:10px;border-radius:14px;background:rgba(0,180,255,.08);border:1px solid rgba(0,180,255,.35);cursor:pointer;">${lang==="th"
 ?
 "👤 ผู้เล่นทั้งหมด"
@@ -1430,7 +1451,20 @@ ${lang==="th"
 "👤 总玩家数"}<br><b>${totalPlayers}</b>
 </div>
 
-<div class="agentSummaryCard ${currentSort==="total_topup" ? "activeSummary" : ""}" onclick="document.getElementById('agentSortSelect').value='total_topup';loadAgents();" style="padding:10px;border-radius:14px;background:rgba(255,215,0,.08);border:1px solid rgba(255,215,0,.35);cursor:pointer;">${lang==="th"
+<div class="agentSummaryCard ${currentSort==="total_topup" ? "activeSummary" : ""}"
+onclick="
+document.getElementById('agentSortSelect').value='total_topup';
+loadAgents();
+"
+style="
+padding:10px;
+border-radius:14px;
+background:rgba(255,215,0,.08);
+border:1px solid rgba(255,215,0,.35);
+cursor:pointer;
+"
+>
+${lang==="th"
 ?
 "💰 ยอดเติมทีมรวม"
 :
@@ -1562,7 +1596,20 @@ document.getElementById(
 const filteredData =
 
 data.filter(a=>{
-
+if(
+agentStatusFilter==="active"
+&&
+a.status==="inactive"
+){
+return false;
+}
+if(
+agentStatusFilter==="inactive"
+&&
+a.status!=="inactive"
+){
+return false;
+}
 return (
 
 (a.agent_code || "")

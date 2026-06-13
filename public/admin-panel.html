@@ -4152,12 +4152,27 @@ background:rgba(255,255,255,.04);
 border:1px solid rgba(255,215,0,.2);
 ">
 
-💵 ฿${Number(r.amount || 0).toLocaleString()}
+💵 结算金额：฿${Number(r.amount || 0).toLocaleString()}
+
+<br>
+
+📈 结算前佣金：฿${Number(r.commission_before || 0).toLocaleString()}
+
+<br>
+
+📉 结算后佣金：฿${Number(r.commission_after || 0).toLocaleString()}
+
+<br>
+
+👤 结算人：${r.settled_by || "admin"}
+
+<br>
+
+📝 备注：${r.admin_note || "-"}
 
 <br><br>
 
 📅 ${r.created_at || "-"}
-
 </div>
 
 `;
@@ -4199,13 +4214,27 @@ lang==="th"
 return;
 }
 
+const adminNote =
+prompt(
+lang==="th"
+?
+"หมายเหตุแอดมิน"
+:
+"请输入管理员备注"
+);
+
+if(adminNote===null){
+return;
+}
+
 const res =
 await fetch("/admin/settle-agent-commission",{
 method:"POST",
 headers:adminHeaders(),
 body:JSON.stringify({
 agentCode,
-commission
+commission,
+adminNote
 })
 });
 

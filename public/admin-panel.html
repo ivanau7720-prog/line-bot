@@ -4145,34 +4145,55 @@ data.records.forEach(r=>{
 html+=`
 
 <div style="
-padding:12px;
-margin-bottom:10px;
-border-radius:14px;
-background:rgba(255,255,255,.04);
-border:1px solid rgba(255,215,0,.2);
+padding:14px;
+margin-bottom:12px;
+border-radius:18px;
+background:
+linear-gradient(
+145deg,
+rgba(0,255,150,.08),
+rgba(0,0,0,.65)
+);
+border:1px solid rgba(0,255,150,.35);
+box-shadow:
+0 0 16px rgba(0,255,150,.18);
+line-height:1.8;
+font-size:13px;
 ">
 
-💵 结算金额：฿${Number(r.amount || 0).toLocaleString()}
+<div style="
+color:#00ff99;
+font-size:18px;
+font-weight:900;
+text-shadow:0 0 10px #00ff99;
+margin-bottom:8px;
+">
+💵 ฿${Number(r.amount || 0).toLocaleString()}
+</div>
+
+📈 结算前：
+฿${Number(r.commission_before || 0).toLocaleString()}
 
 <br>
 
-📈 结算前佣金：฿${Number(r.commission_before || 0).toLocaleString()}
+📉 结算后：
+฿${Number(r.commission_after || 0).toLocaleString()}
 
 <br>
 
-📉 结算后佣金：฿${Number(r.commission_after || 0).toLocaleString()}
+👤 操作员：
+${r.settled_by || "admin"}
 
 <br>
 
-👤 结算人：${r.settled_by || "admin"}
+📝 备注：
+${r.admin_note || "-"}
 
 <br>
 
-📝 备注：${r.admin_note || "-"}
+📅 时间：
+${r.created_at || "-"}
 
-<br><br>
-
-📅 ${r.created_at || "-"}
 </div>
 
 `;
@@ -4187,7 +4208,150 @@ document
 html;
 
 }
+async function showCommissionHistory(agentCode){
 
+const lang =
+localStorage.getItem(
+"adminLang"
+)
+|| "zh";
+
+document
+.getElementById(
+"commissionModal"
+)
+.style.display =
+"flex";
+
+document
+.getElementById(
+"commissionModalBody"
+)
+.innerHTML =
+lang==="th"
+?
+"กำลังโหลด..."
+:
+"加载中...";
+
+const res =
+await fetch(
+
+"/admin/agent-commission-history/"
++
+encodeURIComponent(
+agentCode
+),
+
+{
+headers:
+adminGetHeaders()
+}
+
+);
+
+const data =
+await res.json();
+
+let html="";
+
+if(
+!data.records
+||
+data.records.length===0
+){
+
+html=
+lang==="th"
+?
+"ยังไม่มีประวัติค่าคอม"
+:
+"暂无佣金记录";
+
+}
+
+data.records.forEach(r=>{
+
+html+=`
+
+<div style="
+padding:14px;
+margin-bottom:12px;
+border-radius:18px;
+
+background:
+linear-gradient(
+145deg,
+rgba(0,255,150,.08),
+rgba(0,0,0,.65)
+);
+
+border:
+1px solid
+rgba(
+0,
+255,
+150,
+.35
+);
+
+line-height:1.9;
+">
+
+<div style="
+font-size:18px;
+font-weight:900;
+color:#00ff99;
+">
+
+💵
+฿${Number(
+r.amount||0
+).toLocaleString()}
+
+</div>
+
+📈 结算前：
+฿${Number(
+r.commission_before||0
+).toLocaleString()}
+
+<br>
+
+📉 结算后：
+฿${Number(
+r.commission_after||0
+).toLocaleString()}
+
+<br>
+
+👤
+${r.settled_by||"-"}
+
+<br>
+
+📝
+${r.admin_note||"-"}
+
+<br>
+
+🕒
+${r.created_at||"-"}
+
+</div>
+
+`;
+
+});
+
+document
+.getElementById(
+"commissionModalBody"
+)
+.innerHTML=
+html;
+
+}
 function closeCommissionHistory(){
 
 document.getElementById(

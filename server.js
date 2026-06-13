@@ -2123,7 +2123,11 @@ await supabase.from("players").insert([{
   username,
   password,
   name:username,
-  balance:1000,
+  balance:0,
+  total_topup:0,
+  total_withdraw:0,
+  reward_points:0,
+  vip_level:10,
   agent_code:finalAgent
 }]);
 
@@ -2527,11 +2531,15 @@ app.post("/admin/approve-withdraw", checkAdmin, async (req, res) => {
     }
 
     const newBalance = Number(player.balance || 0) - Number(request.amount);
-
-    await supabase
-      .from("players")
-      .update({ balance: newBalance })
-      .eq("user_id", request.user_id);
+    const newWithdraw =
+Number(player.total_withdraw || 0) + Number(request.amount);
+   await supabase
+  .from("players")
+  .update({
+    balance: newBalance,
+    total_withdraw: newWithdraw
+  })
+  .eq("user_id", request.user_id);
 
     await supabase
       .from("withdraw_requests")

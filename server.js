@@ -2243,6 +2243,105 @@ records:[]
 }
 
 });
+// ===== 管理员：新增公告 =====
+app.post("/admin/announcement", async (req,res)=>{
+
+const admin =
+req.headers["x-admin-token"];
+
+if(admin !== ADMIN_PASSWORD){
+
+return res.status(403).json({
+success:false
+});
+
+}
+
+const {
+title,
+image_url,
+content,
+show_to
+}
+=
+req.body;
+
+await supabase
+.from("announcements")
+.update({
+is_active:false
+})
+.eq(
+"show_to",
+show_to || "player"
+);
+
+await supabase
+.from("announcements")
+.insert([{
+
+title,
+
+image_url,
+
+content,
+
+show_to:
+show_to || "player",
+
+is_active:true
+
+}]);
+
+res.json({
+success:true
+});
+
+});
+
+
+
+
+// ===== 读取公告 =====
+app.get("/announcement", async (req,res)=>{
+
+const showTo =
+req.query.showTo
+||
+"player";
+
+const { data } =
+await supabase
+.from("announcements")
+.select("*")
+.eq(
+"is_active",
+true
+)
+.in(
+"show_to",
+[
+showTo,
+"all"
+]
+)
+.order(
+"created_at",
+{
+ascending:false
+}
+)
+.limit(1);
+
+res.json(
+data?.[0]
+||
+null
+);
+
+});
+
+
 // ===== 管理员：查看充值申请 =====
 app.get("/admin/recharge-requests", checkAdmin, async (req, res) => {
   try {

@@ -571,6 +571,38 @@ margin:10px 0 14px;
 加载中...
 
 </div>
+
+<div
+id="agentFilterBar"
+
+style="
+display:none;
+
+margin-bottom:10px;
+
+padding:10px 14px;
+
+border-radius:999px;
+
+background:
+rgba(255,215,0,.08);
+
+border:
+1px solid rgba(255,215,0,.35);
+
+color:gold;
+
+font-size:13px;
+
+font-weight:bold;
+"
+
+>
+
+筛选中
+
+</div>
+
 <input
 id="agentSearchInput"
 placeholder="搜索代理编号 / 名字 / ค้นหารหัสเอเย่นต์ / ชื่อ"
@@ -1574,6 +1606,54 @@ a[sortBy]
 );
 
 });
+const filterBar =
+document.getElementById(
+"agentFilterBar"
+);
+
+if(filterBar){
+
+if(agentStatusFilter){
+
+filterBar.style.display =
+"block";
+
+filterBar.innerHTML =
+`
+${lang==="th"
+
+?
+
+(agentStatusFilter==="inactive"
+?
+"⛔ กำลังกรอง：เอเย่นต์ปิดใช้งาน"
+:
+"✅ กำลังกรอง：เอเย่นต์เปิดใช้งาน")
+
+:
+
+(agentStatusFilter==="inactive"
+?
+"⛔ 当前筛选：已停用代理"
+:
+"✅ 当前筛选：启用代理")
+
+}
+
+<span onclick="window.agentStatusFilter='';loadAgents();" style="cursor:pointer;margin-left:10px;color:red;">
+✕
+</span>
+`;
+
+}else{
+
+filterBar.style.display =
+"none";
+
+}
+
+}
+
 const searchText =
 
 document.getElementById(

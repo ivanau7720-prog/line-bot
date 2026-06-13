@@ -442,7 +442,17 @@ onclick="showAdminLogs()">
 </div>
 
 </div>
+<div class="card">
 
+<h3 id="todayWithdrawTitle">
+💸 今日出账记录
+</h3>
+
+<div id="todayWithdrawContent">
+加载中...
+</div>
+
+</div>
 <div class="card">
 
 <h3 id="gameTitle">
@@ -1199,6 +1209,25 @@ document.getElementById("adminLogsBtn").innerText =
 LANG[lang].adminLogs;
 document.getElementById("profitTitle").innerText =
 LANG[lang].profit;
+document.getElementById(
+"todayRechargeTitle"
+).innerText=
+
+lang==="th"
+?
+"💳 เติมเงินวันนี้"
+:
+"💳 今日充值记录";
+
+document.getElementById(
+"todayWithdrawTitle"
+).innerText=
+
+lang==="th"
+?
+"💸 ถอนเงินวันนี้"
+:
+"💸 今日出账记录";
 document.getElementById("gameTitle").innerText =
 LANG[lang].game;
 
@@ -1321,7 +1350,7 @@ localStorage.getItem("adminLang")
 );
 
 loadTodayRecharge();
-
+loadTodayWithdraw();
 };
 
 const adminToken = localStorage.getItem("adminToken");
@@ -3392,6 +3421,114 @@ document.getElementById("todayRechargeContent").innerHTML =
 html;
 
 }
+async function loadTodayWithdraw(){
+
+const lang =
+localStorage.getItem("adminLang")
+|| "zh";
+
+const res =
+await fetch("/admin/today-withdraw",{
+headers: adminGetHeaders()
+});
+
+const data =
+await res.json();
+
+let html = "";
+
+html += `
+<div style="
+margin-top:10px;
+font-size:18px;
+font-weight:bold;
+color:#ff6666;
+">
+
+${
+lang==="th"
+?
+"ยอดถอนวันนี้："
+:
+"今日总出账："
+}
+
+฿${Number(data.total || 0).toLocaleString()}
+
+</div>
+
+<div style="
+margin:6px 0 12px;
+color:gold;
+font-weight:bold;
+">
+
+${
+lang==="th"
+?
+"จำนวนรายการถอน："
+:
+"提款笔数："
+}
+
+${data.count || 0}
+
+</div>
+`;
+
+if(
+!data.records ||
+data.records.length === 0
+){
+
+html +=
+lang==="th"
+?
+"ยังไม่มีรายการถอนวันนี้"
+:
+"今日暂无出账记录";
+
+}else{
+
+data.records.forEach(r=>{
+
+const time =
+(r.created_at || "")
+.slice(11,16);
+
+html += `
+<div style="
+padding:8px;
+border-bottom:1px solid rgba(255,255,255,.15);
+display:flex;
+justify-content:space-between;
+gap:10px;
+">
+
+<span>
+${r.user_id || "-"}
+</span>
+
+<span style="color:#ff6666;font-weight:bold;">
+฿${Number(r.amount || 0).toLocaleString()}
+</span>
+
+<span style="color:gold;">
+${time}
+</span>
+
+</div>
+`;
+
+});
+
+}
+
+document.getElementById("todayWithdrawContent").innerHTML =
+html;
+
+}
+
 async function loadTx(){
   const lang =
 localStorage.getItem("adminLang")
@@ -3928,6 +4065,7 @@ async function approveWithdraw(id){
 loadWithdrawRequests();
 loadPlayers();
 loadReviewBadges();
+loadTodayWithdraw();
 }
 
 async function rejectWithdraw(id){
@@ -4113,6 +4251,26 @@ setInterval(()=>{
   loadReviewBadges();
   loadAdminTimer();
 },2000);
+let lastStatsDate =
+new Date().toDateString();
+
+setInterval(()=>{
+
+const nowDate =
+new Date().toDateString();
+
+if(nowDate !== lastStatsDate){
+
+lastStatsDate =
+nowDate;
+
+loadTodayRecharge();
+loadTodayWithdraw();
+loadProfit();
+
+}
+
+},60000);
 loadBets();
 loadAdminTimer();
 loadAgents();

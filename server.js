@@ -1837,6 +1837,34 @@ app.get("/admin/rounds", checkAdmin, async (req, res) => {
   }
 });
 
+
+// ===== 管理员：操作日志列表 =====
+app.get("/admin/logs", checkAdmin, async (req, res) => {
+try{
+
+const { data } = await supabase
+.from("admin_logs")
+.select("*")
+.order("id", { ascending:false })
+.limit(100);
+
+res.json({
+success:true,
+logs:data || []
+});
+
+}catch(err){
+
+console.error("admin logs error:", err);
+
+res.json({
+success:false,
+logs:[]
+});
+
+}
+
+});
 // ===== 管理员：玩家流水记录 + 筛选 =====
 app.get("/admin/transactions", checkAdmin, async (req, res) => {
   try {

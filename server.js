@@ -107,6 +107,24 @@ ADD COLUMN IF NOT EXISTS agent_code TEXT;
 ALTER TABLE agents
 ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'active';
 
+ALTER TABLE agents
+ADD COLUMN IF NOT EXISTS current_level TEXT DEFAULT 'BRONZE';
+
+ALTER TABLE agents
+ADD COLUMN IF NOT EXISTS current_rate NUMERIC DEFAULT 20;
+
+CREATE TABLE IF NOT EXISTS agent_level_logs (
+id BIGSERIAL PRIMARY KEY,
+agent_code TEXT,
+old_level TEXT,
+new_level TEXT,
+old_rate NUMERIC DEFAULT 0,
+new_rate NUMERIC DEFAULT 0,
+valid_players NUMERIC DEFAULT 0,
+total_topup NUMERIC DEFAULT 0,
+created_at TIMESTAMP DEFAULT NOW()
+);
+
 CREATE TABLE IF NOT EXISTS point_records (
 id BIGSERIAL PRIMARY KEY,
 user_id TEXT,
@@ -1088,6 +1106,53 @@ rate:20
 
 }
 
+async function checkAndLogAgentLevel(
+agentCode,
+oldLevel,
+oldRate,
+newLevel,
+newRate,
+validPlayers,
+totalTopup
+){
+
+try{
+
+if(
+oldLevel === newLevel &&
+Number(oldRate) === Number(newRate)
+){
+return;
+}
+
+await supabase
+.from("agent_level_logs")
+.insert([{
+agent_code: agentCode,
+old_level: oldLevel || "BRONZE",
+new_level: newLevel,
+old_rate: Number(oldRate || 20),
+new_rate: Number(newRate || 20),
+valid_players: Number(validPlayers || 0),
+total_topup: Number(totalTopup || 0)
+}]);
+
+await supabase
+.from("agents")
+.update({
+current_level: newLevel,
+current_rate: newRate
+})
+.eq("agent_code", agentCode);
+
+}catch(err){
+
+console.log("agent level log error:", err);
+
+}
+
+}
+
 // ===== 管理员：启用 / 停用代理 =====
 app.post("/admin/update-agent-status", checkAdmin, async (req, res) => {
   try {
@@ -1549,6 +1614,16 @@ validPlayers,
 totalTopup
 );
 
+await checkAndLogAgentLevel(
+a.agent_code,
+a.current_level || "BRONZE",
+a.current_rate || 20,
+levelData.level,
+levelData.rate,
+validPlayers,
+totalTopup
+);
+      
 const commission =
 Math.floor(
 totalPlayerLoss *

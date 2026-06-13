@@ -1442,22 +1442,15 @@ localStorage.getItem("adminLang")
 );
 
 loadTodayRecharge();
-loadTodayWithdraw();
-};
-window.onload=()=>{
-
-switchLang(
-localStorage.getItem("adminLang")
-||"zh"
-);
-
-loadTodayRecharge();
 
 loadTodayWithdraw();
+
+loadAnnouncementForm();
 
 loadAnnouncement();
 
 };
+
 const adminToken = localStorage.getItem("adminToken");
 
 if(!adminToken){
@@ -3631,6 +3624,49 @@ ${time}
 
 document.getElementById("todayWithdrawContent").innerHTML =
 html;
+
+}
+async function loadAnnouncementForm(){
+
+try{
+
+const res =
+await fetch(
+"/announcement?showTo=player"
+);
+
+const data =
+await res.json();
+
+if(!data){
+return;
+}
+
+document.getElementById(
+"annTitle"
+).value =
+data.title || "";
+
+document.getElementById(
+"annImage"
+).value =
+data.image_url || "";
+
+document.getElementById(
+"annContent"
+).value =
+data.content || "";
+
+document.getElementById(
+"annShowTo"
+).value =
+data.show_to || "player";
+
+}catch(err){
+
+console.log(err);
+
+}
 
 }
 async function saveAnnouncement(){

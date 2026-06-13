@@ -71,9 +71,21 @@ await supabase.rpc("exec_sql", {
 sql: `
 ALTER TABLE players
 ADD COLUMN IF NOT EXISTS username TEXT UNIQUE;
+
+ALTER TABLE transactions
+ADD COLUMN IF NOT EXISTS commission_before NUMERIC DEFAULT 0;
+
+ALTER TABLE transactions
+ADD COLUMN IF NOT EXISTS commission_after NUMERIC DEFAULT 0;
+
+ALTER TABLE transactions
+ADD COLUMN IF NOT EXISTS admin_note TEXT;
+
+ALTER TABLE transactions
+ADD COLUMN IF NOT EXISTS settled_by TEXT;
+
 ALTER TABLE players
 ADD COLUMN IF NOT EXISTS bank_name TEXT;
-
 ALTER TABLE players
 ADD COLUMN IF NOT EXISTS bank_account TEXT;
 
@@ -1116,15 +1128,16 @@ try{
 
 const {
 agentCode,
-commission
-}
-=
-req.body;
+commission,
+adminNote
+} = req.body;
+
+const commissionBefore =
+Number(commission || 0);
 
 if(
-!agentCode
-||
-Number(commission)<=0
+!agentCode ||
+commissionBefore <= 0
 ){
 
 return res.json({
@@ -1135,99 +1148,60 @@ msg:"资料错误"
 }
 
 const today =
-new Date()
-.toISOString()
-.slice(
-0,
-10
-);
+new Date().toISOString().slice(0,10);
 
-const {
-data:exist
-}
-=
+const { data: exist } =
 await supabase
-.from(
-"transactions"
-)
+.from("transactions")
 .select("*")
-.eq(
-"user_id",
-agentCode
-)
-.eq(
-"type",
-"agent_commission_settled"
-)
-.gte(
-"created_at",
-today+"T00:00:00"
-)
-.lte(
-"created_at",
-today+"T23:59:59"
-);
+.eq("user_id", agentCode)
+.eq("type", "agent_commission_settled")
+.gte("created_at", today + "T00:00:00")
+.lte("created_at", today + "T23:59:59");
 
 if(
-exist
-&&
-exist.length>0
+exist &&
+exist.length > 0
 ){
 
 return res.json({
-
 success:false,
-
 msg:"今天已经结算过这个代理"
-
 });
 
 }
 
 await supabase
-.from(
-"transactions"
-)
+.from("transactions")
 .insert([{
 
-user_id:
-agentCode,
-
-amount:
-Number(
-commission
-),
-
-type:
-"agent_commission_settled",
-
-note:
-"Agent commission settled"
+user_id: agentCode,
+amount: commissionBefore,
+type: "agent_commission_settled",
+note: "Agent commission settled",
+commission_before: commissionBefore,
+commission_after: 0,
+admin_note: adminNote || "",
+settled_by: "admin"
 
 }]);
 
 res.json({
-
 success:true
-
 });
 
-}
-
-catch(err){
+}catch(err){
 
 console.log(err);
 
 res.json({
-
-success:false
-
+success:false,
+msg:"结算失败"
 });
 
 }
 
 });
-
 // ===== 管理员：代理佣金历史 =====
 app.get("/admin/agent-commission-history/:agentCode", checkAdmin, async (req, res) => {
 

@@ -945,6 +945,49 @@ console.log(e);
 }
 
 }
+async function loadPlayerAnnouncement(){
+
+const res =
+await fetch("/announcement?showTo=player");
+
+const data =
+await res.json();
+
+if(!data){
+return;
+}
+
+document.getElementById("playerAnnouncement").style.display =
+"block";
+
+document.getElementById("playerAnnouncementContent").innerHTML =
+`
+<h2 style="color:gold;">
+${data.title || ""}
+</h2>
+
+${
+data.image_url
+?
+`<img src="${data.image_url}" style="width:100%;border-radius:12px;margin-top:10px;">`
+:
+""
+}
+
+<div style="margin-top:14px;white-space:pre-wrap;">
+${data.content || ""}
+</div>
+`;
+
+}
+
+function closePlayerAnnouncement(){
+
+document.getElementById("playerAnnouncement").style.display =
+"none";
+
+}
+loadPlayerAnnouncement();
 
 loadProfile();
 

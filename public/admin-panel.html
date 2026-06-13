@@ -1418,7 +1418,7 @@ let totalTopup=0;
 let totalLoss=0;
 
 let totalCommission=0;
-
+let totalCommissionRate = 0;
 data.forEach(a=>{
 
 totalPlayers +=
@@ -1440,9 +1440,47 @@ totalCommission +=
 Number(
 a.commission||0
 );
-
+totalCommissionRate +=
+Number(
+a.commission_rate||0
+);
 });
+const avgCommissionRate =
 
+totalAgents
+
+?
+
+(
+totalCommissionRate
+/
+totalAgents
+)
+
+.toFixed(1)
+
+:
+
+0;
+
+const activeRate =
+
+totalAgents
+
+?
+
+Math.floor(
+activeAgents
+/
+totalAgents
+*
+100
+)
+
+:
+
+0;
+  
 document.getElementById(
 "agentSummaryBox"
 ).innerHTML=`
@@ -1463,7 +1501,7 @@ ${totalAgents}
 
 </div>
 
-<div class="agentSummaryCard ${agentStatusFilter==="active" ? "activeSummary" : ""}" onclick="window.agentStatusFilter='active';loadAgents();" style="padding:10px;border-radius:14px;background:rgba(0,255,150,.08);border:1px solid rgba(0,255,150,.35);cursor:pointer;">${lang==="th"
+<div class="agentSummaryCard ${agentStatusFilter==="active" ? "activeSummary" : ""}" onclick="document.getElementById('agentSearchInput').value='';window.agentStatusFilter='active';loadAgents();" style="padding:10px;border-radius:14px;background:rgba(0,255,150,.08);border:1px solid rgba(0,255,150,.35);cursor:pointer;">${lang==="th"
 ?
 "✅ เอเย่นต์เปิดใช้งาน"
 :
@@ -1516,7 +1554,25 @@ ${lang==="th"
 :
 "💵 总预计佣金"}<br><b>฿${totalCommission.toLocaleString()}</b>
 </div>
+<div class="agentSummaryCard" style="padding:10px;border-radius:14px;background:rgba(0,255,255,.08);border:1px solid rgba(0,255,255,.35);">
 
+💎 ${lang==="th" ? "ค่าคอมเฉลี่ย" : "平均佣金率"}
+
+<br>
+
+<b>${avgCommissionRate}%</b>
+
+</div>
+
+<div class="agentSummaryCard" style="padding:10px;border-radius:14px;background:rgba(0,255,150,.08);border:1px solid rgba(0,255,150,.35);">
+
+🔥 ${lang==="th" ? "อัตราใช้งาน" : "今日活跃率"}
+
+<br>
+
+<b>${activeRate}%</b>
+
+</div>
 `;
 let html="";
 html += `

@@ -1320,6 +1320,8 @@ localStorage.getItem("adminLang")
 ||"zh"
 );
 
+loadTodayRecharge();
+
 };
 
 const adminToken = localStorage.getItem("adminToken");
@@ -3283,7 +3285,113 @@ html += `<div>🎯 ${t.roundLabel}${r.id}${t.roundUnit} ｜ ${result}</div>`;
 
   document.getElementById("rounds").innerHTML = html;
 }
+async function loadTodayRecharge(){
 
+const lang =
+localStorage.getItem("adminLang")
+|| "zh";
+
+const res =
+await fetch("/admin/today-recharge",{
+headers: adminGetHeaders()
+});
+
+const data =
+await res.json();
+
+let html = "";
+
+html += `
+<div style="
+margin-top:10px;
+font-size:18px;
+font-weight:bold;
+color:#00ff99;
+">
+
+${
+lang==="th"
+?
+"ยอดเติมเงินวันนี้："
+:
+"今日总充值："
+}
+
+฿${Number(data.total || 0).toLocaleString()}
+
+</div>
+
+<div style="
+margin:6px 0 12px;
+color:gold;
+font-weight:bold;
+">
+
+${
+lang==="th"
+?
+"จำนวนรายการ："
+:
+"充值笔数："
+}
+
+${data.count || 0}
+
+</div>
+`;
+
+if(
+!data.records ||
+data.records.length === 0
+){
+
+html +=
+lang==="th"
+?
+"ยังไม่มีรายการเติมเงินวันนี้"
+:
+"今日暂无充值记录";
+
+}else{
+
+data.records.forEach(r=>{
+
+const time =
+(r.created_at || "")
+.slice(11,16);
+
+html += `
+<div style="
+padding:8px;
+border-bottom:1px solid rgba(255,255,255,.15);
+display:flex;
+justify-content:space-between;
+gap:10px;
+">
+
+<span>
+${r.user_id || "-"}
+</span>
+
+<span style="color:#00ff99;font-weight:bold;">
+฿${Number(r.amount || 0).toLocaleString()}
+</span>
+
+<span style="color:gold;">
+${time}
+</span>
+
+</div>
+`;
+
+});
+
+}
+
+document.getElementById("todayRechargeContent").innerHTML =
+html;
+
+}
 async function loadTx(){
   const lang =
 localStorage.getItem("adminLang")
@@ -3792,10 +3900,11 @@ async function approveRecharge(id){
     body: JSON.stringify({id})
   });
 
-    loadRechargeRequests();
+loadRechargeRequests();
 loadWithdrawRequests();
 loadExchangeRequests();
 loadReviewBadges();
+loadTodayRecharge();
 }
 
 async function rejectRecharge(id){
@@ -3816,9 +3925,9 @@ async function approveWithdraw(id){
     body: JSON.stringify({id})
   });
 
-      loadWithdrawRequests();
-  loadPlayers();
-  loadReviewBadges();
+loadWithdrawRequests();
+loadPlayers();
+loadReviewBadges();
 }
 
 async function rejectWithdraw(id){

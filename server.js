@@ -2198,6 +2198,51 @@ records:[]
 }
 
 });
+
+
+// ===== 管理员：今日出账记录 =====
+app.get("/admin/today-withdraw", checkAdmin, async (req, res) => {
+try{
+
+const today =
+new Date().toISOString().slice(0,10);
+
+const { data } =
+await supabase
+.from("transactions")
+.select("*")
+.eq("type", "withdraw_approved")
+.gte("created_at", today + "T00:00:00")
+.lte("created_at", today + "T23:59:59")
+.order("created_at", { ascending:false });
+
+let total = 0;
+
+(data || []).forEach(r=>{
+total += Number(r.amount || 0);
+});
+
+res.json({
+success:true,
+total,
+count:(data || []).length,
+records:data || []
+});
+
+}catch(err){
+
+console.error("today withdraw error:", err);
+
+res.json({
+success:false,
+total:0,
+count:0,
+records:[]
+});
+
+}
+
+});
 // ===== 管理员：查看充值申请 =====
 app.get("/admin/recharge-requests", checkAdmin, async (req, res) => {
   try {

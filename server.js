@@ -36,6 +36,52 @@ function checkAdmin(req, res, next){
   next();
 }
 
+async function logAdminAction(
+
+adminName,
+actionType,
+targetUser,
+amount,
+note
+
+){
+
+try{
+
+await supabase
+
+.from("admin_logs")
+
+.insert([{
+
+admin_name:
+adminName || "admin",
+
+action_type:
+actionType,
+
+target_user:
+targetUser || "",
+
+amount:
+Number(amount || 0),
+
+note:
+note || ""
+
+}]);
+
+}catch(err){
+
+console.log(
+"admin log error",
+err
+);
+
+}
+
+}
+
 // ===== 管理员登录 =====
 app.post("/admin-login", (req, res) => {
 
@@ -163,7 +209,23 @@ created_at TIMESTAMP DEFAULT NOW()
 );
 `
 });
+CREATE TABLE IF NOT EXISTS admin_logs (
 
+id BIGSERIAL PRIMARY KEY,
+
+admin_name TEXT,
+
+action_type TEXT,
+
+target_user TEXT,
+
+amount NUMERIC DEFAULT 0,
+
+note TEXT,
+
+created_at TIMESTAMP DEFAULT NOW()
+
+);
 }catch(err){
 console.log("DB init skip");
 }

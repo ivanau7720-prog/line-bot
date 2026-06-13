@@ -2702,6 +2702,35 @@ lang==="th"
 }
 
 </button>
+<button
+onclick="
+showAgentLevelHistory(
+'${a.agent_code}'
+)
+"
+
+style="
+margin-top:8px;
+margin-left:6px;
+padding:8px 14px;
+border-radius:999px;
+background:linear-gradient(90deg,#ffd700,#ff9900);
+color:black;
+font-size:12px;
+font-weight:bold;
+box-shadow:0 0 12px rgba(255,215,0,.35);
+">
+
+🏆 ${
+lang==="th"
+?
+"ประวัติระดับ"
+:
+"等级记录"
+}
+
+</button>
+
 ${
 index===0
 &&
@@ -4767,6 +4796,114 @@ document.getElementById(
 "commissionModal"
 ).style.display =
 "none";
+
+}
+
+async function showAgentLevelHistory(agentCode){
+
+const lang =
+localStorage.getItem("adminLang") || "zh";
+
+const modal =
+document.getElementById("commissionModal");
+
+const title =
+document.getElementById("commissionModalTitle");
+
+const body =
+document.getElementById("commissionModalBody");
+
+modal.style.display =
+"flex";
+
+title.innerText =
+lang==="th"
+?
+"🏆 ประวัติการอัปเกรดระดับ"
+:
+"🏆 代理等级记录";
+
+body.innerHTML =
+"Loading...";
+
+const res =
+await fetch(
+"/admin/agent-level-history/" + agentCode,
+{
+headers:adminGetHeaders()
+}
+);
+
+const data =
+await res.json();
+
+if(
+!data.success ||
+!data.records ||
+data.records.length===0
+){
+
+body.innerHTML =
+lang==="th"
+?
+"ยังไม่มีประวัติการอัปเกรด"
+:
+"暂无等级升级记录";
+
+return;
+
+}
+
+let html = "";
+
+data.records.forEach(r=>{
+
+html += `
+<div style="
+padding:10px;
+margin-bottom:10px;
+border-radius:12px;
+background:rgba(255,255,255,.06);
+border:1px solid rgba(255,215,0,.25);
+">
+
+<div style="color:gold;font-weight:bold;">
+${r.old_level || "-"}
+→
+${r.new_level || "-"}
+</div>
+
+<div>
+💎 ${r.old_rate || 0}%
+→
+${r.new_rate || 0}%
+</div>
+
+<div>
+✅ ${
+lang==="th" ? "สมาชิกที่มีผล" : "有效会员"
+}：
+${r.valid_players || 0}
+</div>
+
+<div>
+💰 ${
+lang==="th" ? "ยอดเติมทีม" : "团队充值"
+}：
+฿${Number(r.total_topup || 0).toLocaleString()}
+</div>
+
+<div style="margin-top:6px;color:#aaa;font-size:12px;">
+🕒 ${r.created_at || ""}
+</div>
+
+</div>
+`;
+
+});
+
+body.innerHTML =
+html;
 
 }
 async function settleAgentCommission(agentCode, commission){

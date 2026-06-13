@@ -486,10 +486,11 @@ style="width:100%;padding:10px;margin:6px 0;"
 <option value="all">全部弹出</option>
 </select>
 
-<button onclick="saveAnnouncement()">
+<button id="saveAnnBtn" onclick="saveAnnouncement()">
 💾 保存公告
 </button>
 <button
+id="previewAnnBtn"
 onclick="previewAnnouncement()"
 style="
 background:
@@ -1525,6 +1526,35 @@ lang==="th"
 :
 
 "全部弹出";
+
+document.getElementById(
+"saveAnnBtn"
+).innerText=
+
+lang==="th"
+
+?
+
+"💾 บันทึกประกาศ"
+
+:
+
+"💾 保存公告";
+
+
+document.getElementById(
+"previewAnnBtn"
+).innerText=
+
+lang==="th"
+
+?
+
+"👁 ดูตัวอย่าง"
+
+:
+
+"👁 预览公告";
 localStorage.setItem(
 "adminLang",
 lang

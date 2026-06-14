@@ -303,14 +303,21 @@ const { data: bets } = await supabase
 
 for (const b of bets || []) {
 
-  if (GAME.bets[b.user_id]) {
-    GAME.bets[b.user_id].amount += Number(b.amount || 0);
-    GAME.bets[b.user_id].side = b.bet_side;
-  } else {
+  if (!GAME.bets[b.user_id]) {
+
     GAME.bets[b.user_id] = {
-      side: b.bet_side,
-      amount: Number(b.amount || 0)
+      B:0,
+      P:0,
+      T:0
     };
+
+  }
+
+  if(["B","P","T"].includes(b.bet_side)){
+
+    GAME.bets[b.user_id][b.bet_side] +=
+    Number(b.amount || 0);
+
   }
 
   GAME.betUsers[b.user_id] = true;
@@ -537,17 +544,19 @@ betCooldown[userId] = now;
   });
 }
 
-/* 禁止庄闲对冲 */
+/* 禁止庄闲对冲，但允许 庄+和 / 闲+和 */
 
-if(GAME.bets[userId]){
-
-const oldSide =
-GAME.bets[userId].side;
+const oldBet =
+GAME.bets[userId] || {
+B:0,
+P:0,
+T:0
+};
 
 if(
-(oldSide==="B" && side==="P")
-||
-(oldSide==="P" && side==="B")
+oldBet.B > 0
+&&
+side === "P"
 ){
 
 return res.json({
@@ -557,7 +566,19 @@ msg:"同一局不能同时买庄和闲"
 
 }
 
+if(
+oldBet.P > 0
+&&
+side === "B"
+){
+
+return res.json({
+success:false,
+msg:"同一局不能同时买庄和闲"
+});
+
 }
+    
 await changeBalance(
 userId,
 -betAmount
@@ -581,18 +602,18 @@ await supabase.from("transactions").insert([
     round_id: GAME.roundDbId
   }
 ]);
-if(GAME.bets[userId]){
-
-GAME.bets[userId].amount += betAmount;
-
-}else{
+if(!GAME.bets[userId]){
 
 GAME.bets[userId] = {
-side: side,
-amount: betAmount
+B:0,
+P:0,
+T:0
 };
 
 }
+
+GAME.bets[userId][side] += betAmount;
+GAME.betUsers[userId] = true;
     res.json({
       success:true
     });
@@ -718,33 +739,60 @@ const roundId = roundData.id;
 
       if (!data) continue;
 
-      let win = 0;
+let win = 0;
 let lose = 0;
 let payout = 0;
 
-if (bet.side === result) {
+const betB =
+Number(bet.B || 0);
 
-  if (result === "B") {
+const betP =
+Number(bet.P || 0);
 
-    payout = Math.floor(bet.amount * 1.95);
+const betT =
+Number(bet.T || 0);
 
-  } else if (result === "P") {
+const totalBet =
+betB + betP + betT;
 
-    payout = bet.amount * 2;
+if(result === "B"){
 
-  } else if (result === "T") {
+payout =
+Math.floor(betB * 1.95);
 
-    payout = bet.amount * 9;
+lose =
+betP + betT;
 
-  }
+}
 
-  await changeBalance(uid, payout);
+if(result === "P"){
 
-  win = payout;
+payout =
+betP * 2;
 
-} else {
+lose =
+betB + betT;
 
-  lose = bet.amount;
+}
+
+if(result === "T"){
+
+payout =
+(betT * 9) + betB + betP;
+
+lose =
+0;
+
+}
+
+if(payout > 0){
+
+await changeBalance(
+uid,
+payout
+);
+
+win = payout;
 
 }
 
@@ -755,26 +803,38 @@ if (bet.side === result) {
     total_lose: Number(data.total_lose || 0) + lose
   })
   .eq("user_id", uid);
-// 👇👇👇 更新本局下注结算流水
+// 👇👇👇 更新本局所有下注记录为已结算
 await supabase
-  .from("transactions")
-  .update({
-    result: result,
-    win_amount: payout,
-    type: payout > 0 ? "win" : "lose"
-  })
-  .eq("round_id", roundId)
-  .eq("user_id", uid);
+.from("transactions")
+.update({
+result: result,
+type: "settled"
+})
+.eq("round_id", roundId)
+.eq("user_id", uid);
  }
+
 GAME.bets = {};
 GAME.betUsers = {};
 GAME.timeLeft = 60;
 
 GAME.roundStartTime = null;
 
-clearInterval(GAME.timer);
+GAME.roundDbId =
+null;
 
-GAME.timer = null;
+if(
+GAME.timer
+){
+
+clearInterval(
+GAME.timer
+);
+
+GAME.timer =
+null;
+
+}
 
 res.json({
 msg:"结算完成"
@@ -880,24 +940,36 @@ app.get("/admin/monitor-data", checkAdmin, async (req, res) => {
     let playerAmount = 0;
     let tieAmount = 0;
 
-    for(const uid in GAME.bets){
-      const bet = GAME.bets[uid];
+for(const uid in GAME.bets){
 
-      if(bet.side === "B"){
-        bankerUsers++;
-        bankerAmount += Number(bet.amount || 0);
-      }
+  const bet =
+  GAME.bets[uid];
 
-      if(bet.side === "P"){
-        playerUsers++;
-        playerAmount += Number(bet.amount || 0);
-      }
+  const betB =
+  Number(bet.B || 0);
 
-      if(bet.side === "T"){
-        tieUsers++;
-        tieAmount += Number(bet.amount || 0);
-      }
-    }
+  const betP =
+  Number(bet.P || 0);
+
+  const betT =
+  Number(bet.T || 0);
+
+  if(betB > 0){
+    bankerUsers++;
+    bankerAmount += betB;
+  }
+
+  if(betP > 0){
+    playerUsers++;
+    playerAmount += betP;
+  }
+
+  if(betT > 0){
+    tieUsers++;
+    tieAmount += betT;
+  }
+
+}
 
     const totalBet =
       bankerAmount + playerAmount + tieAmount;
@@ -1980,66 +2052,164 @@ let list = [];
 
 for(const uid in GAME.bets){
 
-const bet = GAME.bets[uid];
+const bet =
+GAME.bets[uid];
 
-const user = await getUser(uid);
+const user =
+await getUser(uid);
+
+if(Number(bet.B || 0) > 0){
 
 list.push({
 userId: uid,
-name: user?.name || "玩家",
-side: bet.side,
-amount: bet.amount
+name: user?.name || user?.username || "玩家",
+side: "B",
+amount: Number(bet.B || 0)
 });
+
+}
+
+if(Number(bet.P || 0) > 0){
+
+list.push({
+userId: uid,
+name: user?.name || user?.username || "玩家",
+side: "P",
+amount: Number(bet.P || 0)
+});
+
+}
+
+if(Number(bet.T || 0) > 0){
+
+list.push({
+userId: uid,
+name: user?.name || user?.username || "玩家",
+side: "T",
+amount: Number(bet.T || 0)
+});
+
+}
 
 }
 
 res.json(list);
 
 }catch(err){
+
 console.error(err);
+
 res.json([]);
+
 }
 
 });
 
 app.get("/admin/profit", checkAdmin, async (req, res) => {
-  try {
-    const { data } = await supabase
-      .from("transactions")
-      .select("*");
+try {
 
-    let total = 0;
-    let today = 0;
+const { data } = await supabase
+.from("transactions")
+.select("*");
 
-    const now = new Date().toDateString();
+let total = 0;
+let today = 0;
 
-   data.forEach(t => {
-  let profit = 0;
+const todayText =
+new Date().toISOString().slice(0,10);
 
-  if (t.type === "lose") {
-    profit = Number(t.amount || 0);
-  }
+(data || []).forEach(t => {
 
-  if (t.type === "win") {
-    profit = Number(t.amount || 0) - Number(t.win_amount || 0);
-  }
+let profit = 0;
 
-  total += profit;
-      const d = new Date(t.created_at).toDateString();
-      if (d === now) {
-        today += profit;
-      }
-    });
+const amount =
+Number(t.amount || 0);
 
-    res.json({
-      total,
-      today
-    });
+const result =
+t.result;
 
-  } catch (err) {
-    console.error(err);
-    res.json({ total:0, today:0 });
-  }
+const side =
+t.bet_side;
+
+if(
+t.type === "settled"
+){
+
+if(
+
+result === "T"
+
+&&
+
+(
+side === "B"
+||
+side === "P"
+)
+
+){
+
+profit = 0;
+
+}
+
+else if(
+
+side !== result
+
+){
+
+profit = amount;
+
+}
+
+else{
+
+if(result === "B"){
+profit = amount - Math.floor(amount * 1.95);
+}
+
+if(result === "P"){
+profit = amount - (amount * 2);
+}
+
+if(result === "T"){
+profit = amount - (amount * 9);
+}
+
+}
+
+}
+
+total += profit;
+
+if(
+String(t.created_at || "").slice(0,10)
+===
+todayText
+){
+
+today += profit;
+
+}
+
+});
+
+res.json({
+total,
+today
+});
+
+} catch (err) {
+
+console.error(err);
+
+res.json({
+total:0,
+today:0
+});
+
+}
 });
 // ===== 管理员：加钱 =====
 app.post("/admin/add", checkAdmin, async (req, res) => {
@@ -2047,7 +2217,18 @@ app.post("/admin/add", checkAdmin, async (req, res) => {
     const { userId, amount } = req.body;
 
     const addMoney = Number(amount);
+if(
+!addMoney
+||
+addMoney <= 0
+){
 
+return res.json({
+success:false,
+msg:"金额错误"
+});
+
+}
 /* 先查玩家资料 */
 const { data } = await supabase
   .from("players")
@@ -2090,32 +2271,55 @@ res.json({ success: true });
 });
 
 // ===== 管理员：扣钱 =====
+// ===== 管理员：扣钱 =====
 app.post("/admin/minus", checkAdmin, async (req, res) => {
-  try {
-    const { userId, amount } = req.body;
+try {
 
-    await changeBalance(userId, -amount);
+const { userId, amount } = req.body;
+
+const minusMoney =
+Number(amount);
+
+if(
+!minusMoney
+||
+minusMoney <= 0
+){
+
+return res.json({
+success:false,
+msg:"金额错误"
+});
+
+}
+
+await changeBalance(
+userId,
+-minusMoney
+);
 
 await supabase.from("transactions").insert([
 {
-  user_id: userId,
-  amount: Number(amount),
-  type: "admin_minus"
+user_id: userId,
+amount: minusMoney,
+type: "admin_minus"
 }
 ]);
+
 await logAdminAction(
 "admin",
 "管理员扣钱",
 userId,
-amount,
+minusMoney,
 "Admin minus balance"
 );
+
 res.json({ success: true });
 
-  } catch (err) {
-    console.error(err);
-    res.json({ success: false });
-  }
+} catch (err) {
+console.error(err);
+res.json({ success: false });
+}
 });
 
 // ===== 注册 =====

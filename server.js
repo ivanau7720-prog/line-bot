@@ -493,19 +493,22 @@ app.post("/bet", async (req, res) => {
       });
     }
 
-    const now = Date.now();
+const now = Date.now();
 
-    if (
-      betCooldown[userId] &&
-      now - betCooldown[userId] < 3000
-    ) {
-      return res.json({
-        success:false,
-        msg:"请3秒后再下注"
-      });
-    }
+if(
+betCooldown[userId]
+&&
+now - betCooldown[userId] < 500
+){
 
-    betCooldown[userId] = now;
+return res.json({
+success:false,
+msg:"请稍后再下注"
+});
+
+}
+
+betCooldown[userId] = now;
 
     const user = await getUser(userId);
 
@@ -522,65 +525,27 @@ app.post("/bet", async (req, res) => {
   });
 }
 
-/* 每局只允许一次下注 */
+/* 禁止庄闲对冲 */
 
-if(
-
-GAME.betUsers[userId]
-
-
-){
+if(GAME.bets[userId]){
 
 const oldSide =
 GAME.bets[userId].side;
 
-/* 允许：庄+和 */
-
 if(
-
-(oldSide==="B"&&side==="T")
-
+(oldSide==="B" && side==="P")
 ||
-
-(oldSide==="T"&&side==="B")
-
+(oldSide==="P" && side==="B")
 ){
 
 return res.json({
 success:false,
-msg:"本局已下注"
+msg:"同一局不能同时买庄和闲"
 });
 
 }
 
-/* 允许：闲+和 */
-
-if(
-
-(oldSide==="P"&&side==="T")
-
-||
-
-(oldSide==="T"&&side==="P")
-
-){
-
-return res.json({
-success:false,
-msg:"本局已下注"
-});
-
 }
-
-/* 禁止重复 */
-
-return res.json({
-success:false,
-msg:"同一局只能下注一次"
-});
-
-}
-
 await changeBalance(
 userId,
 -betAmount
@@ -604,16 +569,18 @@ await supabase.from("transactions").insert([
     round_id: GAME.roundDbId
   }
 ]);
- GAME.bets[userId] = {
+if(GAME.bets[userId]){
 
+GAME.bets[userId].amount += betAmount;
+
+}else{
+
+GAME.bets[userId] = {
 side: side,
-
 amount: betAmount
-
 };
 
-GAME.betUsers[userId] = true;
-
+}
     res.json({
       success:true
     });

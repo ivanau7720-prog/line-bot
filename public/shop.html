@@ -579,10 +579,16 @@ box.appendChild(card);
 async function exchangeItem(itemName,cost,vipNeed){
 
 const t=LANG[currentLang];
+
+if(window.exchangeSubmitting){
+return;
+}
+
 if(myVip > vipNeed){
 alert(t.vipNotEnough);
 return;
 }
+
 if(myPoint < cost){
 alert(t.notEnough);
 return;
@@ -591,6 +597,10 @@ return;
 if(!confirm(itemName+" ต้องการแลกใช้ "+cost+" Point ?")){
 return;
 }
+
+window.exchangeSubmitting = true;
+
+try{
 
 const uid=localStorage.getItem("userId");
 
@@ -614,6 +624,22 @@ if(d.success){
 await loadPoint();
 renderItems();
 loadMyExchangeRecords();
+}
+
+}catch(err){
+
+alert(
+currentLang==="th"
+?
+"ส่งคำขอแลกไม่สำเร็จ กรุณาลองใหม่"
+:
+"兑换提交失败，请再试一次"
+);
+
+}finally{
+
+window.exchangeSubmitting = false;
+
 }
 
 }

@@ -139,6 +139,12 @@ ALTER TABLE players
 ADD COLUMN IF NOT EXISTS phone TEXT;
 
 ALTER TABLE players
+ADD COLUMN IF NOT EXISTS line_id TEXT;
+
+ALTER TABLE players
+ADD COLUMN IF NOT EXISTS real_name TEXT;
+
+ALTER TABLE players
 ADD COLUMN IF NOT EXISTS email TEXT;
 
 ALTER TABLE players
@@ -1802,14 +1808,44 @@ app.get("/admin/players", checkAdmin, async (req, res) => {
       .from("players")
       .select("*");
 
-  const list = data.map(p => ({
-  id: p.user_id,
-  username: p.username || "",
-  agent_code: p.agent_code || "-",
-  balance: p.balance,
-  vip: p.vip_level || 10,
-  win: p.total_win || 0,
-  lose: p.total_lose || 0
+const list = data.map(p => ({
+
+id:
+p.user_id,
+
+username:
+p.username || "",
+
+real_name:
+p.real_name || "",
+
+phone:
+p.phone || "",
+
+line_id:
+p.line_id || "",
+
+bank_name:
+p.bank_name || "",
+
+bank_account:
+p.bank_account || "",
+
+agent_code:
+p.agent_code || "-",
+
+balance:
+p.balance,
+
+vip:
+p.vip_level || 10,
+
+win:
+p.total_win || 0,
+
+lose:
+p.total_lose || 0
+
 }));
     res.json(list);
 
@@ -2071,7 +2107,16 @@ res.json({ success: true });
 // ===== 注册 =====
 app.post("/register", async (req,res)=>{
 
-const { username, password, agentCode } = req.body;
+const {
+username,
+password,
+realName,
+phone,
+lineId,
+bankName,
+bankAccount,
+agentCode
+} = req.body;
 
 if(!/^[a-zA-Z0-9]{4,12}$/.test(username)){
 return res.json({success:false,msg:"ID限英文数字4-12"});
@@ -2080,7 +2125,18 @@ return res.json({success:false,msg:"ID限英文数字4-12"});
 if(!password || password.length < 4){
 return res.json({success:false,msg:"密码至少4位"});
 }
-
+if(
+!realName ||
+!phone ||
+!lineId ||
+!bankName ||
+!bankAccount
+){
+return res.json({
+success:false,
+msg:"Please fill in all real information"
+});
+}
 const { data: old } = await supabase
 .from("players")
 .select("*")
@@ -2123,6 +2179,11 @@ await supabase.from("players").insert([{
   username,
   password,
   name:username,
+  real_name:realName,
+  phone,
+  line_id:lineId,
+  bank_name:bankName,
+  bank_account:bankAccount,
   balance:0,
   total_topup:0,
   total_withdraw:0,

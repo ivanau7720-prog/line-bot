@@ -792,7 +792,7 @@ uid,
 payout
 );
 
-win = payout;
+win = payout - totalBet;
 
 }
 
@@ -974,14 +974,17 @@ for(const uid in GAME.bets){
     const totalBet =
       bankerAmount + playerAmount + tieAmount;
 
-    const profitIfBanker =
-      totalBet - (bankerAmount * 1.95);
+const profitIfBanker =
+totalBet -
+(bankerAmount * 1.95);
 
-    const profitIfPlayer =
-      totalBet - (playerAmount * 2);
+const profitIfPlayer =
+totalBet -
+(playerAmount * 2);
 
-    const profitIfTie =
-      totalBet - (tieAmount * 9);
+const profitIfTie =
+tieAmount -
+(tieAmount * 9);
 
     res.json({
       online,
@@ -1638,18 +1641,63 @@ app.get("/admin/player-detail/:userId", checkAdmin, async (req, res) => {
    const todayWinLose =
 todayTxs.reduce((sum, t) => {
 
-  if(t.type === "win"){
-    return sum + Number(t.win_amount || 0) - Number(t.amount || 0);
-  }
+const amount =
+Number(t.amount || 0);
 
-  if(t.type === "lose"){
-    return sum - Number(t.amount || 0);
-  }
+const result =
+t.result;
 
-  return sum + Number(t.change || 0);
+const side =
+t.bet_side;
+
+if(
+t.type === "settled"
+){
+
+if(
+result === "T"
+&&
+(
+side === "B"
+||
+side === "P"
+)
+){
+
+return sum;
+
+}
+
+if(side !== result){
+
+return sum - amount;
+
+}
+
+if(result === "B"){
+
+return sum + Math.floor(amount * 1.95) - amount;
+
+}
+
+if(result === "P"){
+
+return sum + (amount * 2) - amount;
+
+}
+
+if(result === "T"){
+
+return sum + (amount * 9) - amount;
+
+}
+
+}
+
+return sum + Number(t.change || 0);
 
 }, 0);
-
+    
     res.json({
       success:true,
 

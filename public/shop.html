@@ -243,8 +243,31 @@ box-shadow:0 0 16px rgba(255,215,0,.55);
 <div class="sectionTitle" id="luxuryTitle">👑 豪华礼品区</div>
 <div class="grid" id="luxuryGrid"></div>
 
-<button class="backBtn" onclick="location.href='/account.html'" id="backText">
+<div class="sectionTitle"
+id="exchangeHistoryTitle">
+
+📜 我的兑换记录
+
+</div>
+
+<div
+id="myExchangeRecords"
+
+style="
+margin-top:10px;
+">
+
+加载中...
+
+</div>
+
+
+<button class="backBtn"
+onclick="location.href='/account.html'"
+id="backText">
+
 返回账户
+
 </button>
 
 </div>
@@ -590,11 +613,136 @@ alert(d.msg || "Success");
 if(d.success){
 await loadPoint();
 renderItems();
+loadMyExchangeRecords();
 }
 
 }
+async function loadMyExchangeRecords(){
 
-loadPoint();
+const uid =
+localStorage.getItem("userId");
+
+const box =
+document.getElementById("myExchangeRecords");
+
+if(!uid || !box){
+return;
+}
+
+const res =
+await fetch(
+"/my-exchange-records?userId=" + uid
+);
+
+const data =
+await res.json();
+
+let html = "";
+
+if(
+data.length === 0
+){
+
+html =
+currentLang==="th"
+?
+"ยังไม่มีประวัติการแลก"
+:
+"暂无兑换记录";
+
+}else{
+
+data.forEach(r=>{
+
+let statusText =
+r.status;
+
+if(r.status==="pending"){
+statusText =
+currentLang==="th"
+?
+"⏳ รอตรวจสอบ"
+:
+"⏳ 申请中";
+}
+
+if(r.status==="approved"){
+statusText =
+currentLang==="th"
+?
+"✅ อนุมัติแล้ว"
+:
+"✅ 已批准";
+}
+
+if(r.status==="done"){
+statusText =
+currentLang==="th"
+?
+"📦 จัดส่งแล้ว"
+:
+"📦 已发货";
+}
+
+if(r.status==="rejected"){
+statusText =
+currentLang==="th"
+?
+"❌ ถูกปฏิเสธ"
+:
+"❌ 已拒绝";
+}
+
+html += `
+<div style="
+margin:10px 0;
+padding:12px;
+border-radius:16px;
+background:rgba(0,18,45,.68);
+border:1px solid rgba(255,215,0,.35);
+box-shadow:0 0 18px rgba(255,215,0,.12);
+line-height:1.8;
+font-size:14px;
+">
+
+🎁 ${r.item_name || "-"}
+<br>
+
+💎 Point：
+${Number(r.point_cost || 0).toLocaleString()}
+<br>
+
+📌 ${statusText}
+<br>
+
+📝 ${
+currentLang==="th"
+?
+"หมายเหตุจัดส่ง"
+:
+"物流备注"
+}：
+${r.shipping_note || "-"}
+
+<br>
+
+🕒 ${r.created_at || "-"}
+
+</div>
+`;
+
+});
+
+}
+
+box.innerHTML =
+html;
+
+}
+loadPoint().then(()=>{
+loadMyExchangeRecords();
+});
+
 switchLang(currentLang);
 </script>
 

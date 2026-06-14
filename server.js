@@ -252,7 +252,7 @@ let GAME = {
   roundDbId: null,
 
   bets: {},
-
+  betUsers:{},
   timer: null,
 
   timeLeft: 60,
@@ -268,6 +268,7 @@ let rechargeCooldown = {};
 let withdrawCooldown = {};
 let onlineUsers = {};
 let chatCooldown = {};
+let exchangeCooldown = {};
 // ===== 恢复进行中的局 =====
 async function restoreActiveRound(){
 
@@ -311,6 +312,8 @@ for (const b of bets || []) {
       amount: Number(b.amount || 0)
     };
   }
+
+  GAME.betUsers[b.user_id] = true;
 
 }
     if(left > 0){
@@ -419,6 +422,7 @@ app.post("/start", async (req, res) => {
     GAME.currentRound = (GAME.currentRound || 0) + 1;
     GAME.isBetting = true;
     GAME.bets = {};
+    GAME.betUsers = {};
     GAME.bettingDuration = 60;
     GAME.timeLeft = 60;
     GAME.roundStartTime = Date.now();
@@ -518,29 +522,62 @@ app.post("/bet", async (req, res) => {
   });
 }
 
-/* 防庄闲对冲 */
+/* 每局只允许一次下注 */
 
-if (GAME.bets[userId]) {
+if(
 
-  const oldSide =
-  GAME.bets[userId].side;
+GAME.betUsers[userId]
 
-  if (
 
-    (oldSide==="B" && side==="P")
+){
 
-    ||
+const oldSide =
+GAME.bets[userId].side;
 
-    (oldSide==="P" && side==="B")
+/* 允许：庄+和 */
 
-  ){
+if(
 
-    return res.json({
-      success:false,
-      msg:"同一局不能同时买庄和闲"
-    });
+(oldSide==="B"&&side==="T")
 
-  }
+||
+
+(oldSide==="T"&&side==="B")
+
+){
+
+return res.json({
+success:false,
+msg:"本局已下注"
+});
+
+}
+
+/* 允许：闲+和 */
+
+if(
+
+(oldSide==="P"&&side==="T")
+
+||
+
+(oldSide==="T"&&side==="P")
+
+){
+
+return res.json({
+success:false,
+msg:"本局已下注"
+});
+
+}
+
+/* 禁止重复 */
+
+return res.json({
+success:false,
+msg:"同一局只能下注一次"
+});
 
 }
 
@@ -552,6 +589,7 @@ await supabase.from("turnover_records").insert([
   {
     user_id: userId,
     agent_code: user.agent_code || null,
+    round_id: GAME.roundDbId,
     amount: betAmount,
     bet_side: side,
     type: "bet"
@@ -566,18 +604,15 @@ await supabase.from("transactions").insert([
     round_id: GAME.roundDbId
   }
 ]);
- if (GAME.bets[userId]) {
+ GAME.bets[userId] = {
 
-  GAME.bets[userId].amount += betAmount;
+side: side,
 
-} else {
+amount: betAmount
 
-  GAME.bets[userId] = {
-    side: side,
-    amount: betAmount
-  };
+};
 
-}   
+GAME.betUsers[userId] = true;
 
     res.json({
       success:true
@@ -636,6 +671,7 @@ app.post("/admin/reset-game", checkAdmin, async (req, res) => {
     GAME.isBetting = false;
     GAME.roundActive = false;
     GAME.bets = {};
+    GAME.betUsers = {};
     GAME.timeLeft = 60;
     GAME.roundStartTime = null;
 
@@ -753,7 +789,7 @@ await supabase
   .eq("user_id", uid);
  }
 GAME.bets = {};
-
+GAME.betUsers = {};
 GAME.timeLeft = 60;
 
 GAME.roundStartTime = null;
@@ -2936,6 +2972,25 @@ app.post("/exchange", async (req, res) => {
       itemName,
       cost
     } = req.body;
+
+const now =
+Date.now();
+
+if(
+exchangeCooldown[userId]
+&&
+now - exchangeCooldown[userId] < 5000
+){
+
+return res.json({
+success:false,
+msg:"请勿重复兑换"
+});
+
+}
+
+exchangeCooldown[userId] = now;
+    
 const vipMap={
 
 "1g 金条":5,

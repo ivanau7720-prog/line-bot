@@ -3868,7 +3868,45 @@ withdrawCount>0
 :
 
 "none";
+const exchange =
+await fetch(
+"/admin/exchange-records",
+{
+headers:
+adminGetHeaders()
+}
+);
 
+const exchangeData =
+await exchange.json();
+
+const exchangeCount =
+
+exchangeData
+.filter(
+r=>r.status==="pending"
+)
+.length;
+
+document.getElementById(
+"exchangeBadge"
+).innerText =
+
+exchangeCount;
+
+document.getElementById(
+"exchangeBadge"
+).style.display =
+
+exchangeCount>0
+
+?
+
+"inline-block"
+
+:
+
+"none";
 }catch(err){
 
 console.log(
@@ -4474,6 +4512,12 @@ ${t.approve}
 
 <button onclick="rejectExchange('${e.id}')">
 ${t.reject}
+</button>
+
+<button onclick="doneExchange('${e.id}')">
+
+${t.doneExchange}
+
 </button>
 `
 :

@@ -18,7 +18,6 @@ app.get("/shop.html", (req, res) => {
 });
 
 app.use(express.static("public"));
-app.use(express.static(__dirname));
 // ===== 管理员登录检查 =====
 function checkAdmin(req, res, next){
 
@@ -402,7 +401,7 @@ if (newBalance < 0) newBalance = 0;
 }
 
 // ===== 开局 =====
-app.post("/start", async (req, res) => {
+app.post("/start", checkAdmin, async (req, res) => {
   try {
 
     if (GAME.roundActive && !GAME.isBetting) {
@@ -472,7 +471,19 @@ app.post("/bet", async (req, res) => {
     const { userId, side, amount } = req.body;
 
     const betAmount = Number(amount);
+    if(!userId){
+return res.json({
+success:false,
+msg:"玩家资料错误"
+});
+}
 
+if(!betAmount || isNaN(betAmount)){
+return res.json({
+success:false,
+msg:"下注金额错误"
+});
+}
     if (!GAME.isBetting) {
       return res.json({
         success:false,
@@ -594,8 +605,7 @@ amount: betAmount
   }
 });
 // ===== 停止下注 =====
-app.post("/stop", async (req, res) => {
-  try {
+app.post("/stop", checkAdmin, async (req, res) => {  try {
 
     if (!GAME.roundActive) {
       return res.json({

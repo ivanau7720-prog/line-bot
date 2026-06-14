@@ -784,6 +784,21 @@ margin:10px 0;
 加载中...
 
 </div>
+<input
+id="exchangeSearchInput"
+placeholder="搜索玩家ID / 用户名 / 商品名称"
+oninput="loadExchangeRequests()"
+style="
+width:100%;
+padding:12px;
+margin:10px 0;
+border-radius:12px;
+border:1px solid gold;
+background:#111;
+color:gold;
+box-sizing:border-box;
+"
+>
 <div id="exchangeRequests">
 
 暂无兑换申请
@@ -3793,139 +3808,7 @@ document.getElementById("todayWithdrawContent").innerHTML =
 html;
 
 }
-async function loadReviewBadges(){
 
-try{
-
-const recharge =
-await fetch(
-"/admin/recharge-requests",
-{
-headers:
-adminGetHeaders()
-}
-);
-
-const rechargeData =
-await recharge.json();
-
-const rechargeCount =
-
-rechargeData
-.filter(
-r=>r.status==="pending"
-)
-.length;
-
-document.getElementById(
-"rechargeBadge"
-).innerText =
-
-rechargeCount;
-
-document.getElementById(
-"rechargeBadge"
-).style.display =
-
-rechargeCount>0
-
-?
-
-"inline-block"
-
-:
-
-"none";
-
-
-const withdraw =
-await fetch(
-"/admin/withdraw-requests",
-{
-headers:
-adminGetHeaders()
-}
-);
-
-const withdrawData =
-await withdraw.json();
-
-const withdrawCount =
-
-withdrawData
-.filter(
-r=>r.status==="pending"
-)
-.length;
-
-document.getElementById(
-"withdrawBadge"
-).innerText =
-
-withdrawCount;
-
-document.getElementById(
-"withdrawBadge"
-).style.display =
-
-withdrawCount>0
-
-?
-
-"inline-block"
-
-:
-
-"none";
-const exchange =
-await fetch(
-"/admin/exchange-records",
-{
-headers:
-adminGetHeaders()
-}
-);
-
-const exchangeData =
-await exchange.json();
-
-const exchangeCount =
-
-exchangeData
-.filter(
-r=>r.status==="pending"
-)
-.length;
-
-document.getElementById(
-"exchangeBadge"
-).innerText =
-
-exchangeCount;
-
-document.getElementById(
-"exchangeBadge"
-).style.display =
-
-exchangeCount>0
-
-?
-
-"inline-block"
-
-:
-
-"none";
-}catch(err){
-
-console.log(
-"badge error",
-err
-);
-
-}
-
-}
 async function loadAnnouncementForm(){
 
 try{
@@ -4269,30 +4152,35 @@ function clearTxFilter(){
   loadTx();
 }
 async function loadRechargeRequests(){
+
 const lang =
 localStorage.getItem("adminLang")
 || "zh";
 
 const t =
 LANG[lang];
-  const res = await fetch("/admin/recharge-requests",{
-    headers: adminGetHeaders()
-  });
 
-  const data = await res.json();
+const res =
+await fetch("/admin/recharge-requests",{
+headers: adminGetHeaders()
+});
 
-  let html = "";
+const data =
+await res.json();
 
-  if(data.length === 0){
-   html = t.noRecharge;
-  }
+let html = "";
 
-  data.forEach(r=>{
- html += `
-  <div style="padding:8px;border-bottom:1px solid rgba(255,255,255,0.15)">
-    👤 ${r.username || "-"}
-    <br>
-    🆔 ${r.user_id}
+if(data.length === 0){
+html = t.noRecharge;
+}
+
+data.forEach(r=>{
+
+html += `
+<div style="padding:8px;border-bottom:1px solid rgba(255,255,255,0.15)">
+👤 ${r.username || "-"}
+<br>
+🆔 ${r.user_id}
 <br>
 ${t.rechargeAmount}${r.amount}
 <br>
@@ -4305,11 +4193,11 @@ ${t.note}${r.note || "-"}
 ${t.screenshot}
 <br>
 ${t.status}${r.status}
-    <br>
-    🕒 ${r.created_at}
-    <br><br>
+<br>
+🕒 ${r.created_at}
+<br><br>
 
-   ${
+${
 r.status === "pending"
 ?
 `
@@ -4325,13 +4213,14 @@ ${t.reject}
 ""
 }
 
-  </div>
+</div>
 `;
-  });
 
-  document.getElementById("rechargeRequests").innerHTML = html;
+});
+
+document.getElementById("rechargeRequests").innerHTML = html;
+
 }
-
 
 async function loadWithdrawRequests(){
 const lang =
@@ -4404,103 +4293,23 @@ const t =
 LANG[lang];
 
 const res =
-await fetch("/admin/exchange-records",{
-headers: adminGetHeaders()
-});
+await fetch(
+"/admin/exchange-records",
+{
+headers:
+adminGetHeaders()
+}
+);
 
 const data =
 await res.json();
 
-let pendingCount = 0;
-let approvedCount = 0;
-let doneCount = 0;
-let rejectedCount = 0;
 
-data.forEach(e=>{
+// ===== 统计 =====
 
-if(e.status==="pending"){
-pendingCount++;
-}
-
-if(e.status==="approved"){
-approvedCount++;
-}
-
-if(e.status==="done"){
-doneCount++;
-}
-
-if(e.status==="rejected"){
-rejectedCount++;
-}
-
-});
-
-document.getElementById("exchangeSummaryBox").innerHTML = `
-
-<div style="
-padding:12px;
-border-radius:14px;
-background:rgba(255,204,0,.08);
-border:1px solid rgba(255,204,0,.45);
-color:#ffcc00;
-font-weight:bold;
-text-align:center;
-">
-${lang==="th" ? "⏳ รอตรวจสอบ" : "⏳ 待审核"}
-<br>
-<span style="font-size:24px;">${pendingCount}</span>
-</div>
-
-<div style="
-padding:12px;
-border-radius:14px;
-background:rgba(0,255,150,.08);
-border:1px solid rgba(0,255,150,.45);
-color:#00ff99;
-font-weight:bold;
-text-align:center;
-">
-${lang==="th" ? "✅ อนุมัติแล้ว" : "✅ 已批准"}
-<br>
-<span style="font-size:24px;">${approvedCount}</span>
-</div>
-
-<div style="
-padding:12px;
-border-radius:14px;
-background:rgba(255,215,0,.08);
-border:1px solid rgba(255,215,0,.55);
-color:gold;
-font-weight:bold;
-text-align:center;
-">
-${lang==="th" ? "📦 จัดส่งแล้ว" : "📦 已发货"}
-<br>
-<span style="font-size:24px;">${doneCount}</span>
-</div>
-
-<div style="
-padding:12px;
-border-radius:14px;
-background:rgba(255,80,80,.08);
-border:1px solid rgba(255,80,80,.45);
-color:#ff6666;
-font-weight:bold;
-text-align:center;
-">
-${lang==="th" ? "❌ ปฏิเสธแล้ว" : "❌ 已拒绝"}
-<br>
-<span style="font-size:24px;">${rejectedCount}</span>
-</div>
-
-`;
 let pendingCount=0;
-
 let approvedCount=0;
-
 let doneCount=0;
-
 let rejectedCount=0;
 
 data.forEach(e=>{
@@ -4526,10 +4335,10 @@ document.getElementById(
 `
 
 <div style="
-padding:10px;
-border-radius:12px;
+padding:12px;
+border-radius:14px;
 background:rgba(255,204,0,.08);
-border:1px solid #ffcc00;
+border:1px solid gold;
 text-align:center;
 ">
 
@@ -4541,8 +4350,8 @@ ${pendingCount}
 </div>
 
 <div style="
-padding:10px;
-border-radius:12px;
+padding:12px;
+border-radius:14px;
 background:rgba(0,255,150,.08);
 border:1px solid #00ff99;
 text-align:center;
@@ -4556,10 +4365,10 @@ ${approvedCount}
 </div>
 
 <div style="
-padding:10px;
-border-radius:12px;
+padding:12px;
+border-radius:14px;
 background:rgba(255,215,0,.08);
-border:1px solid gold;
+border:1px solid #ffcc00;
 text-align:center;
 ">
 
@@ -4571,8 +4380,8 @@ ${doneCount}
 </div>
 
 <div style="
-padding:10px;
-border-radius:12px;
+padding:12px;
+border-radius:14px;
 background:rgba(255,80,80,.08);
 border:1px solid red;
 text-align:center;
@@ -4587,40 +4396,175 @@ ${rejectedCount}
 
 `;
 
-let html = "";
 
-if(data.length === 0){
+// ===== 搜索 =====
 
-html = t.noExchange;
+const searchText =
 
-}else{
+document
+.getElementById(
+"exchangeSearchInput"
+)
 
-data.forEach(e=>{
+?
 
-let statusText = e.status;
-let statusColor = "white";
+document
+.getElementById(
+"exchangeSearchInput"
+)
+.value
+.trim()
+.toLowerCase()
 
-if(e.status === "pending"){
-statusText = lang==="th" ? "รอตรวจสอบ" : "审核中";
-statusColor = "#ffcc00";
+:
+
+"";
+
+const filteredData =
+
+data.filter(e=>{
+
+return(
+
+String(
+e.user_id||""
+)
+.toLowerCase()
+.includes(searchText)
+
+||
+
+String(
+e.username||""
+)
+.toLowerCase()
+.includes(searchText)
+
+||
+
+String(
+e.player_name||""
+)
+.toLowerCase()
+.includes(searchText)
+
+||
+
+String(
+e.item_name||""
+)
+.toLowerCase()
+.includes(searchText)
+
+);
+
+});
+
+let html="";
+
+if(
+filteredData.length===0
+){
+
+html=
+
+searchText
+
+?
+
+(
+lang==="th"
+
+?
+
+"ไม่พบรายการ"
+
+:
+
+"没有找到兑换订单"
+)
+
+:
+
+t.noExchange;
+
 }
 
-if(e.status === "approved"){
-statusText = lang==="th" ? "อนุมัติแล้ว / รอจัดส่ง" : "已批准 / 待发货";
-statusColor = "#00ff99";
+else{
+
+filteredData.forEach(e=>{
+
+let statusText =
+e.status;
+
+let statusColor =
+"white";
+
+if(
+e.status==="pending"
+){
+
+statusText=
+lang==="th"
+?
+"审核中"
+:
+"审核中";
+
+statusColor=
+"#ffcc00";
+
 }
 
-if(e.status === "rejected"){
-statusText = lang==="th" ? "ปฏิเสธ / คืน Point แล้ว" : "已拒绝 / Point已退回";
-statusColor = "#ff4444";
+if(
+e.status==="approved"
+){
+
+statusText=
+lang==="th"
+?
+"待发货"
+:
+"待发货";
+
+statusColor=
+"#00ff99";
+
 }
 
-if(e.status === "done"){
-statusText = lang==="th" ? "จัดส่งแล้ว" : "已发货";
-statusColor = "gold";
+if(
+e.status==="done"
+){
+
+statusText=
+lang==="th"
+?
+"已发货"
+:
+"已发货";
+
+statusColor=
+"gold";
+
 }
 
-html += `
+if(
+e.status==="rejected"
+){
+
+statusText=
+lang==="th"
+?
+"已拒绝"
+:
+"已拒绝";
+
+statusColor=
+"red";
+
+}
+
+html+=`
 
 <div style="
 margin:10px 0;
@@ -4628,70 +4572,109 @@ padding:12px;
 border-radius:14px;
 background:rgba(255,255,255,.06);
 border:1px solid rgba(255,215,0,.25);
-line-height:1.8;
 ">
 
-👤 ${e.player_name || "-"}
+👤
+${e.player_name||"-"}
+
 <br>
 
-🆔 ${e.user_id}
+🆔
+${e.user_id}
+
 <br>
 
-👑 VIP${e.vip_level || 10}
+🎁
+${e.item_name}
+
 <br>
 
-🎁 ${lang==="th" ? "สินค้า" : "商品"}：${e.item_name || "-"}
+💎
+${e.point_cost}
+
 <br>
 
-💎 Point：${Number(e.point_cost || 0).toLocaleString()}
-<br>
-
-${t.status}
 <span style="
-color:${statusColor};
-font-weight:bold;
-font-size:18px;
+color:
+${statusColor};
 ">
+
 ${statusText}
+
 </span>
 
 <br>
 
-🕒 ${e.created_at || "-"}
-<br>
+📝
+${e.shipping_note||"-"}
 
-📝 ${lang==="th" ? "หมายเหตุจัดส่ง" : "发货备注"}：${e.shipping_note || "-"}
 <br><br>
 
 ${
-e.status === "pending"
+e.status==="pending"
+
 ?
+
 `
-<button onclick="approveExchange('${e.id}')">
+
+<button onclick="
+approveExchange(
+'${e.id}'
+)
+">
+
 ${t.approve}
+
 </button>
 
-<button onclick="rejectExchange('${e.id}')" style="background:red;color:white;">
+<button
+style="
+background:red;
+color:white;
+"
+
+onclick="
+rejectExchange(
+'${e.id}'
+)
+">
+
 ${t.reject}
+
 </button>
+
 `
+
 :
+
 ""
+
 }
 
 ${
-e.status === "approved"
+e.status==="approved"
+
 ?
+
 `
-<button onclick="doneExchange('${e.id}')" style="
-background:linear-gradient(90deg,#2196f3,#00ccff);
-color:white;
+
+<button
+onclick="
+doneExchange(
+'${e.id}'
+)
 ">
+
 ${t.doneExchange}
+
 </button>
+
 `
+
 :
+
 ""
+
 }
 
 </div>
@@ -4702,12 +4685,18 @@ ${t.doneExchange}
 
 }
 
-document.getElementById("exchangeRequests").innerHTML =
+document
+.getElementById(
+"exchangeRequests"
+)
+.innerHTML=
+
 html;
 
 loadReviewBadges();
 
 }
+  
 async function approveExchange(id){
 
 await fetch("/admin/approve-exchange",{
@@ -4897,7 +4886,7 @@ let profitB = 0;
 let profitP = 0;
 let profitT = 0;  
 
-  if(data.length === 0){
+ if(data.length === 0){
 
    html = t.betEmpty;
 

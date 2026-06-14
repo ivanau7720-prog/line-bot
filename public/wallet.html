@@ -507,6 +507,10 @@ showDeposit();
 
 async function submitWallet(){
 
+if(window.walletSubmitting){
+return;
+}
+
 const userId =
 localStorage.getItem("userId");
 
@@ -571,6 +575,23 @@ document.getElementById("receiverName").value
 
 }
 
+window.walletSubmitting = true;
+
+const submitBtn =
+document.querySelector(".submit");
+
+if(submitBtn){
+submitBtn.disabled = true;
+submitBtn.innerText =
+currentLang==="th"
+?
+"กำลังส่ง..."
+:
+"提交中...";
+}
+
+try{
+
 const url =
 currentType==="deposit"
 ? "/request-recharge"
@@ -604,6 +625,36 @@ showDeposit();
 }
 
 }
+
+}catch(err){
+
+alert(
+currentLang==="th"
+?
+"ส่งคำขอไม่สำเร็จ กรุณาลองใหม่"
+:
+"提交失败，请再试一次"
+);
+
+}finally{
+
+window.walletSubmitting = false;
+
+const newSubmitBtn =
+document.querySelector(".submit");
+
+if(newSubmitBtn){
+newSubmitBtn.disabled = false;
+newSubmitBtn.innerText =
+currentType==="deposit"
+?
+WALLET_LANG[currentLang].submitDeposit
+:
+WALLET_LANG[currentLang].submitWithdraw;
+}
+
+}
+
 }
 async function loadRecords(){
 

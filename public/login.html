@@ -322,8 +322,17 @@ CREATE ACCOUNT
 
 <input id="regConfirmPassword" type="password" placeholder="Confirm Password">
 
-<input id="regAgentCode" placeholder="Invite Code / Agent Code (optional)">
+<input id="regRealName" placeholder="Real Name / ชื่อจริง">
 
+<input id="regPhone" placeholder="Phone Number / เบอร์โทร">
+
+<input id="regLineId" placeholder="LINE ID">
+
+<input id="regBankName" placeholder="Bank Name / ธนาคาร">
+
+<input id="regBankAccount" placeholder="Bank Account / เลขบัญชี">
+
+<input id="regAgentCode" placeholder="Invite Code / Agent Code (optional)">
 <button class="regBtn" onclick="register()">
 CREATE NOW
 </button>
@@ -406,9 +415,39 @@ document.getElementById("regPassword").value.trim();
 const confirm =
 document.getElementById("regConfirmPassword").value.trim();
 
+const realName =
+document.getElementById("regRealName").value.trim();
+
+const phone =
+document.getElementById("regPhone").value.trim();
+
+const lineId =
+document.getElementById("regLineId").value.trim();
+
+const bankName =
+document.getElementById("regBankName").value.trim();
+
+const bankAccount =
+document.getElementById("regBankAccount").value.trim();
+  
 const agentCode =
 document.getElementById("regAgentCode").value.trim();
 
+if(
+!realName ||
+!phone ||
+!lineId ||
+!bankName ||
+!bankAccount
+){
+
+document.getElementById("regMsg").innerText =
+"Please fill in all real information";
+
+return;
+
+}
+  
 if(password!==confirm){
 
 document.getElementById("regMsg").innerText=
@@ -431,6 +470,11 @@ body:JSON.stringify({
 
 username,
 password,
+realName,
+phone,
+lineId,
+bankName,
+bankAccount,
 agentCode
 
 })

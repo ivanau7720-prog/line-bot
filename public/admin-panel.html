@@ -3551,26 +3551,97 @@ loadPlayers();
 loadProfit();
 
 }
+  
+let adminSubmitting =
+false;
 async function add(){
-  const userId = document.getElementById("uid").value;
-  const amount = Number(document.getElementById("amt").value);
+  
+if(adminSubmitting){
+return;
+}
 
- await fetch("/admin/add",{
-  method:"POST",
-  headers: adminHeaders(),
-  body: JSON.stringify({userId,amount})
+adminSubmitting =
+true;
+const userId =
+document.getElementById("uid").value.trim();
+
+const amount =
+Number(document.getElementById("amt").value);
+
+if(!userId || !amount || amount <= 0){
+
+adminSubmitting =
+false;
+
+alert(
+"请输入玩家ID和正确金额"
+);
+
+return;
+
+}
+
+const res =
+await fetch("/admin/add",{
+method:"POST",
+headers: adminHeaders(),
+body: JSON.stringify({userId,amount})
 });
+
+const data =
+await res.json();
+
+alert(data.msg || "已加钱");
+
+loadPlayers();
+loadProfit();
+loadTodayRecharge();
+adminSubmitting =
+false;
 }
 
 async function minus(){
-  const userId = document.getElementById("uid").value;
-  const amount = Number(document.getElementById("amt").value);
+if(adminSubmitting){
+return;
+}
 
- await fetch("/admin/minus",{
-  method:"POST",
-  headers: adminHeaders(),
-  body: JSON.stringify({userId,amount})
+adminSubmitting =
+true;
+const userId =
+document.getElementById("uid").value.trim();
+
+const amount =
+Number(document.getElementById("amt").value);
+
+if(!userId || !amount || amount <= 0){
+
+adminSubmitting =
+false;
+
+alert(
+"请输入玩家ID和正确金额"
+);
+
+return;
+
+}
+
+const res =
+await fetch("/admin/minus",{
+method:"POST",
+headers: adminHeaders(),
+body: JSON.stringify({userId,amount})
 });
+
+const data =
+await res.json();
+
+alert(data.msg || "已扣钱");
+
+loadPlayers();
+loadProfit();
+adminSubmitting =
+false;
 }
 async function loadRounds(){
   const lang = localStorage.getItem("adminLang") || "zh";

@@ -1472,7 +1472,13 @@ let totalTime = 60;
 // 下注
 async function bet(side) {
 
-  // 🔥 下注锁定（防作弊）
+if(window.betSubmitting){
+return;
+}
+
+window.betSubmitting = true;
+
+// 🔥 下注锁定（防作弊）
   const state = await fetch("/state").then(r => r.json());
 
   if (!state.isBetting) {
@@ -1508,42 +1514,134 @@ if (!amount) {
 
 const playerName = currentUserId;
 
-  const res = await fetch("/bet", {
-    method: "POST",
-    headers: {"Content-Type":"application/json"},
-    body: JSON.stringify({ userId, side, amount })
-  });
+ try{
 
-  const data = await res.json();
+const res = await fetch("/bet", {
 
-  // 💥 UI金额 + 动画
-  if (side === "B") {
-  flyChip("totalB");
-    let el = document.getElementById("totalB");
-el.innerHTML += `<div style="font-size:12px;color:gold">
-${playerName} 💰${amount}
-</div>`;
-  }
+method:"POST",
 
-  if (side === "P") {
-    flyChip("totalP");
-    let el = document.getElementById("totalP");
-el.innerHTML += `<div style="font-size:12px;color:gold">
-${playerName} 💰${amount}
-</div>`;
-  }
+headers:{
+"Content-Type":"application/json"
+},
 
-  if (side === "T") {
-    flyChip("totalT");
-    let el = document.getElementById("totalT");
-el.innerHTML += `<div style="font-size:12px;color:gold">
-${playerName} 💰${amount}
-</div>`;
-  }
+body:
+JSON.stringify({
+userId,
+side,
+amount
+})
 
-  document.getElementById("msg").innerText =
-data.msg || T("betSuccessMsg");
-  document.getElementById("betSound").play();
+});
+
+const data =
+await res.json();
+
+if(!data.success){
+
+alert(
+data.msg ||
+T("betClosedAlert")
+);
+
+return;
+
+}
+
+if (side === "B") {
+
+flyChip("totalB");
+
+let el =
+document.getElementById(
+"totalB"
+);
+
+el.innerHTML += `
+<div style="
+font-size:12px;
+color:gold;
+">
+${playerName}
+💰${amount}
+</div>
+`;
+
+}
+
+if (side === "P") {
+
+flyChip("totalP");
+
+let el =
+document.getElementById(
+"totalP"
+);
+
+el.innerHTML += `
+<div style="
+font-size:12px;
+color:gold;
+">
+${playerName}
+💰${amount}
+</div>
+`;
+
+}
+
+if (side === "T") {
+
+flyChip("totalT");
+
+let el =
+document.getElementById(
+"totalT"
+);
+
+el.innerHTML += `
+<div style="
+font-size:12px;
+color:gold;
+">
+${playerName}
+💰${amount}
+</div>
+`;
+
+}
+
+document
+.getElementById(
+"msg"
+)
+.innerText =
+
+data.msg
+||
+T(
+"betSuccessMsg"
+);
+
+document
+.getElementById(
+"betSound"
+)
+.play();
+
+}catch(err){
+
+alert(
+currentLang==="th"
+?
+"เดิมพันไม่สำเร็จ"
+:
+"下注失败"
+);
+
+}finally{
+
+window.betSubmitting = false;
+
 }
 
 // 状态

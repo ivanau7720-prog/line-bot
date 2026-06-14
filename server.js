@@ -3314,36 +3314,105 @@ if(userVip > needVip){
   });
 
 }
-    const currentPoint = Number(player.reward_points || 0);
-    const pointCost = Number(cost);
+const currentPoint =
+Number(player.reward_points || 0);
 
-    if (currentPoint < pointCost) {
+const pointCost =
+Number(cost);
+
+if(
+!pointCost
+||
+isNaN(pointCost)
+||
+pointCost <= 0
+){
+
+return res.json({
+success:false,
+msg:"积分数量错误"
+});
+
+}
+
+if (currentPoint < pointCost) {
       return res.json({
         success:false,
         msg:"积分不足"
       });
     }
 
-    const newPoint = currentPoint - pointCost;
+const newPoint =
+currentPoint - pointCost;
 
-    await supabase
-      .from("players")
-      .update({
-        reward_points:newPoint
-      })
-      .eq("user_id", userId);
+const {
+data: updatedPlayer,
+error: pointError
+} = await supabase
+.from("players")
+.update({
+reward_points:newPoint
+})
+.eq("user_id", userId)
+.gte("reward_points", pointCost)
+.select()
+.maybeSingle();
+
+if(
+pointError
+||
+!updatedPlayer
+){
+
+return res.json({
+success:false,
+msg:"积分不足或请勿重复兑换"
+});
+
+}
 
    const isBonus =
 itemName.toLowerCase().includes("bonus");
 
+const {
+error: exchangeError
+}
+=
 await supabase
-  .from("exchange_records")
-  .insert([{
-    user_id:userId,
-    item_name:itemName,
-    point_cost:pointCost,
-    status: isBonus ? "approved" : "pending"
-  }]);
+.from("exchange_records")
+.insert([{
+user_id:userId,
+item_name:itemName,
+point_cost:pointCost,
+status:
+isBonus
+?
+"approved"
+:
+"pending"
+}]);
+
+if(
+exchangeError
+){
+
+await supabase
+.from("players")
+.update({
+reward_points:
+currentPoint
+})
+.eq(
+"user_id",
+userId
+);
+
+return res.json({
+success:false,
+msg:"兑换失败，积分已退回"
+});
+
+}
 
     await supabase
       .from("point_records")

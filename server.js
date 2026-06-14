@@ -3110,7 +3110,34 @@ res.json([]);
 
 });
 
+// ===== 玩家：查看自己的兑换记录 =====
+app.get("/my-exchange-records", async (req, res) => {
+  try {
 
+    const userId = req.query.userId;
+
+    if (!userId) {
+      return res.json([]);
+    }
+
+    const { data, error } = await supabase
+      .from("exchange_records")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending:false });
+
+    if (error) {
+      console.error(error);
+      return res.json([]);
+    }
+
+    res.json(data || []);
+
+  } catch (err) {
+    console.error("my exchange records error:", err);
+    res.json([]);
+  }
+});
 // ===== 管理员：批准兑换 =====
 app.post("/admin/approve-exchange", checkAdmin, async (req, res) => {
   try {

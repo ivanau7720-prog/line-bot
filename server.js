@@ -3117,10 +3117,31 @@ app.post("/admin/approve-exchange", checkAdmin, async (req, res) => {
 
     const { id } = req.body;
 
+    const { data: record } = await supabase
+      .from("exchange_records")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (!record || record.status !== "pending") {
+      return res.json({
+        success:false,
+        msg:"申请不存在或已处理"
+      });
+    }
+
     await supabase
       .from("exchange_records")
       .update({ status:"approved" })
       .eq("id", id);
+
+    await logAdminAction(
+      "admin",
+      "批准兑换 / อนุมัติแลกของ",
+      record.user_id,
+      record.point_cost,
+      record.item_name || ""
+    );
 
     res.json({ success:true });
 
@@ -3129,7 +3150,6 @@ app.post("/admin/approve-exchange", checkAdmin, async (req, res) => {
     res.json({ success:false });
   }
 });
-
 
 // ===== 管理员：拒绝兑换 =====
 app.post("/admin/reject-exchange", checkAdmin, async (req, res) => {
@@ -3178,7 +3198,13 @@ app.post("/admin/reject-exchange", checkAdmin, async (req, res) => {
         type:"exchange_refund",
         note:"Exchange rejected refund"
       }]);
-
+    await logAdminAction(
+  "admin",
+  "拒绝兑换 / ปฏิเสธแลกของ",
+  record.user_id,
+  record.point_cost,
+  "Refund Point / คืนพอยต์：" + (record.item_name || "")
+);
     res.json({ success:true });
 
   } catch (err) {
@@ -3194,13 +3220,49 @@ app.post("/admin/done-exchange", checkAdmin, async (req, res) => {
 
     const { id, shippingNote } = req.body;
 
-await supabase
-  .from("exchange_records")
-  .update({
-    status:"done",
-    shipping_note: shippingNote || ""
-  })
-  .eq("id", id);
+    const { data: record } = await supabase
+      .from("exchange_records")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+if(
+!record
+||
+record.status==="done"
+){
+
+return res.json({
+success:false,
+msg:"已发货"
+});
+
+}
+if(
+record.status!=="approved"
+){
+
+return res.json({
+success:false,
+msg:"请先批准"
+});
+
+}
+    await supabase
+      .from("exchange_records")
+      .update({
+        status:"done",
+        shipping_note: shippingNote || ""
+      })
+      .eq("id", id);
+
+    await logAdminAction(
+      "admin",
+      "兑换已发货 / จัดส่งของแลกแล้ว",
+      record.user_id,
+      record.point_cost,
+      (record.item_name || "") + " / " + (shippingNote || "-")
+    );
 
     res.json({ success:true });
 

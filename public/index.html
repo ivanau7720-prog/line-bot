@@ -865,7 +865,9 @@ align-items:center;
 <div class="bet-buttons">
 
  <!-- 闲 -->
-<div id="areaP" onclick="bet('P')" style="
+<div id="areaP"
+onclick="selectSide('P')"
+style="
 position:relative;
 width:100%;
 height:92px;
@@ -884,7 +886,7 @@ box-shadow:
 0 0 10px #ffd700,
 0 0 25px rgba(0,80,255,0.8),
 inset 0 0 15px rgba(255,215,0,0.2);
-transition:0.2s;
+transition:.2s;
 ">
 
 <div id="playerText">
@@ -896,7 +898,9 @@ transition:0.2s;
 </div>
 
 <!-- 和 -->
-<div id="areaT" onclick="bet('T')" style="
+<div id="areaT"
+onclick="selectSide('T')"
+style="
 position:relative;
 width:100%;
 height:92px;
@@ -915,7 +919,7 @@ box-shadow:
 0 0 10px #ffd700,
 0 0 25px rgba(0,255,80,0.8),
 inset 0 0 15px rgba(255,215,0,0.2);
-transition:0.2s;
+transition:.2s;
 ">
   
 <div id="tieText">
@@ -927,7 +931,9 @@ transition:0.2s;
 </div>
 
 <!-- 庄 -->
-<div id="areaB" onclick="bet('B')" style="
+<div id="areaB"
+onclick="selectSide('B')"
+style="
 position:relative;
 width:100%;
 height:92px;
@@ -946,7 +952,7 @@ box-shadow:
 0 0 10px #ffd700,
 0 0 25px rgba(255,0,0,0.8),
 inset 0 0 15px rgba(255,215,0,0.2);
-transition:0.2s;
+transition:.2s;
 ">
 
 <div id="bankerText">
@@ -973,7 +979,7 @@ display:flex;
 justify-content:center;
 ">
 
-<button id="confirmBtn" onclick="confirmBet(event)" style="
+<button id="confirmBtn" onclick="submitSelectedBet(event)" style="
 height:38px;
 font-size:17px;
 width:88%;
@@ -1159,20 +1165,38 @@ letter-spacing:1px;
 
 <script>
 
-function confirmBet(event){
+async function submitSelectedBet(event){
 
-const btn = event.target;
+const btn =
+event.target;
 
-btn.style.transform = "scale(0.95)";
+btn.style.transform =
+"scale(.95)";
 
 setTimeout(()=>{
-btn.style.transform = "scale(1)";
+
+btn.style.transform =
+"scale(1)";
+
 },150);
 
-document.getElementById("betSound").play();
+if(!window.selectedSide){
 
-document.getElementById("msg").innerText =
-T("betSuccess");
+alert(
+currentLang==="zh"
+?
+"请选择下注区域"
+:
+"กรุณาเลือกฝั่ง"
+);
+
+return;
+
+}
+
+await bet(
+selectedSide
+);
 
 }
 
@@ -1481,10 +1505,11 @@ window.betSubmitting = true;
 // 🔥 下注锁定（防作弊）
   const state = await fetch("/state").then(r => r.json());
 
-  if (!state.isBetting) {
-    alert(T("betClosedAlert"));
-    return;
-  }
+if (!state.isBetting) {
+alert(T("betClosedAlert"));
+window.betSubmitting = false;
+return;
+}
 
 const userId = currentUserId;
 const amount = selectedAmount;
@@ -1503,15 +1528,16 @@ amount
 );
 
 if (!userId) {
-  alert(T("lineLoginAlert"));
-  return;
+alert(T("lineLoginAlert"));
+window.betSubmitting = false;
+return;
 }
 
 if (!amount) {
-  alert(T("selectChipAlert"));
-  return;
+alert(T("selectChipAlert"));
+window.betSubmitting = false;
+return;
 }
-
 const playerName = currentUserId;
 
  try{
@@ -1621,7 +1647,12 @@ data.msg
 T(
 "betSuccessMsg"
 );
+loadBalance();
 
+loadStats();
+
+loadState();
+   
 document
 .getElementById(
 "betSound"
@@ -1641,6 +1672,8 @@ currentLang==="th"
 }finally{
 
 window.betSubmitting = false;
+
+}
 
 }
 
@@ -2074,7 +2107,42 @@ setInterval(() => {
 
 let currentUserId = "";
 let selectedAmount = 0;
+let selectedSide = null;
 
+function selectSide(side){
+
+window.selectedSide =
+side;
+
+selectedSide =
+side;
+
+/* 清除旧选择 */
+
+[
+"areaB",
+"areaP",
+"areaT"
+].forEach(id=>{
+
+document
+.getElementById(id)
+.style.border =
+"2px solid #ffd700";
+
+});
+
+/* 高亮 */
+
+const box =
+document.getElementById(
+"area"+side
+);
+
+box.style.border =
+"4px solid #00ff88";
+
+}
  const activityNames = [
   "SOMCHAI","NONG88","JACK88","VIP7","MALI","TONY99",
   "AEK456","PLOY88","BANK007","NEW MEMBER"
@@ -2354,7 +2422,10 @@ box.style.display === "none" ? "block" : "none";
 }
 
 function openLine(){
-window.open("https://line.me/", "_blank");
+window.open(
+"https://line.me/R/ti/p/sTvAg23cCR",
+"_blank"
+);
 }
 
 function openWalletCenter(){

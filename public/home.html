@@ -555,14 +555,25 @@ BACCARAT
 
 </a>
 
-<a class="card" href="/account.html">
+<a
+class="card"
+
+href="https://line.me/ti/p/sTvAg23cCR"
+
+target="_blank"
+>
 
 <div class="icon">
 📞
 </div>
 
-<div class="text" id="serviceText">
-联系客服
+<div
+class="text"
+id="serviceText"
+>
+
+LINE SUPPORT
+
 </div>
 
 </a>
@@ -770,9 +781,10 @@ document.getElementById("memberLabel").innerText = t.member;
   document.getElementById("noticeTitle").innerText = t.noticeTitle;
 document.getElementById("noticeText").innerText = t.noticeText;
 document.getElementById("noticeSmall").innerText = t.noticeSmall;
-  const username =
-localStorage.getItem("username") || localStorage.getItem("userId") || "";
-
+  
+ const username =
+localStorage.getItem("name") || localStorage.getItem("userId") || "";
+  
 document.getElementById("welcomeText").innerText =
 t.welcome + " " + username;
   localStorage.setItem("homeLang", lang);

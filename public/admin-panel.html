@@ -1583,6 +1583,12 @@ loadAnnouncementForm();
 
 loadAnnouncement();
 
+loadReviewBadges();
+
+setInterval(()=>{
+loadReviewBadges();
+},60000);
+
 };
 
 const adminToken = localStorage.getItem("adminToken");
@@ -3216,14 +3222,32 @@ const t = LANG[lang];
   let html = "";
 
   data.forEach(p=>{
-  html += `
-  <div style="margin:5px 0">
+ html += `
+  <div style="
+  margin:8px 0;
+  padding:10px;
+  border-radius:12px;
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,215,0,.25);
+  line-height:1.8;
+  ">
     🆔 ${p.id}
     | 👤 ${p.username}
     | ${t.agentLabel}${p.agent_code}
-   | 💰${p.balance}
-| 👑 VIP${p.vip || 10}
-| ${t.winLabel}${p.win}
+    <br>
+    🪪 ${lang==="th" ? "ชื่อจริง" : "真实姓名"}：${p.real_name || "-"}
+    <br>
+    📞 ${lang==="th" ? "เบอร์โทร" : "电话"}：${p.phone || "-"}
+    <br>
+    💬 LINE：${p.line_id || "-"}
+    <br>
+    🏦 ${lang==="th" ? "ธนาคาร" : "银行"}：${p.bank_name || "-"}
+    <br>
+    💳 ${lang==="th" ? "เลขบัญชี" : "银行账号"}：${p.bank_account || "-"}
+    <br>
+    💰 ${p.balance}
+    | 👑 VIP${p.vip || 10}
+    | ${t.winLabel}${p.win}
     | ${t.loseLabel}${p.lose}
   </div>
 `;
@@ -3758,6 +3782,101 @@ ${time}
 
 document.getElementById("todayWithdrawContent").innerHTML =
 html;
+
+}
+async function loadReviewBadges(){
+
+try{
+
+const recharge =
+await fetch(
+"/admin/recharge-requests",
+{
+headers:
+adminGetHeaders()
+}
+);
+
+const rechargeData =
+await recharge.json();
+
+const rechargeCount =
+
+rechargeData
+.filter(
+r=>r.status==="pending"
+)
+.length;
+
+document.getElementById(
+"rechargeBadge"
+).innerText =
+
+rechargeCount;
+
+document.getElementById(
+"rechargeBadge"
+).style.display =
+
+rechargeCount>0
+
+?
+
+"inline-block"
+
+:
+
+"none";
+
+
+const withdraw =
+await fetch(
+"/admin/withdraw-requests",
+{
+headers:
+adminGetHeaders()
+}
+);
+
+const withdrawData =
+await withdraw.json();
+
+const withdrawCount =
+
+withdrawData
+.filter(
+r=>r.status==="pending"
+)
+.length;
+
+document.getElementById(
+"withdrawBadge"
+).innerText =
+
+withdrawCount;
+
+document.getElementById(
+"withdrawBadge"
+).style.display =
+
+withdrawCount>0
+
+?
+
+"inline-block"
+
+:
+
+"none";
+
+}catch(err){
+
+console.log(
+"badge error",
+err
+);
+
+}
 
 }
 async function loadAnnouncementForm(){

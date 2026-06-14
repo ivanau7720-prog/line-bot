@@ -377,33 +377,75 @@ document.getElementById("username").value.trim();
 const password =
 document.getElementById("password").value.trim();
 
-const res = await fetch("/member-login",{
+/* 空白检查 */
+
+if(
+!username ||
+!password
+){
+
+document.getElementById("msg").innerText =
+"Please enter Player ID and Password";
+
+return;
+
+}
+
+try{
+
+const res =
+await fetch(
+"/member-login",
+{
 method:"POST",
+
 headers:{
 "Content-Type":"application/json"
 },
-body:JSON.stringify({
-username,password
-})
-});
 
-const data = await res.json();
+body:JSON.stringify({
+username,
+password
+})
+
+}
+);
+
+const data =
+await res.json();
 
 if(data.success){
-// 临时登录资料（关网页自动消失）
-localStorage.setItem("userId", data.userId);
-localStorage.setItem("name", data.name);
 
-location.href = "/home.html";
+localStorage.setItem(
+"userId",
+data.userId
+);
+
+localStorage.setItem(
+"name",
+data.name
+);
+
+location.href =
+"/home.html";
+
 }else{
 
 document.getElementById("msg").innerText =
-data.msg;
+data.msg ||
+"Login failed";
+
+}
+
+}catch(err){
+
+document.getElementById("msg").innerText =
+"Network error";
 
 }
 
 }
-
+  
 async function register(){
 
 const username =

@@ -268,7 +268,6 @@ let withdrawCooldown = {};
 let onlineUsers = {};
 let chatCooldown = {};
 let exchangeCooldown = {};
-let loginAttempts = {};
 // ===== 恢复进行中的局 =====
 async function restoreActiveRound(){
 
@@ -2467,28 +2466,15 @@ app.post("/member-login", async (req,res)=>{
 
 const { username,password } = req.body;
 
-const loginKey =
-username || "";
-
-const now =
-Date.now();
-
-if(!loginAttempts[loginKey]){
-loginAttempts[loginKey]={
-count:0,
-lockedUntil:0
-};
-}
-
 if(
-loginAttempts[loginKey].lockedUntil
-&&
-now < loginAttempts[loginKey].lockedUntil
+!username
+||
+!password
 ){
 
 return res.json({
 success:false,
-msg:"账号暂时锁定，请10分钟后再试"
+msg:"请输入账号和密码"
 });
 
 }
@@ -2502,21 +2488,12 @@ const { data } = await supabase
 
 if(!data){
 
-loginAttempts[loginKey].count++;
-
-if(loginAttempts[loginKey].count >= 5){
-loginAttempts[loginKey].lockedUntil =
-Date.now() + 10 * 60 * 1000;
-}
-
 return res.json({
 success:false,
 msg:"账号或密码错误"
 });
 
 }
-
-delete loginAttempts[loginKey];
 
 res.json({
 success:true,

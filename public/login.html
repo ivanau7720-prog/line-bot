@@ -503,10 +503,37 @@ return;
 
 }
 
-if(!password || password.length < 4){
+if(!password){
+
+document.getElementById("regMsg").innerText =
+"Password is required";
+
+return;
+
+}
+
+if(password.length < 4){
 
 document.getElementById("regMsg").innerText =
 "Password must be at least 4 characters";
+
+return;
+
+}
+
+if(password.length > 30){
+
+document.getElementById("regMsg").innerText =
+"Password maximum 30 characters";
+
+return;
+
+}
+
+if(/\s/.test(password)){
+
+document.getElementById("regMsg").innerText =
+"Password cannot contain spaces";
 
 return;
 

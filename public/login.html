@@ -527,7 +527,7 @@ document.getElementById("regAgentCode").value.trim();
 if(!username){
 
 document.getElementById("regMsg").innerText =
-"请输入玩家账号 / กรุณากรอก Player ID";
+"请输入玩家账号 / กรุณากรอกรหัสผู้เล่น";
 
 return;
 
@@ -536,7 +536,7 @@ return;
 if(username.length < 4 || username.length > 15){
 
 document.getElementById("regMsg").innerText =
-"玩家账号需 4–15 位 / Player ID ต้อง 4–15 ตัว";
+"玩家账号需 4–15 位 / รหัสผู้เล่นต้องมี 4–15 ตัว";
 
 return;
 
@@ -555,7 +555,7 @@ return;
 if(password.length < 4){
 
 document.getElementById("regMsg").innerText =
-"密码至少 4 位 / รหัสผ่านอย่างน้อย 4 ตัว";
+"密码至少 4 位 / รหัสผ่านต้องมีอย่างน้อย 4 ตัว";
 
 return;
 
@@ -564,7 +564,7 @@ return;
 if(password.length > 15){
 
 document.getElementById("regMsg").innerText =
-"密码需 4–15 位 / รหัสผ่าน 4–15 ตัว";
+"密码需 4–15 位 / รหัสผ่านต้องมี 4–15 ตัว";
 
 return;
 
@@ -580,7 +580,7 @@ if(
 ){
 
 document.getElementById("regMsg").innerText =
-"请填写姓名、电话、银行、账号 / กรุณากรอกชื่อ เบอร์ ธนาคาร เลขบัญชี";
+"请填写姓名、电话、银行、账号 / กรุณากรอกชื่อ เบอร์โทร ธนาคาร และเลขบัญชี";
 
 return;
 
@@ -590,7 +590,7 @@ return;
 if(password!==confirm){
 
 document.getElementById("regMsg").innerText=
-"密码不一致 / รหัสผ่านไม่ตรงกัน";
+"密码不一致 / รหัสผ่านทั้งสองช่องไม่ตรงกัน";
 
 return;
 
@@ -628,7 +628,7 @@ data.msg || "Account Created";
 if(data.success){
 
 document.getElementById("regMsg").innerText =
-"注册成功，请点击 LOGIN 登入 / สมัครสำเร็จ กรุณากด LOGIN";
+"注册成功，请点击 LOGIN 登入 / สมัครสำเร็จ กรุณาเข้าสู่ระบบ";
 
 setTimeout(()=>{
 

@@ -2494,25 +2494,40 @@ agentCode;
 }
 
 }
+const { error: insertError } =
 await supabase.from("players").insert([{
-  user_id:userId,
-  username,
-  password,
-  name:username,
-  real_name:realName,
-  phone,
-  line_id:lineId,
-  bank_name:bankName,
-  bank_account:bankAccount,
-  balance:0,
-  total_topup:0,
-  total_withdraw:0,
-  reward_points:0,
-  vip_level:10,
-  agent_code:finalAgent
+user_id:userId,
+username,
+password,
+name:username,
+real_name:realName,
+phone,
+line_id:"",
+bank_name:bankName,
+bank_account:bankAccount,
+balance:0,
+total_topup:0,
+total_withdraw:0,
+reward_points:0,
+vip_level:10,
+agent_code:finalAgent
 }]);
 
-res.json({success:true});
+if(insertError){
+
+console.log("register insert error:", insertError);
+
+return res.json({
+success:false,
+msg:"注册失败，请换一个Player ID / สมัครไม่สำเร็จ กรุณาเปลี่ยนรหัสผู้เล่น"
+});
+
+}
+
+res.json({
+success:true,
+msg:"注册成功 / สมัครสำเร็จ"
+});
 
 });
 

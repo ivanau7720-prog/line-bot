@@ -316,11 +316,52 @@ text-align:center;
 CREATE ACCOUNT
 </h1>
 
-<input id="regUsername" placeholder="รหัสผู้เล่น (A-Z / 0-9 / @ _ -) 4–20 ตัว">
-<input id="regPassword" type="password" placeholder="รหัสผ่าน / Password">
+<input id="regUsername" placeholder="รหัสผู้เล่น 4–15 ตัว">
+<div style="position:relative;">
 
-<input id="regConfirmPassword" type="password" placeholder="ยืนยันรหัสผ่าน / Confirm Password">
+<input
+id="regPassword"
+type="password"
+placeholder="รหัสผ่าน 4–15 ตัว"
+style="padding-right:60px;">
 
+<span
+onclick="togglePwd('regPassword',this)"
+style="
+position:absolute;
+right:18px;
+top:50%;
+transform:translateY(-50%);
+cursor:pointer;
+font-size:20px;
+">
+👁️
+</span>
+
+</div>
+
+<div style="position:relative;">
+
+<input
+id="regConfirmPassword"
+type="password"
+placeholder="ยืนยันรหัสผ่าน / Confirm Password"
+style="padding-right:60px;">
+
+<span
+onclick="togglePwd('regConfirmPassword',this)"
+style="
+position:absolute;
+right:18px;
+top:50%;
+transform:translateY(-50%);
+cursor:pointer;
+font-size:20px;
+">
+👁️
+</span>
+
+</div>
 <input id="regRealName" placeholder="ชื่อจริง / Real Name">
 
 <input id="regPhone" placeholder="เบอร์โทร / Phone Number">
@@ -478,24 +519,15 @@ return;
 
 }
 
-if(username.length < 4 || username.length > 20){
+if(username.length < 4 || username.length > 15){
 
 document.getElementById("regMsg").innerText =
-"玩家账号需 4–20 位 / Player ID ต้อง 4–20 ตัว";
+"玩家账号需 4–15 位 / Player ID ต้อง 4–15 ตัว";
 
 return;
 
 }
 
-/* 不能全部都是符号，必须至少有英文或数字 */
-if(!/[a-zA-Z0-9]/.test(username)){
-
-document.getElementById("regMsg").innerText =
-"账号至少包含英文或数字 / ต้องมีตัวอักษรหรือเลขอย่างน้อย 1 ตัว";
-
-return;
-
-}
 
 if(!password){
 
@@ -515,23 +547,16 @@ return;
 
 }
 
-if(password.length > 30){
+if(password.length > 15){
 
 document.getElementById("regMsg").innerText =
-"密码最多 30 位 / รหัสผ่านไม่เกิน 30 ตัว";
+"密码需 4–15 位 / รหัสผ่าน 4–15 ตัว";
 
 return;
 
 }
 
-if(/\s/.test(password)){
 
-document.getElementById("regMsg").innerText =
-"密码不能有空格 / รหัสผ่านห้ามมีช่องว่าง";
-
-return;
-
-}
 
 if(
 !realName ||
@@ -639,7 +664,24 @@ document.getElementById(
 ).innerText="";
 
 }
+function togglePwd(id,el){
 
+const input =
+document.getElementById(id);
+
+if(input.type==="password"){
+
+input.type="text";
+el.innerHTML="🙈";
+
+}else{
+
+input.type="password";
+el.innerHTML="👁️";
+
+}
+
+}
 
 </script>
 

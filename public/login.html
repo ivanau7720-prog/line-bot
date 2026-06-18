@@ -316,7 +316,7 @@ text-align:center;
 CREATE ACCOUNT
 </h1>
 
-<input id="regUsername" placeholder="Player ID 4-20 letters / numbers / symbols"
+<input id="regUsername" placeholder="账号 4–20 位（英文/数字/符号） / ID 4–20 ตัว">
 
 <input id="regPassword" type="password" placeholder="Password">
 
@@ -478,7 +478,7 @@ document.getElementById("regAgentCode").value.trim();
 if(!username){
 
 document.getElementById("regMsg").innerText =
-"Player ID is required";
+"请输入玩家账号 / กรุณากรอก Player ID";
 
 return;
 
@@ -487,7 +487,7 @@ return;
 if(username.length < 4 || username.length > 20){
 
 document.getElementById("regMsg").innerText =
-"Player ID must be 4-20 characters";
+"玩家账号需 4–20 位 / Player ID ต้อง 4–20 ตัว";
 
 return;
 
@@ -497,7 +497,7 @@ return;
 if(!/[a-zA-Z0-9]/.test(username)){
 
 document.getElementById("regMsg").innerText =
-"Player ID must include at least one letter or number";
+"账号至少包含英文或数字 / ต้องมีตัวอักษรหรือเลขอย่างน้อย 1 ตัว";
 
 return;
 
@@ -506,7 +506,7 @@ return;
 if(!password){
 
 document.getElementById("regMsg").innerText =
-"Password is required";
+"请输入密码 / กรุณากรอกรหัสผ่าน";
 
 return;
 
@@ -515,7 +515,7 @@ return;
 if(password.length < 4){
 
 document.getElementById("regMsg").innerText =
-"Password must be at least 4 characters";
+"密码至少 4 位 / รหัสผ่านอย่างน้อย 4 ตัว";
 
 return;
 
@@ -524,7 +524,7 @@ return;
 if(password.length > 30){
 
 document.getElementById("regMsg").innerText =
-"Password maximum 30 characters";
+"密码最多 30 位 / รหัสผ่านไม่เกิน 30 ตัว";
 
 return;
 
@@ -533,7 +533,7 @@ return;
 if(/\s/.test(password)){
 
 document.getElementById("regMsg").innerText =
-"Password cannot contain spaces";
+"密码不能有空格 / รหัสผ่านห้ามมีช่องว่าง";
 
 return;
 
@@ -547,7 +547,7 @@ if(
 ){
 
 document.getElementById("regMsg").innerText =
-"Please fill in Name, Phone, Bank Name and Bank Account";
+"请填写姓名、电话、银行、账号 / กรุณากรอกชื่อ เบอร์ ธนาคาร เลขบัญชี";
 
 return;
 
@@ -557,7 +557,7 @@ return;
 if(password!==confirm){
 
 document.getElementById("regMsg").innerText=
-"Password not match";
+"密码不一致 / รหัสผ่านไม่ตรงกัน";
 
 return;
 

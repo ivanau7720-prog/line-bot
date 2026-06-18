@@ -2411,8 +2411,40 @@ msg:"Player ID must include at least one letter or number"
 
 }
 
-if(!password || password.length < 4){
-return res.json({success:false,msg:"密码至少4位"});
+if(!password){
+
+return res.json({
+success:false,
+msg:"Password is required"
+});
+
+}
+
+if(password.length < 4){
+
+return res.json({
+success:false,
+msg:"Password must be at least 4 characters"
+});
+
+}
+
+if(password.length > 30){
+
+return res.json({
+success:false,
+msg:"Password maximum 30 characters"
+});
+
+}
+
+if(/\s/.test(password)){
+
+return res.json({
+success:false,
+msg:"Password cannot contain spaces"
+});
+
 }
 if(
 !realName ||

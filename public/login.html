@@ -475,20 +475,57 @@ document.getElementById("regBankAccount").value.trim();
 const agentCode =
 document.getElementById("regAgentCode").value.trim();
 
+if(!username){
+
+document.getElementById("regMsg").innerText =
+"Player ID is required";
+
+return;
+
+}
+
+if(username.length < 4 || username.length > 20){
+
+document.getElementById("regMsg").innerText =
+"Player ID must be 4-20 characters";
+
+return;
+
+}
+
+/* 不能全部都是符号，必须至少有英文或数字 */
+if(!/[a-zA-Z0-9]/.test(username)){
+
+document.getElementById("regMsg").innerText =
+"Player ID must include at least one letter or number";
+
+return;
+
+}
+
+if(!password || password.length < 4){
+
+document.getElementById("regMsg").innerText =
+"Password must be at least 4 characters";
+
+return;
+
+}
+
 if(
 !realName ||
 !phone ||
-!lineId ||
 !bankName ||
 !bankAccount
 ){
 
 document.getElementById("regMsg").innerText =
-"Please fill in all real information";
+"Please fill in Name, Phone, Bank Name and Bank Account";
 
 return;
 
 }
+
   
 if(password!==confirm){
 

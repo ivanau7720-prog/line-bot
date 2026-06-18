@@ -273,7 +273,31 @@ VIP MEMBER LOGIN
 </div>
 
 <input id="username" placeholder="Player ID">
-<input id="password" type="password" placeholder="Password">
+<div style="position:relative;">
+
+<input
+id="password"
+type="password"
+placeholder="Password"
+style="padding-right:60px;">
+
+<span
+onclick="togglePwd('password',this)"
+style="
+position:absolute;
+right:18px;
+top:50%;
+transform:translateY(-50%);
+cursor:pointer;
+font-size:20px;
+user-select:none;
+">
+
+👁️
+
+</span>
+
+</div>
 
 <button class="loginBtn" onclick="login()">
 LOGIN

@@ -2383,8 +2383,32 @@ bankAccount,
 agentCode
 } = req.body;
 
-if(!/^[a-zA-Z0-9]{4,12}$/.test(username)){
-return res.json({success:false,msg:"ID限英文数字4-12"});
+if(!username){
+
+return res.json({
+success:false,
+msg:"Player ID is required"
+});
+
+}
+
+if(username.length < 4 || username.length > 20){
+
+return res.json({
+success:false,
+msg:"Player ID must be 4-20 characters"
+});
+
+}
+
+/* 不能全部都是符号，必须至少有英文或数字 */
+if(!/[a-zA-Z0-9]/.test(username)){
+
+return res.json({
+success:false,
+msg:"Player ID must include at least one letter or number"
+});
+
 }
 
 if(!password || password.length < 4){
@@ -2393,13 +2417,12 @@ return res.json({success:false,msg:"密码至少4位"});
 if(
 !realName ||
 !phone ||
-!lineId ||
 !bankName ||
 !bankAccount
 ){
 return res.json({
 success:false,
-msg:"Please fill in all real information"
+msg:"Please fill in Name, Phone, Bank Name and Bank Account"
 });
 }
 const { data: old } = await supabase

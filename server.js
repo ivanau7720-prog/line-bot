@@ -2515,11 +2515,16 @@ agent_code:finalAgent
 
 if(insertError){
 
-console.log("register insert error:", insertError);
+console.log(
+"REGISTER ERROR:",
+insertError
+);
 
 return res.json({
 success:false,
-msg:"注册失败，请换一个Player ID / สมัครไม่สำเร็จ กรุณาเปลี่ยนรหัสผู้เล่น"
+msg:
+"注册失败：" +
+(insertError.message || "数据库错误")
 });
 
 }
@@ -2527,8 +2532,6 @@ msg:"注册失败，请换一个Player ID / สมัครไม่สำเร
 res.json({
 success:true,
 msg:"注册成功 / สมัครสำเร็จ"
-});
-
 });
 
 // ===== 登录 =====

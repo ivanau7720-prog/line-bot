@@ -2392,24 +2392,15 @@ msg:"Player ID is required"
 
 }
 
-if(username.length < 4 || username.length > 20){
+if(username.length < 4 || username.length > 15){
 
 return res.json({
 success:false,
-msg:"Player ID must be 4-20 characters"
+msg:"Player ID must be 4-15 characters"
 });
 
 }
 
-/* 不能全部都是符号，必须至少有英文或数字 */
-if(!/[a-zA-Z0-9]/.test(username)){
-
-return res.json({
-success:false,
-msg:"Player ID must include at least one letter or number"
-});
-
-}
 
 if(!password){
 
@@ -2429,23 +2420,15 @@ msg:"Password must be at least 4 characters"
 
 }
 
-if(password.length > 30){
+if(password.length > 15){
 
 return res.json({
 success:false,
-msg:"Password maximum 30 characters"
+msg:"Password must be 4-15 characters"
 });
 
 }
 
-if(/\s/.test(password)){
-
-return res.json({
-success:false,
-msg:"Password cannot contain spaces"
-});
-
-}
 if(
 !realName ||
 !phone ||
@@ -2532,6 +2515,8 @@ msg:
 res.json({
 success:true,
 msg:"注册成功 / สมัครสำเร็จ"
+});
+
 });
 
 // ===== 登录 =====

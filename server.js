@@ -3699,7 +3699,12 @@ await supabase
 res.json({
 success:true,
 spin_count:
-Number(data?.spin_count || 0)
+Number(data?.spin_count || 0),
+claimed_today:
+data?.last_spin_date ===
+new Date().toLocaleDateString("en-CA",{
+timeZone:"Asia/Bangkok"
+})
 });
 
 }catch(err){

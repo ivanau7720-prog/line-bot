@@ -613,6 +613,52 @@ await changeBalance(
 userId,
 -betAmount
 );
+/* Lucky Bonus 流水累计 */
+
+const { data: activeBonus } =
+await supabase
+.from("lucky_bonus_wallet")
+.select("*")
+.eq("user_id", userId)
+.eq("status","used")
+.gt("turnover_required",0)
+.order("id",{
+ascending:true
+})
+.limit(1);
+
+if(
+activeBonus &&
+activeBonus.length > 0
+){
+
+const bonus =
+activeBonus[0];
+
+const newDone =
+Math.min(
+Number(bonus.turnover_done || 0)
++
+betAmount,
+Number(bonus.turnover_required || 0)
+);
+
+const newStatus =
+newDone >= Number(bonus.turnover_required || 0)
+?
+"completed"
+:
+"used";
+
+await supabase
+.from("lucky_bonus_wallet")
+.update({
+turnover_done:newDone,
+status:newStatus
+})
+.eq("id", bonus.id);
+
+}
 await supabase.from("turnover_records").insert([
   {
     user_id: userId,

@@ -260,7 +260,28 @@ box-shadow:
 z-index:1;
 
 }
+.wheelPrize.bigPrize{
 
+background:
+linear-gradient(
+180deg,
+#a10000,
+#220000
+);
+
+border:
+2px solid
+rgba(255,215,0,.65);
+
+box-shadow:
+
+0 0 12px red,
+
+0 0 20px gold;
+
+font-size:26px;
+
+}
 .p1{transform:rotate(0deg) translateY(-104px);}
 .p2{transform:rotate(33deg) translateY(-104px);}
 .p3{transform:rotate(66deg) translateY(-104px);}
@@ -745,9 +766,11 @@ font-weight:bold;
 </div>
 <div class="wheelBox" id="wheel">
 
-<div class="wheelPrize p1">📱</div>
-<div class="wheelPrize p2">🎧</div>
-<div class="wheelPrize p3">🥇</div>
+<div class="wheelPrize p1 bigPrize">📱</div>
+
+<div class="wheelPrize p2 bigPrize">🏍️</div>
+
+<div class="wheelPrize p3 bigPrize">🚗</div>
 
 <div class="wheelPrize p4">5%</div>
 <div class="wheelPrize p5">10%</div>
@@ -821,8 +844,12 @@ START SPIN
 <div class="prize">🎁 <b>Bonus 8%</b></div>
 <div class="prize">🎁 <b>Bonus 10%</b></div>
 <div class="prize">🎁 <b>Bonus 12%</b></div>
+<div class="prize">📱 <b>iPhone 17 Pro Max</b></div>
+
+<div class="prize">🏍️ <b>Thai Motorbike</b></div>
+
 <div class="prize" style="grid-column:1/3;">
-📱 <b>iPhone 17 Pro Max</b>
+🚗 <b>Thai Car</b>
 </div>
 
 </div>

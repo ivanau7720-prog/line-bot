@@ -716,6 +716,9 @@ font-weight:bold;
 <div id="todaySpinBadge" class="todaySpinBadge">
 检查今日状态中...
 </div>
+<div id="resetCountdown" class="todaySpinBadge">
+--:--:--
+</div>
 <div class="wheelBox" id="wheel">
 
 <div class="wheelPrize p1">📱</div>
@@ -859,7 +862,10 @@ wait:"等待抽奖",
 start:"START SPIN",
 ruleTitle:"🎁 活动规则",
 ruleText:
-"每日充值满 1,000 THB 可获得 Lucky Spin ×1。<br>每位玩家每天限 1 次，泰国时间 12AM 刷新。<br>抽中 Bonus 奖励，下次充值可获得额外奖励。<br>所有 Bonus 完成 1.5 倍流水即可提款。"
+"每日充值满 1,000 THB 可获得 Lucky Spin ×1。<br>每位玩家每天限 1 次，泰国时间 12AM 刷新。<br>抽中 Bonus 奖励，下次充值可获得额外奖励。<br>所有 Bonus 完成 1.5 倍流水即可提款。",
+
+countdown:
+"⏳ 距离明日刷新："
 },
 th:{
 sub:"เติมเงินครบ 1,000 THB ต่อวัน รับสิทธิ์ Lucky Spin 1 ครั้ง จำกัดผู้เล่นละ 1 ครั้งต่อวัน",
@@ -868,7 +874,10 @@ wait:"รอการหมุน",
 start:"START SPIN",
 ruleTitle:"🎁 กติกากิจกรรม",
 ruleText:
-"เติมเงินครบ 1,000 THB ต่อวัน รับ Lucky Spin ×1<br>จำกัดผู้เล่นละ 1 ครั้งต่อวัน รีเซ็ตเวลา 00:00 น. ตามเวลาไทย<br>หากได้รับ Bonus จะใช้กับการเติมเงินครั้งถัดไป<br>Bonus ทุกประเภท ถอนเงินได้เมื่อทำยอดเล่นครบ 1.5 เท่า"
+"เติมเงินครบ 1,000 THB ต่อวัน รับ Lucky Spin ×1<br>จำกัดผู้เล่นละ 1 ครั้งต่อวัน รีเซ็ตเวลา 00:00 น. ตามเวลาไทย<br>หากได้รับ Bonus จะใช้กับการเติมเงินครั้งถัดไป<br>Bonus ทุกประเภท ถอนเงินได้เมื่อทำยอดเล่นครบ 1.5 เท่า",
+
+countdown:
+"⏳ รีเซ็ตอีกใน:"
 }
 };
 
@@ -915,8 +924,18 @@ Number(data.spin_count || 0);
 
 document.getElementById("spinCount").innerText =
 spinCount;
+
 const badge =
-document.getElementById("todaySpinBadge");
+document.getElementById(
+"todaySpinBadge"
+);
+
+const lang =
+localStorage.getItem(
+"spinLang"
+)
+||
+"zh";
 
 if(data.claimed_today){
 
@@ -924,7 +943,9 @@ badge.className =
 "todaySpinBadge done";
 
 badge.innerText =
-"🟢 今日资格已领取 / รับสิทธิ์ Lucky Spin แล้ว";
+lang === "th"
+? "🟢 รับสิทธิ์ Lucky Spin แล้ว"
+: "🟢 今日资格已领取";
 
 }else{
 
@@ -932,7 +953,9 @@ badge.className =
 "todaySpinBadge wait";
 
 badge.innerText =
-"💰 今日充值满 1,000 THB 即可领取 / เติมครบ 1,000 THB เพื่อรับสิทธิ์";
+lang === "th"
+? "💰 เติมครบ 1,000 THB เพื่อรับสิทธิ์"
+: "💰 今日充值满 1,000 THB 即可领取";
 
 }
 }catch(err){
@@ -1116,6 +1139,113 @@ console.log(err);
 }
 
 }
+function startResetCountdown(){
+
+setInterval(()=>{
+
+const lang =
+localStorage.getItem(
+"spinLang"
+)
+|| "zh";
+
+const t =
+LANG[lang];
+
+const now =
+new Date();
+
+const bangkok =
+new Date(
+now.toLocaleString(
+"en-US",
+{
+timeZone:
+"Asia/Bangkok"
+}
+)
+);
+
+const next =
+new Date(
+bangkok
+);
+
+next.setDate(
+next.getDate()+1
+);
+
+next.setHours(
+0,
+0,
+0,
+0
+);
+
+let diff =
+next - bangkok;
+
+const h =
+String(
+Math.floor(
+diff/3600000
+)
+).padStart(
+2,
+"0"
+);
+
+const m =
+String(
+Math.floor(
+diff/60000
+)%60
+).padStart(
+2,
+"0"
+);
+
+const s =
+String(
+Math.floor(
+diff/1000
+)%60
+).padStart(
+2,
+"0"
+);
+
+document
+.getElementById(
+"resetCountdown"
+)
+.innerText =
+
+t.countdown
+
++
+
+h
+
++
+
+":"
+
++
+
+m
+
++
+
+":"
+
++
+
+s;
+
+},1000);
+
+}
 function showWinModal(prize){
 
 document.getElementById("winPrize").innerText =
@@ -1250,6 +1380,7 @@ loadSpinCount();
 loadMyBonus();
 
 loadSpinHistory();
+startResetCountdown();
 </script>
 
 </body>

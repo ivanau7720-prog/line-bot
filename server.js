@@ -1681,11 +1681,39 @@ app.get("/admin/player-detail/:userId", checkAdmin, async (req, res) => {
 
     const { userId } = req.params;
 
-    const { data: player } = await supabase
-      .from("players")
-      .select("*")
-      .eq("user_id", userId)
-      .maybeSingle();
+const { data: players } =
+await supabase
+.from("players")
+.select("*")
+.or(
+`user_id.eq.${key},username.eq.${key}`
+);
+
+if(
+!players ||
+players.length === 0
+){
+
+return res.json({
+success:false,
+msg:"找不到玩家"
+});
+
+}
+
+if(
+players.length > 1
+){
+
+return res.json({
+success:false,
+msg:"发现重复账号，请检查"
+});
+
+}
+
+const player =
+players[0];
 
     if (!player) {
       return res.json({
@@ -2392,69 +2420,181 @@ today:0
 
 }
 });
-// ===== 管理员：加钱 =====
+// ===== 管理员：加钱（支持 user_id / username）=====
 app.post("/admin/add", checkAdmin, async (req, res) => {
-  try {
-    const { userId, amount } = req.body;
+try{
 
-    const addMoney = Number(amount);
+const { userId, amount } = req.body;
+
+const addMoney =
+Number(amount);
+
 if(
-!addMoney
-||
+!userId ||
+!addMoney ||
 addMoney <= 0
 ){
 
 return res.json({
 success:false,
-msg:"金额错误"
+msg:"玩家ID/USERNAME 或金额错误"
 });
 
 }
-/* 先查玩家资料 */
-const { data } = await supabase
-  .from("players")
-  .select("*")
-  .eq("user_id", userId)
-  .single();
 
-let newBalance = Number(data.balance || 0) + addMoney;
-let newTopup = Number(data.total_topup || 0) + addMoney;
+const key =
+String(userId).trim();
 
-/* 更新余额 + 累计充值 */
+/* 支持输入 user_id 或 username */
+const { data: players } =
 await supabase
-  .from("players")
-  .update({
-    balance: newBalance,
-    total_topup: newTopup
-  })
-  .eq("user_id", userId);
+.from("players")
+.select("*")
+.or(
+`user_id.eq.${key},username.eq.${key}`
+);
 
-await supabase.from("transactions").insert([
-{
-  user_id: userId,
-  amount: Number(amount),
-  type: "admin_add"
+if(
+!players ||
+players.length===0
+){
+
+return res.json({
+success:false,
+msg:"找不到玩家"
+});
+
 }
-]);
+
+if(
+players.length>1
+){
+
+return res.json({
+success:false,
+msg:"发现重复账号"
+});
+
+}
+
+const player =
+players[0];
+
+if(!player){
+
+return res.json({
+success:false,
+msg:"找不到玩家，请检查 ID / USERNAME"
+});
+
+}
+
+const realUserId =
+player.user_id;
+
+const newBalance =
+Number(player.balance || 0)
++
+addMoney;
+
+const newTopup =
+Number(player.total_topup || 0)
++
+addMoney;
+
+const pointAdd =
+Math.floor(addMoney / 100 * 10);
+
+const newPoint =
+Number(player.reward_points || 0)
++
+pointAdd;
+
+/* 更新余额 + 累计充值 + Point */
+await supabase
+.from("players")
+.update({
+balance:newBalance,
+total_topup:newTopup,
+reward_points:newPoint
+})
+.eq("user_id", realUserId);
+
+/* Lucky Spin：每日满 1000 只给 1 次 */
+const today =
+new Date().toLocaleDateString(
+"en-CA",
+{
+timeZone:"Asia/Bangkok"
+}
+);
+
+if(addMoney >= 1000){
+
+const { data: spinWallet } =
+await supabase
+.from("lucky_spin_wallet")
+.select("*")
+.eq("user_id", realUserId)
+.maybeSingle();
+
+if(!spinWallet){
+
+await supabase
+.from("lucky_spin_wallet")
+.insert([{
+user_id:realUserId,
+spin_count:1,
+last_spin_date:today
+}]);
+
+}else if(spinWallet.last_spin_date !== today){
+
+await supabase
+.from("lucky_spin_wallet")
+.update({
+spin_count:Number(spinWallet.spin_count || 0) + 1,
+last_spin_date:today
+})
+.eq("user_id", realUserId);
+
+}
+
+}
+
+await supabase.from("transactions").insert([{
+user_id:realUserId,
+amount:addMoney,
+type:"admin_add"
+}]);
+
 await logAdminAction(
 "admin",
 "管理员加钱",
-userId,
-amount,
-"Admin add balance"
+realUserId,
+addMoney,
+"Admin add balance / point / spin"
 );
-res.json({ success: true });
 
-  } catch (err) {
-    console.error(err);
-    res.json({ success: false });
-  }
+res.json({
+success:true,
+msg:"加钱成功"
 });
 
-// ===== 管理员：扣钱 =====
-// ===== 管理员：扣钱 =====
+}catch(err){
+
+console.error("admin add error:",err);
+
+res.json({
+success:false,
+msg:"加钱失败"
+});
+
+}
+});
+// ===== 管理员：扣钱（支持 user_id / username）=====
 app.post("/admin/minus", checkAdmin, async (req, res) => {
-try {
+try{
 
 const { userId, amount } = req.body;
 
@@ -2462,44 +2602,82 @@ const minusMoney =
 Number(amount);
 
 if(
-!minusMoney
-||
+!userId ||
+!minusMoney ||
 minusMoney <= 0
 ){
 
 return res.json({
 success:false,
-msg:"金额错误"
+msg:"玩家ID/USERNAME 或金额错误"
 });
 
 }
 
-await changeBalance(
-userId,
--minusMoney
+const key =
+String(userId).trim();
+
+/* 支持输入 user_id 或 username */
+const { data: player } =
+await supabase
+.from("players")
+.select("*")
+.or(`user_id.eq.${key},username.eq.${key}`)
+.maybeSingle();
+
+if(!player){
+
+return res.json({
+success:false,
+msg:"找不到玩家，请检查 ID / USERNAME"
+});
+
+}
+
+const realUserId =
+player.user_id;
+
+const newBalance =
+Math.max(
+Number(player.balance || 0) - minusMoney,
+0
 );
 
-await supabase.from("transactions").insert([
-{
-user_id: userId,
-amount: minusMoney,
-type: "admin_minus"
-}
-]);
+await supabase
+.from("players")
+.update({
+balance:newBalance
+})
+.eq("user_id", realUserId);
+
+await supabase.from("transactions").insert([{
+user_id:realUserId,
+amount:minusMoney,
+type:"admin_minus"
+}]);
 
 await logAdminAction(
 "admin",
 "管理员扣钱",
-userId,
+realUserId,
 minusMoney,
 "Admin minus balance"
 );
 
-res.json({ success: true });
+res.json({
+success:true,
+msg:"扣钱成功"
+});
 
-} catch (err) {
-console.error(err);
-res.json({ success: false });
+}catch(err){
+
+console.error("admin minus error:",err);
+
+res.json({
+success:false,
+msg:"扣钱失败"
+});
+
 }
 });
 

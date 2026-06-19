@@ -307,7 +307,108 @@ box-shadow:inset 0 0 14px rgba(255,215,0,.08);
 color:gold;
 text-shadow:0 0 8px rgba(255,215,0,.45);
 }
-</style>
+
+.bonusCard{
+margin-bottom:12px;
+padding:14px;
+
+border-radius:18px;
+
+background:
+linear-gradient(
+180deg,
+rgba(255,215,0,.12),
+rgba(0,0,0,.45)
+);
+
+border:
+1px solid
+rgba(255,215,0,.32);
+
+box-shadow:
+0 0 18px
+rgba(255,215,0,.12);
+}
+
+.bonusTop{
+
+display:flex;
+
+justify-content:
+space-between;
+
+align-items:center;
+
+}
+
+.bonusTop b{
+color:gold;
+font-size:16px;
+}
+
+.bonusTop span{
+font-size:12px;
+color:#eee;
+}
+
+.bonusPercent{
+
+margin-top:10px;
+
+text-align:center;
+
+font-size:22px;
+
+font-weight:bold;
+
+color:gold;
+
+}
+
+.bonusBar{
+
+margin-top:10px;
+
+height:16px;
+
+border-radius:999px;
+
+overflow:hidden;
+
+background:
+rgba(255,255,255,.12);
+
+}
+
+.bonusFill{
+
+height:100%;
+
+background:
+
+linear-gradient(
+90deg,
+#ff9900,
+#ffd700,
+#fff2a0
+);
+
+box-shadow:
+0 0 15px gold;
+
+}
+
+.bonusLeft{
+
+margin-top:10px;
+
+text-align:center;
+
+font-size:13px;
+
+color:#ddd;
+
+}
 </style>
 </head>
 
@@ -528,17 +629,57 @@ statusText =
 "已使用 / ใช้แล้ว";
 }
 
+const percent =
+required > 0
+? Math.min(
+Math.floor(
+(done/required)*100
+),
+100
+)
+: 0;
+
 return `
-<div style="
-margin-bottom:10px;
-padding:10px;
-border-radius:14px;
-background:rgba(255,215,0,.08);
-border:1px solid rgba(255,215,0,.25);
-">
-<b style="color:gold;">Bonus ${b.bonus_percent}%</b><br>
-状态：${statusText}<br>
-剩余流水：${left.toLocaleString()}
+<div class="bonusCard">
+
+<div class="bonusTop">
+
+<b>
+Bonus ${b.bonus_percent}%
+</b>
+
+<span>
+${statusText}
+</span>
+
+</div>
+
+<div class="bonusPercent">
+${percent}%
+</div>
+
+<div class="bonusBar">
+
+<div
+class="bonusFill"
+
+style="
+width:${percent}%;
+"
+>
+
+</div>
+
+</div>
+
+<div class="bonusLeft">
+
+剩余流水：
+
+${left.toLocaleString()}
+
+</div>
+
 </div>
 `;
 

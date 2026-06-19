@@ -3342,50 +3342,129 @@ Number(wallet.spin_count || 0) - 1
 })
 .eq("user_id", userId);
 
-/* 抽奖概率 */
+/* 新 Lucky Spin */
+
 const r =
 Math.random() * 100;
 
 let prizeType = "";
 let prizeValue = "";
+
 let bonusPercent = 0;
+
 let pointAdd = 0;
 
-if(r < 38){
-prizeType = "point";
-prizeValue = "100 Point";
-pointAdd = 100;
-}else if(r < 63){
-prizeType = "point";
-prizeValue = "300 Point";
-pointAdd = 300;
-}else if(r < 78){
-prizeType = "point";
-prizeValue = "500 Point";
-pointAdd = 500;
-}else if(r < 86){
-prizeType = "point";
-prizeValue = "1000 Point";
-pointAdd = 1000;
-}else if(r < 93){
-prizeType = "bonus";
-prizeValue = "Bonus 5%";
-bonusPercent = 5;
-}else if(r < 97){
-prizeType = "bonus";
-prizeValue = "Bonus 8%";
-bonusPercent = 8;
-}else if(r < 99){
-prizeType = "bonus";
-prizeValue = "Bonus 10%";
-bonusPercent = 10;
-}else if(r < 99.9){
-prizeType = "bonus";
-prizeValue = "Bonus 12%";
-bonusPercent = 12;
-}else{
-prizeType = "iphone";
-prizeValue = "iPhone 17 Pro Max";
+/* 豪华奖 */
+
+if(r < 0.001){
+
+prizeType =
+"iphone";
+
+prizeValue =
+"iPhone 17 Pro Max";
+
+}
+
+else if(
+r < 0.002
+){
+
+prizeType =
+"luxury";
+
+prizeValue =
+"AirPods Pro";
+
+}
+
+else if(
+r < 0.003
+){
+
+prizeType =
+"luxury";
+
+prizeValue =
+"Gold 1g";
+
+}
+
+/* Bonus */
+
+else if(
+r < 5.003
+){
+
+prizeType =
+"bonus";
+
+prizeValue =
+"Bonus 5%";
+
+bonusPercent =
+5;
+
+}
+
+else if(
+r < 8.003
+){
+
+prizeType =
+"bonus";
+
+prizeValue =
+"Bonus 10%";
+
+bonusPercent =
+10;
+
+}
+
+else if(
+r < 9.503
+){
+
+prizeType =
+"bonus";
+
+prizeValue =
+"Bonus 15%";
+
+bonusPercent =
+15;
+
+}
+
+/* Point */
+
+else if(
+r < 79.503
+)
+
+prizeType =
+"point";
+
+prizeValue =
+"10 Point";
+
+pointAdd =
+10;
+
+}
+
+else{
+
+prizeType =
+"point";
+
+prizeValue =
+"20 Point";
+
+pointAdd =
+20;
+
 }
 
 /* Point 直接加 */

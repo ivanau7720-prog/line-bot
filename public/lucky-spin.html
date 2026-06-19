@@ -375,7 +375,7 @@ document.getElementById("spinCount").innerText =
 
 }
 
-function spinNow(){
+async function spinNow(){
 
 if(spinning){
 return;
@@ -392,6 +392,12 @@ return;
 
 spinning = true;
 
+document.getElementById("spinBtn").disabled =
+true;
+
+document.getElementById("resultBox").innerText =
+"กำลังหมุน... / 正在抽奖...";
+
 const wheel =
 document.getElementById("wheel");
 
@@ -401,14 +407,75 @@ const deg =
 wheel.style.transform =
 `rotate(${deg}deg)`;
 
+try{
+
+const res =
+await fetch("/lucky-spin",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+userId
+})
+
+});
+
+const data =
+await res.json();
+
 setTimeout(()=>{
 
 spinning = false;
 
+document.getElementById("spinBtn").disabled =
+false;
+
+if(!data.success){
+
 document.getElementById("resultBox").innerText =
-"请等待后台连接 / รอเชื่อมต่อระบบ";
+data.msg || "抽奖失败 / หมุนไม่สำเร็จ";
+
+loadSpinCount();
+
+return;
+
+}
+
+spinCount =
+Number(data.spin_count || 0);
+
+document.getElementById("spinCount").innerText =
+spinCount;
+
+document.getElementById("resultBox").innerText =
+"🎉 恭喜获得 / ยินดีด้วย: " +
+data.prize_value;
 
 },4200);
+
+}catch(err){
+
+console.log(err);
+
+setTimeout(()=>{
+
+spinning = false;
+
+document.getElementById("spinBtn").disabled =
+false;
+
+document.getElementById("resultBox").innerText =
+"网络错误 / ระบบผิดพลาด";
+
+loadSpinCount();
+
+},4200);
+
+}
 
 }
 

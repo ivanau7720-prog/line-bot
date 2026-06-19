@@ -2608,7 +2608,9 @@ error.message
 spinAdded = 1;
 
 }
-  
+
+}
+
 await supabase.from("transactions").insert([{
 user_id:realUserId,
 amount:addMoney,

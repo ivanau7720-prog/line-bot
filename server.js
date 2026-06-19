@@ -228,7 +228,15 @@ bonus_percent NUMERIC DEFAULT 0,
 status TEXT DEFAULT 'done',
 created_at TIMESTAMP DEFAULT NOW()
 );
-
+CREATE TABLE IF NOT EXISTS lucky_bonus_wallet (
+id BIGSERIAL PRIMARY KEY,
+user_id TEXT,
+bonus_percent NUMERIC DEFAULT 0,
+status TEXT DEFAULT 'unused',
+turnover_required NUMERIC DEFAULT 0,
+turnover_done NUMERIC DEFAULT 0,
+created_at TIMESTAMP DEFAULT NOW()
+);
 CREATE TABLE IF NOT EXISTS lucky_spin_pool (
 id BIGSERIAL PRIMARY KEY,
 pool_amount NUMERIC DEFAULT 0,
@@ -2875,11 +2883,50 @@ spin_count:1
 
 }
     
+let bonusAmount = 0;
+let bonusId = null;
+let bonusPercent = 0;
+
+const { data: bonusList } =
+await supabase
+.from("lucky_bonus_wallet")
+.select("*")
+.eq("user_id", request.user_id)
+.eq("status","unused")
+.order("id",{
+ascending:true
+})
+.limit(1);
+
+if(
+bonusList &&
+bonusList.length > 0
+){
+
+const bonus =
+bonusList[0];
+
+bonusId =
+bonus.id;
+
+bonusPercent =
+Number(bonus.bonus_percent || 0);
+
+bonusAmount =
+Math.floor(
+rechargeAmount * bonusPercent / 100
+);
+
+}
+
 const newBalance =
-Number(player.balance || 0) + rechargeAmount;
+Number(player.balance || 0) +
+rechargeAmount +
+bonusAmount;
 
 const newTopup =
-Number(player.total_topup || 0) + rechargeAmount;
+Number(player.total_topup || 0) +
+rechargeAmount;
 
 /* Point 规则：充值 100 = 10 Point */
 const addPoint =
@@ -2910,6 +2957,48 @@ await supabase
     vip_level: newVip
   })
   .eq("user_id", request.user_id);
+
+  if(
+bonusId &&
+bonusAmount > 0
+){
+
+await supabase
+.from("lucky_bonus_wallet")
+.update({
+status:"used",
+turnover_required:
+Math.floor(bonusAmount * 1.5),
+turnover_done:0
+})
+.eq("id", bonusId);
+
+await supabase
+.from("transactions")
+.insert([{
+user_id: request.user_id,
+
+amount:
+bonusAmount,
+
+type:
+"lucky_bonus_used",
+
+change:
+bonusAmount,
+
+note:
+"Lucky Bonus " +
+bonusPercent +
+"%",
+
+result:
+"bonus"
+
+}]);
+
+}
+    
     await supabase
       .from("recharge_requests")
       .update({ status:"approved" })
@@ -3281,7 +3370,20 @@ note:"Lucky Spin " + prizeValue
 }]);
 
 }
+/* Bonus 存入下次充值可用 */
+if(bonusPercent > 0){
 
+await supabase
+.from("lucky_bonus_wallet")
+.insert([{
+user_id:userId,
+bonus_percent:bonusPercent,
+status:"unused",
+turnover_required:0,
+turnover_done:0
+}]);
+
+}
 /* 记录中奖 */
 await supabase
 .from("lucky_spin_records")

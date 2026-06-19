@@ -3492,7 +3492,7 @@ bonusPercent =
 }
 
 else if(
-r < 79
+r < 80
 ){
 
 prizeType =

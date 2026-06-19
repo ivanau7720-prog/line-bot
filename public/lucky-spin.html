@@ -237,13 +237,19 @@ left:50%;
 
 top:50%;
 
-width:46px;
+/* 这里保留你原本 .wheelPrize 里面后面的 transform / width / height / z-index */
 
-height:46px;
+left:50%;
 
-margin-left:-23px;
+top:50%;
 
-margin-top:-23px;
+width:50px;
+
+height:50px;
+
+margin-left:-25px;
+
+margin-top:-25px;
 
 border-radius:16px;
 
@@ -277,6 +283,18 @@ box-shadow:
 z-index:1;
 
 }
+
+.wheelPrize img{
+width:100%;
+height:100%;
+
+object-fit:contain;
+
+border-radius:14px;
+
+display:block;
+}
+
 .wheelPrize.bigPrize{
 
 background:
@@ -296,7 +314,9 @@ box-shadow:
 
 0 0 20px gold;
 
-font-size:26px;
+transform:scale(1.08);
+
+border-radius:18px;
 
 }
 .p1{transform:rotate(0deg) translateY(-104px);}
@@ -807,23 +827,41 @@ animation:goldFlash .8s ease forwards;
 </div>
 <div class="wheelBox" id="wheel">
 
-<div class="wheelPrize p1">10</div>
+<div class="wheelPrize p1">
+<img src="/images/shop/spin-point10.png">
+</div>
 
-<div class="wheelPrize p2">10%</div>
+<div class="wheelPrize p2">
+<img src="/images/shop/spin-bonus10.png">
+</div>
 
-<div class="wheelPrize p3 bigPrize">🏍️</div>
+<div class="wheelPrize p3 bigPrize">
+<img src="/images/shop/spin-bike.png">
+</div>
 
-<div class="wheelPrize p4">20</div>
+<div class="wheelPrize p4">
+<img src="/images/shop/spin-point20.png">
+</div>
 
-<div class="wheelPrize p5">5%</div>
+<div class="wheelPrize p5">
+<img src="/images/shop/spin-bonus5.png">
+</div>
 
-<div class="wheelPrize p6 bigPrize">📱</div>
+<div class="wheelPrize p6 bigPrize">
+<img src="/images/shop/spin-iphone17.png">
+</div>
 
-<div class="wheelPrize p7">10</div>
+<div class="wheelPrize p7">
+<img src="/images/shop/spin-point10.png">
+</div>
 
-<div class="wheelPrize p8 bigPrize">🚗</div>
+<div class="wheelPrize p8 bigPrize">
+<img src="/images/shop/spin-civic.png">
+</div>
 
-<div class="wheelPrize p9">20</div>
+<div class="wheelPrize p9">
+<img src="/images/shop/spin-point20.png">
+</div>
 <div class="wheelInner">
 
 <div class="vipIcon">

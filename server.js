@@ -2531,15 +2531,20 @@ timeZone:"Asia/Bangkok"
 
 if(addMoney >= 1000){
 
-const { data: spinWallet } =
+const { data: spinWallet, error: spinFindError } =
 await supabase
 .from("lucky_spin_wallet")
 .select("*")
 .eq("user_id", realUserId)
 .maybeSingle();
 
+if(spinFindError){
+console.log("spin find error:", spinFindError);
+}
+
 if(!spinWallet){
 
+const { error: spinInsertError } =
 await supabase
 .from("lucky_spin_wallet")
 .insert([{
@@ -2548,8 +2553,13 @@ spin_count:1,
 last_spin_date:today
 }]);
 
-}else if(spinWallet.last_spin_date !== today){
+if(spinInsertError){
+console.log("spin insert error:", spinInsertError);
+}
 
+}else{
+
+const { error: spinUpdateError } =
 await supabase
 .from("lucky_spin_wallet")
 .update({
@@ -2557,6 +2567,10 @@ spin_count:Number(spinWallet.spin_count || 0) + 1,
 last_spin_date:today
 })
 .eq("user_id", realUserId);
+
+if(spinUpdateError){
+console.log("spin update error:", spinUpdateError);
+}
 
 }
 

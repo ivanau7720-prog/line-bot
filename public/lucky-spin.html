@@ -728,6 +728,32 @@ font-size:18px;
 font-weight:bold;
 
 }
+.wheelBox.spinShake{
+animation:spinShake .45s ease;
+}
+
+@keyframes spinShake{
+0%{transform:translateX(0) rotate(var(--finalRotate));}
+25%{transform:translateX(-4px) rotate(var(--finalRotate));}
+50%{transform:translateX(4px) rotate(var(--finalRotate));}
+75%{transform:translateX(-3px) rotate(var(--finalRotate));}
+100%{transform:translateX(0) rotate(var(--finalRotate));}
+}
+
+.goldFlash{
+position:fixed;
+inset:0;
+z-index:9998;
+pointer-events:none;
+background:radial-gradient(circle,rgba(255,215,0,.55),transparent 60%);
+animation:goldFlash .8s ease forwards;
+}
+
+@keyframes goldFlash{
+0%{opacity:0;}
+35%{opacity:1;}
+100%{opacity:0;}
+}
 </style>
 </head>
 
@@ -908,7 +934,25 @@ location.href="/login.html";
 
 let spinCount = 0;
 let spinning = false;
+const PRIZE_DEG = {
 
+"10 Point":[0,231,330],
+
+"20 Point":[99,297],
+
+"Bonus 5%":[132],
+
+"Bonus 10%":[33],
+
+"Bonus 15%":[198],
+
+"Thai Motorbike":[66],
+
+"iPhone 17 Pro Max":[165],
+
+"Honda Civic":[264]
+
+};
 const LANG = {
 zh:{
 sub:"每日充值满 1,000 THB，可获得 1 次 Lucky Spin，每位玩家每天限 1 次",
@@ -1398,6 +1442,21 @@ s;
 },1000);
 
 }
+function playGoldFlash(){
+
+const flash =
+document.createElement("div");
+
+flash.className =
+"goldFlash";
+
+document.body.appendChild(flash);
+
+setTimeout(()=>{
+flash.remove();
+},900);
+
+}
 function showWinModal(prize){
 
 document.getElementById("winPrize").innerText =
@@ -1519,11 +1578,8 @@ LANG[lang].spinning;
 const wheel =
 document.getElementById("wheel");
 
-const deg =
-3600 + Math.floor(Math.random() * 360);
-
 wheel.style.transform =
-`rotate(${deg}deg)`;
+`rotate(0deg)`;
 
 try{
 
@@ -1545,6 +1601,28 @@ userId
 const data =
 await res.json();
 
+
+let options =
+PRIZE_DEG[
+data.prize_value
+] || [0];
+
+let prizeDeg =
+
+options[
+Math.floor(
+Math.random()
+*
+options.length
+)
+];
+
+let finalDeg =
+3600 + (360 - prizeDeg);
+
+wheel.style.transform =
+`rotate(${finalDeg}deg)`;
+  
 setTimeout(()=>{
 
 spinning = false;
@@ -1571,9 +1649,24 @@ spinCount;
 document.getElementById("resultBox").innerText =
 "🎉 " + data.prize_value;
 
+wheel.style.setProperty(
+"--finalRotate",
+finalDeg + "deg"
+);
+
+wheel.classList.add("spinShake");
+
+playGoldFlash();
+
+setTimeout(()=>{
+
+wheel.classList.remove("spinShake");
+
 showWinModal(
 data.prize_value
 );
+
+},500);
 
 loadSpinHistory();
 },4200);

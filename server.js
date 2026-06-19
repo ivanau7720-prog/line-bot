@@ -212,7 +212,30 @@ message TEXT,
 type TEXT DEFAULT 'real',
 created_at TIMESTAMP DEFAULT NOW()
 );
+CREATE TABLE IF NOT EXISTS lucky_spin_wallet (
+id BIGSERIAL PRIMARY KEY,
+user_id TEXT UNIQUE,
+spin_count NUMERIC DEFAULT 0,
+created_at TIMESTAMP DEFAULT NOW()
+);
 
+CREATE TABLE IF NOT EXISTS lucky_spin_records (
+id BIGSERIAL PRIMARY KEY,
+user_id TEXT,
+prize_type TEXT,
+prize_value TEXT,
+bonus_percent NUMERIC DEFAULT 0,
+status TEXT DEFAULT 'done',
+created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS lucky_spin_pool (
+id BIGSERIAL PRIMARY KEY,
+pool_amount NUMERIC DEFAULT 0,
+iphone_enabled TEXT DEFAULT 'no',
+iphone_given NUMERIC DEFAULT 0,
+created_at TIMESTAMP DEFAULT NOW()
+);
 CREATE TABLE IF NOT EXISTS admin_logs (
 
 id BIGSERIAL PRIMARY KEY,
@@ -2803,6 +2826,55 @@ app.post("/admin/approve-recharge", checkAdmin, async (req, res) => {
     const rechargeAmount =
 Number(request.amount);
 
+/* Lucky Spin：
+单次充值满 10000 THB
+送 1 次 */
+
+if(
+rechargeAmount >= 10000
+){
+
+const { data: wallet } =
+await supabase
+.from("lucky_spin_wallet")
+.select("*")
+.eq(
+"user_id",
+request.user_id
+)
+.maybeSingle();
+
+if(wallet){
+
+await supabase
+.from("lucky_spin_wallet")
+.update({
+spin_count:
+Number(wallet.spin_count || 0)
++ 1
+})
+.eq(
+"user_id",
+request.user_id
+);
+
+}else{
+
+await supabase
+.from("lucky_spin_wallet")
+.insert([{
+
+user_id:
+request.user_id,
+
+spin_count:1
+
+}]);
+
+}
+
+}
+    
 const newBalance =
 Number(player.balance || 0) + rechargeAmount;
 
@@ -3089,7 +3161,51 @@ app.get("/my-exchange-records/:userId", async (req, res) => {
     res.json([]);
   }
 });
+// ===== 玩家：查询 Lucky Spin 剩余次数 =====
+app.get("/my-spin-count/:userId", async (req, res) => {
 
+try{
+
+const { userId } =
+req.params;
+
+if(!userId){
+
+return res.json({
+success:false,
+spin_count:0
+});
+
+}
+
+const { data } =
+await supabase
+.from("lucky_spin_wallet")
+.select("*")
+.eq("user_id", userId)
+.maybeSingle();
+
+res.json({
+success:true,
+spin_count:
+Number(data?.spin_count || 0)
+});
+
+}catch(err){
+
+console.error(
+"my spin count error:",
+err
+);
+
+res.json({
+success:false,
+spin_count:0
+});
+
+}
+
+});
 // ===== 玩家申请充值 =====
 app.post("/request-recharge", async (req, res) => {
 

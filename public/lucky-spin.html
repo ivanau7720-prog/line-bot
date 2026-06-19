@@ -254,7 +254,17 @@ START SPIN
 </div>
 
 </div>
+<div class="ruleBox">
 
+<div class="ruleTitle">
+🎁 我的 Bonus
+</div>
+
+<div id="bonusList" class="ruleText">
+加载中...
+</div>
+
+</div>
 <div class="ruleBox">
 
 <div class="ruleTitle" id="ruleTitle">
@@ -374,7 +384,107 @@ document.getElementById("spinCount").innerText =
 }
 
 }
+async function loadSpinCount(){
 
+try{
+
+const res =
+await fetch(
+"/my-spin-count/" + userId
+);
+
+const data =
+await res.json();
+
+spinCount =
+Number(data.spin_count || 0);
+
+document.getElementById("spinCount").innerText =
+spinCount;
+
+}catch(err){
+
+console.log(err);
+
+spinCount = 0;
+
+document.getElementById("spinCount").innerText =
+0;
+
+}
+
+}
+
+/* 👇 新代码插在这里 */
+
+async function loadMyBonus(){
+
+try{
+
+const res =
+await fetch(
+"/my-lucky-bonus/" + userId
+);
+
+const data =
+await res.json();
+
+const box =
+document.getElementById("bonusList");
+
+if(!data || data.length === 0){
+
+box.innerHTML =
+"暂无 Bonus / ยังไม่มีโบนัส";
+
+return;
+
+}
+
+box.innerHTML =
+data.map(b=>{
+
+const required =
+Number(b.turnover_required || 0);
+
+const done =
+Number(b.turnover_done || 0);
+
+const left =
+Math.max(required - done,0);
+
+let statusText =
+"未使用 / ยังไม่ได้ใช้";
+
+if(b.status === "used"){
+statusText =
+"已使用 / ใช้แล้ว";
+}
+
+return `
+<div style="
+margin-bottom:10px;
+padding:10px;
+border-radius:14px;
+background:rgba(255,215,0,.08);
+border:1px solid rgba(255,215,0,.25);
+">
+<b style="color:gold;">Bonus ${b.bonus_percent}%</b><br>
+状态：${statusText}<br>
+剩余流水：${left.toLocaleString()}
+</div>
+`;
+
+}).join("");
+
+}catch(err){
+
+console.log(err);
+
+}
+
+}
+  
 async function spinNow(){
 
 if(spinning){

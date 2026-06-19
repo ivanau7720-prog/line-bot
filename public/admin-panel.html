@@ -1691,7 +1691,7 @@ loadAnnouncementForm();
 loadAnnouncement();
 
 loadReviewBadges();
-
+loadLuckySpinAdmin();
 setInterval(()=>{
 loadReviewBadges();
 },60000);
@@ -1812,11 +1812,104 @@ html;
 
 async function loadLuckyBonusAdmin(){
 
+const lang =
+localStorage.getItem(
+"adminLang"
+)
+||
+"zh";
+
 document.getElementById(
 "spinAdminBox"
 ).innerHTML=
 
-"🎁 Coming Soon";
+lang==="th"
+
+?
+
+"🎁 กำลังโหลด Bonus..."
+
+:
+
+"🎁 正在读取 Bonus...";
+
+const res =
+await fetch(
+"/admin/spin-bonus",
+{
+headers:
+adminGetHeaders()
+}
+);
+
+const data =
+await res.json();
+
+if(
+!data
+||
+data.length===0
+){
+
+document.getElementById(
+"spinAdminBox"
+).innerHTML=
+
+lang==="th"
+
+?
+
+"🎁 ยังไม่มี Bonus"
+
+:
+
+"🎁 暂无 Bonus 数据";
+
+return;
+
+}
+
+let html="";
+
+data.forEach(r=>{
+
+html+=`
+
+<div style="
+padding:10px;
+
+margin-bottom:8px;
+
+border-radius:12px;
+
+background:
+rgba(255,215,0,.08);
+
+border:
+1px solid rgba(255,215,0,.25);
+
+">
+
+👤 ${r.user_id}
+
+<br>
+
+🎁 ${r.bonus_percent}%
+
+<br>
+
+📌 ${r.status}
+
+</div>
+
+`;
+
+});
+
+document.getElementById(
+"spinAdminBox"
+).innerHTML=
+html;
 
 }
 async function createAgent(){

@@ -203,17 +203,66 @@ inset 0 0 22px rgba(255,215,0,.28);
 z-index:2;
 }
 
-.wheelIcon{
-font-size:52px;
-filter:drop-shadow(0 0 10px gold);
+.vipIcon{
+
+font-size:56px;
+
+filter:
+drop-shadow(
+0 0 18px gold
+);
+
+animation:
+vipGlow
+2s
+ease-in-out
+infinite;
+
 }
 
-.wheelText{
-margin-top:8px;
-color:gold;
+.vipTitle{
+
+margin-top:6px;
+
+font-size:24px;
+
 font-weight:900;
-font-size:20px;
-letter-spacing:1px;
+
+color:gold;
+
+letter-spacing:2px;
+
+text-shadow:
+0 0 18px gold;
+
+}
+
+.vipSub{
+
+margin-top:8px;
+
+font-size:11px;
+
+color:#ffe89a;
+
+letter-spacing:2px;
+
+}
+
+@keyframes vipGlow{
+
+0%{
+transform:scale(1);
+}
+
+50%{
+transform:scale(1.08);
+}
+
+100%{
+transform:scale(1);
+}
+
 }
 
 .spinBtn{
@@ -441,9 +490,25 @@ color:#ddd;
 
 <div class="wheelBox" id="wheel">
 <div class="wheelInner">
-<div class="wheelIcon">🎰</div>
-<div class="wheelText" id="wheelText">SPIN</div>
+
+<div class="vipIcon">
+
+👑
+
 </div>
+
+<div class="vipTitle">
+
+VIP CLUB
+
+</div>
+
+<div class="vipSub">
+
+TRY YOUR LUCK
+
+</div>
+
 </div>
 
 <button class="spinBtn" onclick="spinNow()" id="spinBtn">

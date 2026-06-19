@@ -219,6 +219,9 @@ spin_count NUMERIC DEFAULT 0,
 created_at TIMESTAMP DEFAULT NOW()
 );
 
+ALTER TABLE lucky_spin_wallet
+ADD COLUMN IF NOT EXISTS last_spin_date TEXT;
+
 CREATE TABLE IF NOT EXISTS lucky_spin_records (
 id BIGSERIAL PRIMARY KEY,
 user_id TEXT,
@@ -2881,11 +2884,22 @@ app.post("/admin/approve-recharge", checkAdmin, async (req, res) => {
 Number(request.amount);
 
 /* Lucky Spin：
-单次充值满 10000 THB
-送 1 次 */
+每天充值满 1000 THB
+送 1 次
+每日泰国时间 12AM 刷新
+*/
+
+const todaySpinDate =
+new Date()
+.toLocaleDateString(
+"en-CA",
+{
+timeZone:"Asia/Bangkok"
+}
+);
 
 if(
-rechargeAmount >= 10000
+rechargeAmount >= 1000
 ){
 
 const { data: wallet } =
@@ -2898,21 +2912,36 @@ request.user_id
 )
 .maybeSingle();
 
-if(wallet){
+if(
+wallet &&
+wallet.last_spin_date === todaySpinDate
+){
+
+console.log(
+"Today Lucky Spin already given:",
+request.user_id
+);
+
+}
+else if(wallet){
 
 await supabase
 .from("lucky_spin_wallet")
 .update({
 spin_count:
 Number(wallet.spin_count || 0)
-+ 1
++ 1,
+
+last_spin_date:
+todaySpinDate
 })
 .eq(
 "user_id",
 request.user_id
 );
 
-}else{
+}
+else{
 
 await supabase
 .from("lucky_spin_wallet")
@@ -2921,7 +2950,10 @@ await supabase
 user_id:
 request.user_id,
 
-spin_count:1
+spin_count:1,
+
+last_spin_date:
+todaySpinDate
 
 }]);
 
@@ -3348,52 +3380,20 @@ const r =
 Math.random() * 100;
 
 let prizeType = "";
+
 let prizeValue = "";
 
 let bonusPercent = 0;
 
 let pointAdd = 0;
 
-/* 豪华奖 */
+/*
+豪华奖关闭
+仅展示不中奖
+*/
 
-if(r < 0.001){
-
-prizeType =
-"iphone";
-
-prizeValue =
-"iPhone 17 Pro Max";
-
-}
-
-else if(
-r < 0.002
-){
-
-prizeType =
-"luxury";
-
-prizeValue =
-"AirPods Pro";
-
-}
-
-else if(
-r < 0.003
-){
-
-prizeType =
-"luxury";
-
-prizeValue =
-"Gold 1g";
-
-}
-
-/* Bonus */
-
-else if(
-r < 5.003
+if(
+r < 5
 ){
 
 prizeType =
@@ -3408,7 +3408,7 @@ bonusPercent =
 }
 
 else if(
-r < 8.003
+r < 8
 ){
 
 prizeType =
@@ -3423,7 +3423,7 @@ bonusPercent =
 }
 
 else if(
-r < 9.503
+r < 9
 ){
 
 prizeType =
@@ -3437,11 +3437,9 @@ bonusPercent =
 
 }
 
-/* Point */
-
 else if(
-r < 79.503
-)
+r < 79
+){
 
 prizeType =
 "point";
@@ -3466,7 +3464,6 @@ pointAdd =
 20;
 
 }
-
 /* Point 直接加 */
 if(pointAdd > 0){
 
@@ -3549,7 +3546,41 @@ msg:"抽奖失败"
 }
 
 });
+// ===== 玩家：我的 Lucky Spin 记录 =====
+app.get("/my-spin-history/:userId", async (req, res) => {
 
+try{
+
+const { userId } =
+req.params;
+
+if(!userId){
+
+return res.json([]);
+
+}
+
+const { data } =
+await supabase
+.from("lucky_spin_records")
+.select("*")
+.eq("user_id", userId)
+.order("id",{
+ascending:false
+})
+.limit(20);
+
+res.json(data || []);
+
+}catch(err){
+
+console.error("my spin history error:", err);
+
+res.json([]);
+
+}
+
+});
 // ===== 玩家：我的 Lucky Bonus =====
 app.get("/my-lucky-bonus/:userId", async (req, res) => {
 

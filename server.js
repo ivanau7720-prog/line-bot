@@ -3424,6 +3424,41 @@ msg:"抽奖失败"
 }
 
 });
+
+// ===== 玩家：我的 Lucky Bonus =====
+app.get("/my-lucky-bonus/:userId", async (req, res) => {
+
+try{
+
+const { userId } =
+req.params;
+
+if(!userId){
+
+return res.json([]);
+
+}
+
+const { data } =
+await supabase
+.from("lucky_bonus_wallet")
+.select("*")
+.eq("user_id", userId)
+.order("id",{
+ascending:false
+});
+
+res.json(data || []);
+
+}catch(err){
+
+console.error("my lucky bonus error:", err);
+
+res.json([]);
+
+}
+
+});
 // ===== 玩家：查询 Lucky Spin 剩余次数 =====
 app.get("/my-spin-count/:userId", async (req, res) => {
 

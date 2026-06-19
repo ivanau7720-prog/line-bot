@@ -4567,6 +4567,11 @@ ${t.reject}
 
 document.getElementById("rechargeRequests").innerHTML = html;
 
+document.getElementById("rechargeTitle").scrollIntoView({
+behavior:"smooth",
+block:"start"
+});
+
 }
 
 async function loadWithdrawRequests(){
@@ -4628,8 +4633,14 @@ ${t.reject}
 `;
   });
 
-  document.getElementById("withdrawRequests").innerHTML = html;
-}  
+document.getElementById("withdrawRequests").innerHTML = html;
+
+document.getElementById("withdrawTitle").scrollIntoView({
+behavior:"smooth",
+block:"start"
+});
+
+} 
 async function loadExchangeRequests(){
 
 const lang =
@@ -5039,6 +5050,15 @@ document
 .innerHTML=
 
 html;
+
+document
+.getElementById(
+"exchangeTitle"
+)
+.scrollIntoView({
+behavior:"smooth",
+block:"start"
+});
 
 loadReviewBadges();
 

@@ -2561,31 +2561,51 @@ msg:"余额和Point已加，但 Lucky Spin 写入失败：" + error.message
 
 spinAdded = 1;
 
-}else{
-
-const newSpinCount =
-Number(spinWallet.spin_count || 0) + 1;
+}else if(
+spinWallet.last_spin_date !== today
+){
 
 const { error } =
 await supabase
 .from("lucky_spin_wallet")
 .update({
-spin_count: newSpinCount,
-last_spin_date: today
+spin_count:
+Number(
+spinWallet.spin_count || 0
+)
++
+1,
+
+last_spin_date:
+today
+
 })
-.eq("user_id", realUserId);
+.eq(
+"user_id",
+realUserId
+);
 
 if(error){
-console.log("LUCKY SPIN UPDATE ERROR:", error);
+
+console.log(
+"LUCKY SPIN UPDATE ERROR:",
+error
+);
+
 return res.json({
+
 success:false,
-msg:"余额和Point已加，但 Lucky Spin 更新失败：" + error.message
+
+msg:
+"余额和Point已加，但 Lucky Spin 更新失败："
++
+error.message
+
 });
+
 }
 
 spinAdded = 1;
-
-}
 
 }
   

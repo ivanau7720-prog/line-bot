@@ -381,7 +381,31 @@ box-shadow:
 opacity:.65;
 filter:grayscale(.25);
 }
+.spinBtn.cooldown{
 
+background:
+
+linear-gradient(
+145deg,
+#555,
+#333
+);
+
+color:#bbb;
+
+box-shadow:
+
+0 0 18px
+rgba(255,255,255,.12);
+
+}
+
+.spinBtn.cooldown::after{
+
+content:
+" ⏳";
+
+}
 .resultBox{
 margin-top:18px;
 min-height:56px;
@@ -866,10 +890,10 @@ ruleText:
 "每日充值满 1,000 THB 可获得 Lucky Spin ×1。<br>每位玩家每天限 1 次，泰国时间 12AM 刷新。<br>抽中 Bonus 奖励，下次充值可获得额外奖励。<br>所有 Bonus 完成 1.5 倍流水即可提款。",
 
 countdown:
-"⏳ 距离明日刷新："
+"⏳ 距离明日刷新：",
+
 bonusEmpty:
 "暂无 Bonus",
-
 historyEmpty:
 "暂无记录",
 
@@ -889,7 +913,19 @@ claimDone:
 "🟢 今日资格已领取",
 
 claimWait:
-"💰 今日充值满 1,000 THB 即可领取"
+"💰 今日充值满 1,000 THB 即可领取",
+
+noChance:
+"暂无抽奖机会",
+
+spinning:
+"正在抽奖...",
+
+spinFail:
+"抽奖失败",
+
+networkError:
+"网络错误"
 },
 th:{
 sub:"เติมเงินครบ 1,000 THB ต่อวัน รับสิทธิ์ Lucky Spin 1 ครั้ง จำกัดผู้เล่นละ 1 ครั้งต่อวัน",
@@ -901,7 +937,8 @@ ruleText:
 "เติมเงินครบ 1,000 THB ต่อวัน รับ Lucky Spin ×1<br>จำกัดผู้เล่นละ 1 ครั้งต่อวัน รีเซ็ตเวลา 00:00 น. ตามเวลาไทย<br>หากได้รับ Bonus จะใช้กับการเติมเงินครั้งถัดไป<br>Bonus ทุกประเภท ถอนเงินได้เมื่อทำยอดเล่นครบ 1.5 เท่า",
 
 countdown:
-"⏳ รีเซ็ตอีกใน:"
+"⏳ รีเซ็ตอีกใน:",
+
 bonusEmpty:
 "ยังไม่มีโบนัส",
 
@@ -924,7 +961,19 @@ claimDone:
 "🟢 รับสิทธิ์ Lucky Spin แล้ว",
 
 claimWait:
-"💰 เติมครบ 1,000 THB เพื่อรับสิทธิ์"
+"💰 เติมครบ 1,000 THB เพื่อรับสิทธิ์",
+
+noChance:
+"ยังไม่มีสิทธิ์หมุน",
+
+spinning:
+"กำลังหมุน...",
+
+spinFail:
+"หมุนไม่สำเร็จ",
+
+networkError:
+"ระบบผิดพลาด"
 }
 };
 
@@ -951,6 +1000,12 @@ document.getElementById("ruleText").innerHTML =
 t.ruleText;
 
 localStorage.setItem("spinLang",lang);
+
+loadSpinCount();
+
+loadMyBonus();
+
+loadSpinHistory();
 
 }
 
@@ -1336,7 +1391,58 @@ document.getElementById("winModal").style.display =
 "flex";
 
 }
+function startSpinCooldown(){
 
+let sec = 5;
+
+const btn =
+document.getElementById(
+"spinBtn"
+);
+
+btn.disabled =
+true;
+
+btn.classList.add(
+"cooldown"
+);
+
+const timer =
+setInterval(()=>{
+
+btn.innerText =
+sec + "s";
+
+sec--;
+
+if(sec < 0){
+
+clearInterval(
+timer
+);
+
+btn.disabled =
+false;
+
+btn.classList.remove(
+"cooldown"
+);
+
+const lang =
+localStorage.getItem(
+"spinLang"
+)
+|| "zh";
+
+btn.innerText =
+LANG[lang]
+.start;
+
+}
+
+},1000);
+
+}
 function closeWinModal(){
 
 document.getElementById("winModal").style.display =
@@ -1361,8 +1467,7 @@ return;
 
 spinning = true;
 
-document.getElementById("spinBtn").disabled =
-true;
+startSpinCooldown();
 
 document.getElementById("resultBox").innerText =
 "กำลังหมุน... / 正在抽奖...";
@@ -1400,8 +1505,6 @@ setTimeout(()=>{
 
 spinning = false;
 
-document.getElementById("spinBtn").disabled =
-false;
 
 if(!data.success){
 
@@ -1438,8 +1541,6 @@ setTimeout(()=>{
 
 spinning = false;
 
-document.getElementById("spinBtn").disabled =
-false;
 
 document.getElementById("resultBox").innerText =
 "网络错误 / ระบบผิดพลาด";

@@ -1719,7 +1719,106 @@ function adminGetHeaders(){
 function logoutAdmin(){
   localStorage.removeItem("adminToken");
   location.href = "/admin-login.html";
-}  
+} 
+async function loadLuckySpinAdmin(){
+
+const lang =
+localStorage.getItem(
+"adminLang"
+)
+||
+"zh";
+
+const res =
+await fetch(
+"/admin/spin-history",
+{
+headers:
+adminGetHeaders()
+}
+);
+
+const data =
+await res.json();
+
+if(
+!data
+||
+data.length===0
+){
+
+document.getElementById(
+"spinAdminBox"
+).innerHTML=
+
+lang==="th"
+
+?
+
+"📜 ยังไม่มีประวัติ Lucky Spin"
+
+:
+
+"📜 暂无 Lucky Spin 记录";
+
+return;
+
+}
+
+let html="";
+
+data.forEach(r=>{
+
+html+=`
+
+<div style="
+padding:10px;
+margin-bottom:8px;
+
+border-radius:12px;
+
+background:
+rgba(255,215,0,.08);
+
+border:
+1px solid rgba(255,215,0,.25);
+
+">
+
+👤 ${r.user_id}
+
+<br>
+
+🎁 ${r.prize_value}
+
+<br>
+
+🕒 ${r.created_at}
+
+</div>
+
+`;
+
+});
+
+document.getElementById(
+"spinAdminBox"
+).innerHTML=
+html;
+
+}
+
+
+
+async function loadLuckyBonusAdmin(){
+
+document.getElementById(
+"spinAdminBox"
+).innerHTML=
+
+"🎁 Coming Soon";
+
+}
 async function createAgent(){
   const agentCode = document.getElementById("agentCode").value;
   const agentName = document.getElementById("agentName").value;

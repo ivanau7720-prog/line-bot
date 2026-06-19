@@ -1458,8 +1458,15 @@ return;
 
 if(spinCount <= 0){
 
+const lang =
+localStorage.getItem(
+"spinLang"
+)
+||
+"zh";
+
 document.getElementById("resultBox").innerText =
-"暂无抽奖机会 / ยังไม่มีสิทธิ์หมุน";
+LANG[lang].noChance;
 
 return;
 
@@ -1469,8 +1476,15 @@ spinning = true;
 
 startSpinCooldown();
 
+const lang =
+localStorage.getItem(
+"spinLang"
+)
+||
+"zh";
+
 document.getElementById("resultBox").innerText =
-"กำลังหมุน... / 正在抽奖...";
+LANG[lang].spinning;
 
 const wheel =
 document.getElementById("wheel");
@@ -1509,7 +1523,8 @@ spinning = false;
 if(!data.success){
 
 document.getElementById("resultBox").innerText =
-data.msg || "抽奖失败 / หมุนไม่สำเร็จ";
+data.msg ||
+LANG[lang].spinFail;
 
 loadSpinCount();
 
@@ -1543,7 +1558,7 @@ spinning = false;
 
 
 document.getElementById("resultBox").innerText =
-"网络错误 / ระบบผิดพลาด";
+LANG[lang].networkError;
 
 loadSpinCount();
 

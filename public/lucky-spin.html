@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Lucky Spin</title>
+
+<style>
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+}
+
+body{
+min-height:100vh;
+font-family:sans-serif;
+color:white;
+background:
+linear-gradient(rgba(0,0,0,.25),rgba(0,0,0,.85)),
+url("/lobby-bg.jpg");
+background-size:cover;
+background-position:center top;
+padding:18px;
+}
+
+.top{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:18px;
+}
+
+.back{
+background:rgba(0,0,0,.55);
+color:gold;
+border:1px solid rgba(255,215,0,.55);
+border-radius:16px;
+padding:10px 14px;
+font-weight:bold;
+}
+
+.lang button{
+background:rgba(0,0,0,.55);
+color:gold;
+border:1px solid rgba(255,215,0,.55);
+border-radius:16px;
+padding:8px 12px;
+margin-left:6px;
+}
+
+.title{
+text-align:center;
+color:gold;
+font-size:30px;
+font-weight:bold;
+text-shadow:0 0 18px gold;
+margin-top:10px;
+}
+
+.subtitle{
+text-align:center;
+color:#ddd;
+font-size:14px;
+margin-top:8px;
+line-height:1.6;
+}
+
+.panel{
+margin-top:18px;
+padding:18px;
+border-radius:26px;
+background:linear-gradient(180deg,rgba(20,20,20,.78),rgba(0,0,0,.72));
+border:1px solid rgba(255,215,0,.45);
+box-shadow:0 0 35px rgba(255,215,0,.18);
+text-align:center;
+}
+
+.wheelBox{
+width:260px;
+height:260px;
+margin:20px auto;
+border-radius:50%;
+padding:12px;
+background:
+conic-gradient(
+#ffd700 0deg 45deg,
+#7a0000 45deg 90deg,
+#ff9900 90deg 135deg,
+#111 135deg 180deg,
+#ffd700 180deg 225deg,
+#7a0000 225deg 270deg,
+#ff9900 270deg 315deg,
+#111 315deg 360deg
+);
+box-shadow:
+0 0 25px rgba(255,215,0,.65),
+inset 0 0 25px rgba(0,0,0,.45);
+display:flex;
+align-items:center;
+justify-content:center;
+transition:transform 4s cubic-bezier(.12,.78,.18,1);
+}
+
+.wheelInner{
+width:170px;
+height:170px;
+border-radius:50%;
+background:rgba(0,0,0,.88);
+border:2px solid gold;
+display:flex;
+flex-direction:column;
+align-items:center;
+justify-content:center;
+text-align:center;
+box-shadow:inset 0 0 18px rgba(255,215,0,.3);
+}
+
+.wheelIcon{
+font-size:46px;
+}
+
+.wheelText{
+margin-top:8px;
+color:gold;
+font-weight:bold;
+font-size:18px;
+}
+
+.spinCount{
+margin-top:12px;
+color:white;
+font-size:16px;
+}
+
+.spinCount span{
+color:gold;
+font-size:22px;
+font-weight:bold;
+}
+
+.spinBtn{
+width:100%;
+margin-top:16px;
+padding:16px;
+border:none;
+border-radius:20px;
+background:linear-gradient(145deg,#fff2a0,#ffd700 40%,#ff9900);
+color:#111;
+font-size:20px;
+font-weight:bold;
+box-shadow:0 0 25px rgba(255,215,0,.65);
+}
+
+.spinBtn:active{
+transform:scale(.97);
+}
+
+.resultBox{
+margin-top:16px;
+min-height:50px;
+font-size:18px;
+color:#ffd700;
+font-weight:bold;
+line-height:1.6;
+}
+
+.ruleBox{
+margin-top:18px;
+padding:16px;
+border-radius:22px;
+background:rgba(0,0,0,.55);
+border:1px solid rgba(255,215,0,.32);
+}
+
+.ruleTitle{
+color:gold;
+font-weight:bold;
+font-size:18px;
+margin-bottom:10px;
+}
+
+.ruleText{
+font-size:14px;
+color:#eee;
+line-height:1.8;
+text-align:left;
+}
+
+.prizeGrid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:10px;
+margin-top:14px;
+}
+
+.prize{
+padding:12px;
+border-radius:18px;
+background:rgba(255,215,0,.08);
+border:1px solid rgba(255,215,0,.28);
+font-size:14px;
+color:#fff;
+text-align:center;
+}
+
+.prize b{
+color:gold;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="top">
+<button class="back" onclick="location.href='/home.html'">
+← BACK
+</button>
+
+<div class="lang">
+<button onclick="switchLang('zh')">中文</button>
+<button onclick="switchLang('th')">ไทย</button>
+</div>
+</div>
+
+<div class="title">
+🎰 LUCKY SPIN
+</div>
+
+<div class="subtitle" id="subText">
+单次充值满 10,000 THB，即可获得一次幸运转盘机会
+</div>
+
+<div class="panel">
+
+<div class="spinCount" id="spinCountText">
+剩余机会：<span id="spinCount">0</span>
+</div>
+
+<div class="wheelBox" id="wheel">
+<div class="wheelInner">
+<div class="wheelIcon">🎰</div>
+<div class="wheelText" id="wheelText">SPIN</div>
+</div>
+</div>
+
+<button class="spinBtn" onclick="spinNow()" id="spinBtn">
+START SPIN
+</button>
+
+<div class="resultBox" id="resultBox">
+等待抽奖
+</div>
+
+</div>
+
+<div class="ruleBox">
+
+<div class="ruleTitle" id="ruleTitle">
+🎁 活动规则
+</div>
+
+<div class="ruleText" id="ruleText">
+单次充值满 10,000 THB 可获得 Lucky Spin ×1。<br>
+一次充值一次机会，不累计充值。<br>
+抽中 Bonus 奖励，下次充值可获得额外奖励。<br>
+所有 Bonus 完成 1.5 倍流水即可提款。
+</div>
+
+<div class="prizeGrid">
+
+<div class="prize">🟢 <b>100 Point</b></div>
+<div class="prize">🟢 <b>300 Point</b></div>
+<div class="prize">🟢 <b>500 Point</b></div>
+<div class="prize">🟢 <b>1000 Point</b></div>
+<div class="prize">🎁 <b>Bonus 5%</b></div>
+<div class="prize">🎁 <b>Bonus 8%</b></div>
+<div class="prize">🎁 <b>Bonus 10%</b></div>
+<div class="prize">🎁 <b>Bonus 12%</b></div>
+<div class="prize" style="grid-column:1/3;">
+📱 <b>iPhone 17 Pro Max</b>
+</div>
+
+</div>
+
+</div>
+
+<script>
+const userId =
+localStorage.getItem("userId");
+
+if(!userId){
+location.href="/login.html";
+}
+
+let spinCount = 0;
+let spinning = false;
+
+const LANG = {
+zh:{
+sub:"单次充值满 10,000 THB，即可获得一次幸运转盘机会",
+count:"剩余机会：",
+wait:"等待抽奖",
+start:"START SPIN",
+ruleTitle:"🎁 活动规则",
+ruleText:
+"单次充值满 10,000 THB 可获得 Lucky Spin ×1。<br>一次充值一次机会，不累计充值。<br>抽中 Bonus 奖励，下次充值可获得额外奖励。<br>所有 Bonus 完成 1.5 倍流水即可提款。"
+},
+th:{
+sub:"เติมเงินครั้งเดียวครบ 10,000 THB รับสิทธิ์หมุนวงล้อนำโชค 1 ครั้ง",
+count:"สิทธิ์คงเหลือ：",
+wait:"รอการหมุน",
+start:"START SPIN",
+ruleTitle:"🎁 กติกากิจกรรม",
+ruleText:
+"เติมเงินครั้งเดียวครบ 10,000 THB รับ Lucky Spin ×1<br>หนึ่งรายการเติมเงินรับได้ 1 สิทธิ์ ไม่สะสมยอดเติม<br>หากได้รับ Bonus จะใช้กับการเติมเงินครั้งถัดไป<br>Bonus ทุกประเภท ถอนเงินได้เมื่อทำยอดเล่นครบ 1.5 เท่า"
+}
+};
+
+function switchLang(lang){
+
+const t = LANG[lang];
+
+document.getElementById("subText").innerText =
+t.sub;
+
+document.getElementById("spinCountText").innerHTML =
+t.count + `<span id="spinCount">${spinCount}</span>`;
+
+document.getElementById("resultBox").innerText =
+t.wait;
+
+document.getElementById("spinBtn").innerText =
+t.start;
+
+document.getElementById("ruleTitle").innerText =
+t.ruleTitle;
+
+document.getElementById("ruleText").innerHTML =
+t.ruleText;
+
+localStorage.setItem("spinLang",lang);
+
+}
+
+async function loadSpinCount(){
+
+/* 后台还没接，先固定显示 0 */
+spinCount = 0;
+
+document.getElementById("spinCount").innerText =
+spinCount;
+
+}
+
+function spinNow(){
+
+if(spinning){
+return;
+}
+
+if(spinCount <= 0){
+
+document.getElementById("resultBox").innerText =
+"暂无抽奖机会 / ยังไม่มีสิทธิ์หมุน";
+
+return;
+
+}
+
+spinning = true;
+
+const wheel =
+document.getElementById("wheel");
+
+const deg =
+3600 + Math.floor(Math.random() * 360);
+
+wheel.style.transform =
+`rotate(${deg}deg)`;
+
+setTimeout(()=>{
+
+spinning = false;
+
+document.getElementById("resultBox").innerText =
+"请等待后台连接 / รอเชื่อมต่อระบบ";
+
+},4200);
+
+}
+
+switchLang(
+localStorage.getItem("spinLang") || "zh"
+);
+
+loadSpinCount();
+</script>
+
+</body>
+</html>

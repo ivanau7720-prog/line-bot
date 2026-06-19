@@ -638,7 +638,17 @@ START SPIN
 </div>
 
 </div>
+<div class="ruleBox">
 
+<div class="ruleTitle">
+📜 Lucky Spin History
+</div>
+
+<div id="spinHistory" class="ruleText">
+加载中...
+</div>
+
+</div>
 <script>
 const userId =
 localStorage.getItem("userId");
@@ -834,7 +844,69 @@ console.log(err);
 }
 
 }
+async function loadSpinHistory(){
 
+try{
+
+const res =
+await fetch(
+"/my-spin-history/" + userId
+);
+
+const data =
+await res.json();
+
+const box =
+document.getElementById("spinHistory");
+
+if(!data || data.length === 0){
+
+box.innerHTML =
+"暂无记录 / ไม่มีประวัติ";
+
+return;
+
+}
+
+box.innerHTML =
+data.map(r=>`
+
+<div style="
+margin-bottom:10px;
+padding:12px;
+border-radius:16px;
+background:rgba(255,215,0,.08);
+border:1px solid rgba(255,215,0,.25);
+">
+
+<div style="
+color:gold;
+font-size:17px;
+font-weight:bold;
+">
+${r.prize_value}
+</div>
+
+<div style="
+margin-top:6px;
+font-size:12px;
+color:#bbb;
+">
+${String(r.created_at || "").replace("T"," ").slice(0,19)}
+</div>
+
+</div>
+
+`).join("");
+
+}catch(err){
+
+console.log(err);
+
+}
+
+}
+  
 async function spinNow(){
 
 if(spinning){
@@ -914,7 +986,7 @@ spinCount;
 document.getElementById("resultBox").innerText =
 "🎉 恭喜获得 / ยินดีด้วย: " +
 data.prize_value;
-
+loadSpinHistory();
 },4200);
 
 }catch(err){
@@ -946,6 +1018,8 @@ localStorage.getItem("spinLang") || "zh"
 loadSpinCount();
 
 loadMyBonus();
+
+loadSpinHistory();
 </script>
 
 </body>

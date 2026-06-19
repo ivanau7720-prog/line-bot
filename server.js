@@ -2529,53 +2529,66 @@ timeZone:"Asia/Bangkok"
 }
 );
 
+let spinAdded = 0;
+
 if(addMoney >= 1000){
 
-const { data: spinWallet, error: spinFindError } =
+const { data: spinWallet } =
 await supabase
 .from("lucky_spin_wallet")
 .select("*")
 .eq("user_id", realUserId)
 .maybeSingle();
 
-if(spinFindError){
-console.log("spin find error:", spinFindError);
-}
-
 if(!spinWallet){
 
-const { error: spinInsertError } =
+const { error } =
 await supabase
 .from("lucky_spin_wallet")
 .insert([{
-user_id:realUserId,
-spin_count:1,
-last_spin_date:today
+user_id: realUserId,
+spin_count: 1,
+last_spin_date: today
 }]);
 
-if(spinInsertError){
-console.log("spin insert error:", spinInsertError);
+if(error){
+console.log("LUCKY SPIN INSERT ERROR:", error);
+return res.json({
+success:false,
+msg:"余额和Point已加，但 Lucky Spin 写入失败：" + error.message
+});
 }
+
+spinAdded = 1;
 
 }else{
 
-const { error: spinUpdateError } =
+const newSpinCount =
+Number(spinWallet.spin_count || 0) + 1;
+
+const { error } =
 await supabase
 .from("lucky_spin_wallet")
 .update({
-spin_count:Number(spinWallet.spin_count || 0) + 1,
-last_spin_date:today
+spin_count: newSpinCount,
+last_spin_date: today
 })
 .eq("user_id", realUserId);
 
-if(spinUpdateError){
-console.log("spin update error:", spinUpdateError);
+if(error){
+console.log("LUCKY SPIN UPDATE ERROR:", error);
+return res.json({
+success:false,
+msg:"余额和Point已加，但 Lucky Spin 更新失败：" + error.message
+});
 }
+
+spinAdded = 1;
 
 }
 
 }
-
+  
 await supabase.from("transactions").insert([{
 user_id:realUserId,
 amount:addMoney,
@@ -2592,7 +2605,7 @@ addMoney,
 
 res.json({
 success:true,
-msg:"加钱成功"
+msg:"加钱成功，Lucky Spin +" + spinAdded
 });
 
 }catch(err){

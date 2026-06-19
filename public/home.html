@@ -179,6 +179,58 @@ border-radius:20px;
 transition:.5s;
 
 }
+.spinBtn{
+
+width:100%;
+
+margin:0 0 16px;
+
+padding:16px 12px;
+
+border-radius:22px;
+
+border:
+1px solid rgba(255,215,0,.75);
+
+background:
+linear-gradient(
+145deg,
+rgba(40,20,0,.92),
+rgba(0,0,0,.88)
+);
+
+box-shadow:
+0 0 18px rgba(255,215,0,.45),
+inset 0 0 18px rgba(255,215,0,.12);
+
+color:#ffd700;
+
+font-weight:bold;
+
+font-size:22px;
+
+text-align:center;
+
+letter-spacing:1px;
+
+cursor:pointer;
+
+text-shadow:
+0 0 12px gold;
+
+}
+
+.spinBtn .spinSub{
+
+font-size:14px;
+
+margin-top:4px;
+
+color:white;
+
+opacity:.9;
+
+}
 .grid{
 
 display:grid;
@@ -473,6 +525,16 @@ text-shadow:0 0 15px gold;
 
 <div class="logo-spacer"></div>
 
+<div class="spinBtn" onclick="location.href='/lucky-spin.html'">
+
+🎰 LUCKY SPIN
+
+<div class="spinSub" id="spinSubText">
+幸运转盘
+</div>
+
+</div>
+
 <div class="welcomeBox" id="welcomeText">
 欢迎回来
 </div>
@@ -746,7 +808,8 @@ const LANG = {
     noticeText:"充值 100 THB = 获得 10 💎 Point",
    noticeSmall:"积分商城即将开放",
 welcome:"欢迎回来",
-vipNext:"距离下一级 VIP："
+vipNext:"距离下一级 VIP：",
+spinSub:"幸运转盘"
   },
  th:{
     game:"บาคาร่า",
@@ -762,7 +825,8 @@ vipNext:"距离下一级 VIP："
     noticeText:"เติมเงิน 100 THB = รับ 10 💎 Point",
    noticeSmall:"ร้านแลกของรางวัลกำลังจะเปิด",
 welcome:"ยินดีต้อนรับกลับ",
-vipNext:"ยอดเติมที่เหลือถึง VIP ถัดไป："
+vipNext:"ยอดเติมที่เหลือถึง VIP ถัดไป：",
+spinSub:"วงล้อนำโชค"
   }
 };
 
@@ -775,6 +839,7 @@ function switchLang(lang){
   document.getElementById("withdrawText").innerText = t.withdraw;
   document.getElementById("accountText").innerText = t.account;
   document.getElementById("serviceText").innerText = t.service;
+  document.getElementById("spinSubText").innerText =t.spinSub;
 document.getElementById("balanceLabel").innerText = t.balance;
 document.getElementById("pointLabel").innerText = t.point;
 document.getElementById("memberLabel").innerText = t.member;

@@ -166,17 +166,34 @@ border-radius:50%;
 padding:16px;
 background:
 conic-gradient(
-from -90deg,
-#8b0000 0deg 18deg,
-#d6a900 18deg 60deg,
-#111 60deg 100deg,
-#d6a900 100deg 140deg,
-#111 140deg 180deg,
-#d6a900 180deg 220deg,
-#111 220deg 260deg,
-#d6a900 260deg 300deg,
-#111 300deg 340deg,
-#d6a900 340deg 360deg
+from -20deg,
+
+/* p1 10 Point */
+#111 0deg 40deg,
+
+/* p2 Bonus 10% */
+#d6a900 40deg 80deg,
+
+/* p3 Motorbike */
+#8b0000 80deg 120deg,
+
+/* p4 20 Point */
+#111 120deg 160deg,
+
+/* p5 Bonus 5% */
+#d6a900 160deg 200deg,
+
+/* p6 iPhone */
+#8b0000 200deg 240deg,
+
+/* p7 10 Point */
+#111 240deg 280deg,
+
+/* p8 Thai Car */
+#8b0000 280deg 320deg,
+
+/* p9 20 Point */
+#d6a900 320deg 360deg
 );
 box-shadow:
 0 0 0 8px rgba(80,45,0,.95),
@@ -283,16 +300,14 @@ font-size:26px;
 
 }
 .p1{transform:rotate(0deg) translateY(-104px);}
-.p2{transform:rotate(33deg) translateY(-104px);}
-.p3{transform:rotate(66deg) translateY(-104px);}
-.p4{transform:rotate(99deg) translateY(-104px);}
-.p5{transform:rotate(132deg) translateY(-104px);}
-.p6{transform:rotate(165deg) translateY(-104px);}
-.p7{transform:rotate(198deg) translateY(-104px);}
-.p8{transform:rotate(231deg) translateY(-104px);}
-.p9{transform:rotate(264deg) translateY(-104px);}
-.p10{transform:rotate(297deg) translateY(-104px);}
-.p11{transform:rotate(330deg) translateY(-104px);}
+.p2{transform:rotate(40deg) translateY(-104px);}
+.p3{transform:rotate(80deg) translateY(-104px);}
+.p4{transform:rotate(120deg) translateY(-104px);}
+.p5{transform:rotate(160deg) translateY(-104px);}
+.p6{transform:rotate(200deg) translateY(-104px);}
+.p7{transform:rotate(240deg) translateY(-104px);}
+.p8{transform:rotate(280deg) translateY(-104px);}
+.p9{transform:rotate(320deg) translateY(-104px);}
 .wheelInner{
 width:175px;
 height:175px;
@@ -804,15 +819,11 @@ animation:goldFlash .8s ease forwards;
 
 <div class="wheelPrize p6 bigPrize">📱</div>
 
-<div class="wheelPrize p7">15%</div>
+<div class="wheelPrize p7">10</div>
 
-<div class="wheelPrize p8">10</div>
+<div class="wheelPrize p8 bigPrize">🚗</div>
 
-<div class="wheelPrize p9 bigPrize">🚗</div>
-
-<div class="wheelPrize p10">20</div>
-
-<div class="wheelPrize p11">10</div>
+<div class="wheelPrize p9">20</div>
 <div class="wheelInner">
 
 <div class="vipIcon">
@@ -871,7 +882,6 @@ START SPIN
 
 <div class="prize">🎁 <b>Bonus 5%</b></div>
 <div class="prize">🎁 <b>Bonus 10%</b></div>
-<div class="prize">🎁 <b>Bonus 15%</b></div>
 
 <div class="prize">📱 <b>iPhone 17 Pro Max</b></div>
 
@@ -936,21 +946,19 @@ let spinCount = 0;
 let spinning = false;
 const PRIZE_DEG = {
 
-"10 Point":[0,231,330],
+"10 Point":[0,240],
 
-"20 Point":[99,297],
+"20 Point":[120,320],
 
-"Bonus 5%":[132],
+"Bonus 5%":[160],
 
-"Bonus 10%":[33],
+"Bonus 10%":[40],
 
-"Bonus 15%":[198],
+"Thai Motorbike":[80],
 
-"Thai Motorbike":[66],
+"iPhone 17 Pro Max":[200],
 
-"iPhone 17 Pro Max":[165],
-
-"Honda Civic":[264]
+"Honda Civic":[280]
 
 };
 const LANG = {

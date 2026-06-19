@@ -2085,7 +2085,34 @@ app.get("/admin/rounds", checkAdmin, async (req, res) => {
     res.json([]);
   }
 });
+// ===== 管理员：Lucky Spin 抽奖记录 =====
+app.get("/admin/spin-history", checkAdmin, async (req, res) => {
 
+try{
+
+const { data } =
+await supabase
+.from("lucky_spin_records")
+.select("*")
+.order("id",{
+ascending:false
+})
+.limit(100);
+
+res.json(data || []);
+
+}catch(err){
+
+console.error(
+"admin spin history error:",
+err
+);
+
+res.json([]);
+
+}
+
+});
 
 // ===== 管理员：操作日志列表 =====
 app.get("/admin/logs", checkAdmin, async (req, res) => {

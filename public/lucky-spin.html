@@ -831,9 +831,10 @@ CONGRATULATIONS
 10 Point
 </div>
 
-<div class="winText">
-奖励已加入账户<br>
-รางวัลถูกเพิ่มเข้าบัญชีแล้ว
+<div
+class="winText"
+id="winText">
+奖励已加入账户
 </div>
 
 <button onclick="closeWinModal()" class="winBtn">
@@ -866,6 +867,29 @@ ruleText:
 
 countdown:
 "⏳ 距离明日刷新："
+bonusEmpty:
+"暂无 Bonus",
+
+historyEmpty:
+"暂无记录",
+
+bonusUnused:
+"未使用",
+
+bonusUsed:
+"已使用",
+
+turnoverLeft:
+"剩余流水：",
+
+rewardAdded:
+"奖励已加入账户",
+
+claimDone:
+"🟢 今日资格已领取",
+
+claimWait:
+"💰 今日充值满 1,000 THB 即可领取"
 },
 th:{
 sub:"เติมเงินครบ 1,000 THB ต่อวัน รับสิทธิ์ Lucky Spin 1 ครั้ง จำกัดผู้เล่นละ 1 ครั้งต่อวัน",
@@ -878,6 +902,29 @@ ruleText:
 
 countdown:
 "⏳ รีเซ็ตอีกใน:"
+bonusEmpty:
+"ยังไม่มีโบนัส",
+
+historyEmpty:
+"ไม่มีประวัติ",
+
+bonusUnused:
+"ยังไม่ได้ใช้",
+
+bonusUsed:
+"ใช้แล้ว",
+
+turnoverLeft:
+"ยอดเล่นคงเหลือ：",
+
+rewardAdded:
+"รางวัลถูกเพิ่มเข้าบัญชีแล้ว",
+
+claimDone:
+"🟢 รับสิทธิ์ Lucky Spin แล้ว",
+
+claimWait:
+"💰 เติมครบ 1,000 THB เพื่อรับสิทธิ์"
 }
 };
 
@@ -987,8 +1034,13 @@ document.getElementById("bonusList");
 
 if(!data || data.length === 0){
 
+const lang =
+localStorage.getItem("spinLang")
+|| "zh";
+
 box.innerHTML =
-"暂无 Bonus / ยังไม่มีโบนัส";
+LANG[lang]
+.bonusEmpty;
 
 return;
 
@@ -1006,12 +1058,20 @@ Number(b.turnover_done || 0);
 const left =
 Math.max(required - done,0);
 
+const lang =
+localStorage.getItem(
+"spinLang"
+)
+|| "zh";
+
 let statusText =
-"未使用 / ยังไม่ได้ใช้";
+LANG[lang]
+.bonusUnused;
 
 if(b.status === "used"){
 statusText =
-"已使用 / ใช้แล้ว";
+LANG[lang]
+.bonusUsed;
 }
 
 const percent =
@@ -1059,7 +1119,7 @@ width:${percent}%;
 
 <div class="bonusLeft">
 
-剩余流水：
+${LANG[lang].turnoverLeft}
 
 ${left.toLocaleString()}
 
@@ -1094,8 +1154,15 @@ document.getElementById("spinHistory");
 
 if(!data || data.length === 0){
 
+const lang =
+localStorage.getItem(
+"spinLang"
+)
+|| "zh";
+
 box.innerHTML =
-"暂无记录 / ไม่มีประวัติ";
+LANG[lang]
+.historyEmpty;
 
 return;
 
@@ -1251,6 +1318,20 @@ function showWinModal(prize){
 document.getElementById("winPrize").innerText =
 prize;
 
+const lang =
+localStorage.getItem(
+"spinLang"
+)
+|| "zh";
+
+document
+.getElementById(
+"winText"
+)
+.innerText =
+LANG[lang]
+.rewardAdded;
+  
 document.getElementById("winModal").style.display =
 "flex";
 

@@ -3625,9 +3625,25 @@ req.params;
 
 if(!userId){
 
-return res.json({
-success:false,
-spin_count:0
+const todaySpinDate =
+new Date()
+.toLocaleDateString(
+"en-CA",
+{
+timeZone:"Asia/Bangkok"
+}
+);
+
+res.json({
+success:true,
+spin_count:
+Number(data?.spin_count || 0),
+last_spin_date:
+data?.last_spin_date || "",
+today_spin_date:
+todaySpinDate,
+claimed_today:
+data?.last_spin_date === todaySpinDate
 });
 
 }

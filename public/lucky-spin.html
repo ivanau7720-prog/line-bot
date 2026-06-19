@@ -134,7 +134,30 @@ font-size:24px;
 font-weight:900;
 text-shadow:0 0 12px gold;
 }
+.todaySpinBadge{
+margin:12px auto 0;
+display:inline-block;
+padding:9px 16px;
+border-radius:999px;
+font-size:13px;
+font-weight:bold;
+background:rgba(0,0,0,.55);
+border:1px solid rgba(255,215,0,.35);
+color:#ddd;
+box-shadow:0 0 14px rgba(255,215,0,.14);
+}
 
+.todaySpinBadge.done{
+color:#7CFF9B;
+border-color:rgba(124,255,155,.55);
+background:rgba(0,80,30,.35);
+}
+
+.todaySpinBadge.wait{
+color:#ffd700;
+border-color:rgba(255,215,0,.45);
+background:rgba(80,60,0,.35);
+}
 .wheelBox{
 width:285px;
 height:285px;
@@ -689,7 +712,10 @@ font-weight:bold;
 <div class="spinCount" id="spinCountText">
 剩余机会：<span id="spinCount">0</span>
 </div>
-
+  
+<div id="todaySpinBadge" class="todaySpinBadge">
+检查今日状态中...
+</div>
 <div class="wheelBox" id="wheel">
 
 <div class="wheelPrize p1">📱</div>
@@ -889,7 +915,26 @@ Number(data.spin_count || 0);
 
 document.getElementById("spinCount").innerText =
 spinCount;
+const badge =
+document.getElementById("todaySpinBadge");
 
+if(data.claimed_today){
+
+badge.className =
+"todaySpinBadge done";
+
+badge.innerText =
+"🟢 今日资格已领取 / รับสิทธิ์ Lucky Spin แล้ว";
+
+}else{
+
+badge.className =
+"todaySpinBadge wait";
+
+badge.innerText =
+"💰 今日充值满 1,000 THB 即可领取 / เติมครบ 1,000 THB เพื่อรับสิทธิ์";
+
+}
 }catch(err){
 
 console.log(err);

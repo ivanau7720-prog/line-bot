@@ -346,11 +346,32 @@ localStorage.setItem("spinLang",lang);
 
 async function loadSpinCount(){
 
-/* 后台还没接，先固定显示 0 */
-spinCount = 0;
+try{
+
+const res =
+await fetch(
+"/my-spin-count/" + userId
+);
+
+const data =
+await res.json();
+
+spinCount =
+Number(data.spin_count || 0);
 
 document.getElementById("spinCount").innerText =
 spinCount;
+
+}catch(err){
+
+console.log(err);
+
+spinCount = 0;
+
+document.getElementById("spinCount").innerText =
+0;
+
+}
 
 }
 

@@ -507,6 +507,49 @@ linear-gradient(
 </div>
 <div class="card">
 
+<h3 id="spinAdminTitle">
+🎰 Lucky Spin 管理
+</h3>
+
+<button
+id="spinHistoryBtn"
+onclick="loadLuckySpinAdmin()">
+
+📜 查看抽奖记录
+
+</button>
+
+<button
+id="spinBonusBtn"
+onclick="loadLuckyBonusAdmin()">
+
+🎁 查看 Bonus
+
+</button>
+
+<div
+id="spinAdminBox"
+
+style="
+margin-top:12px;
+padding:12px;
+border-radius:16px;
+
+background:
+rgba(255,215,0,.08);
+
+border:
+1px solid rgba(255,215,0,.35);
+
+">
+
+等待读取…
+
+</div>
+
+</div>
+<div class="card">
+
 <h3 id="gameTitle">
 🎰 游戏控制
 </h3>
@@ -1585,6 +1628,46 @@ lang==="th"
 :
 
 "👁 预览公告";
+document.getElementById(
+"spinAdminTitle"
+).innerText=
+
+lang==="th"
+?
+
+"🎰 จัดการ Lucky Spin"
+
+:
+
+"🎰 Lucky Spin 管理";
+
+
+document.getElementById(
+"spinHistoryBtn"
+).innerText=
+
+lang==="th"
+?
+
+"📜 ประวัติการหมุน"
+
+:
+
+"📜 查看抽奖记录";
+
+
+document.getElementById(
+"spinBonusBtn"
+).innerText=
+
+lang==="th"
+?
+
+"🎁 โบนัสผู้เล่น"
+
+:
+
+"🎁 查看 Bonus";
 localStorage.setItem(
 "adminLang",
 lang
@@ -1658,6 +1741,7 @@ localStorage.getItem("adminLang")==="th"
 loadAgents();
 
 }
+
 function getAgentLevelStyle(level){
 
 if(level==="DIAMOND"){

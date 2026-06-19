@@ -523,6 +523,143 @@ font-size:13px;
 color:#ddd;
 
 }
+.winModal{
+
+display:none;
+
+position:fixed;
+
+inset:0;
+
+z-index:9999;
+
+background:
+rgba(0,0,0,.75);
+
+backdrop-filter:
+blur(8px);
+
+align-items:center;
+
+justify-content:center;
+
+padding:20px;
+
+}
+
+.winBox{
+
+width:100%;
+
+max-width:330px;
+
+padding:28px 20px;
+
+border-radius:28px;
+
+text-align:center;
+
+background:
+
+linear-gradient(
+180deg,
+rgba(70,50,5,.95),
+rgba(0,0,0,.95)
+);
+
+border:
+1px solid
+rgba(255,215,0,.65);
+
+box-shadow:
+
+0 0 45px
+rgba(255,215,0,.45);
+
+}
+
+.winIcon{
+
+font-size:60px;
+
+filter:
+drop-shadow(
+0 0 18px gold
+);
+
+}
+
+.winTitle{
+
+margin-top:10px;
+
+font-size:22px;
+
+font-weight:900;
+
+color:gold;
+
+}
+
+.winPrize{
+
+margin-top:15px;
+
+padding:14px;
+
+border-radius:18px;
+
+background:
+rgba(0,0,0,.45);
+
+border:
+1px solid
+rgba(255,215,0,.32);
+
+font-size:28px;
+
+font-weight:900;
+
+color:#fff0a0;
+
+}
+
+.winText{
+
+margin-top:12px;
+
+color:#ddd;
+
+line-height:1.8;
+
+}
+
+.winBtn{
+
+margin-top:20px;
+
+width:100%;
+
+padding:15px;
+
+border:none;
+
+border-radius:18px;
+
+background:
+
+linear-gradient(
+145deg,
+#fff7b8,
+#ffd700,
+#ff9900
+);
+
+font-size:18px;
+
+font-weight:bold;
+
+}
 </style>
 </head>
 
@@ -646,6 +783,34 @@ START SPIN
 
 <div id="spinHistory" class="ruleText">
 加载中...
+</div>
+
+</div>
+<div id="winModal" class="winModal">
+
+<div class="winBox">
+
+<div class="winIcon">
+🏆
+</div>
+
+<div class="winTitle">
+CONGRATULATIONS
+</div>
+
+<div id="winPrize" class="winPrize">
+10 Point
+</div>
+
+<div class="winText">
+奖励已加入账户<br>
+รางวัลถูกเพิ่มเข้าบัญชีแล้ว
+</div>
+
+<button onclick="closeWinModal()" class="winBtn">
+OK
+</button>
+
 </div>
 
 </div>
@@ -906,6 +1071,22 @@ console.log(err);
 }
 
 }
+function showWinModal(prize){
+
+document.getElementById("winPrize").innerText =
+prize;
+
+document.getElementById("winModal").style.display =
+"flex";
+
+}
+
+function closeWinModal(){
+
+document.getElementById("winModal").style.display =
+"none";
+
+}
   
 async function spinNow(){
 
@@ -984,8 +1165,12 @@ document.getElementById("spinCount").innerText =
 spinCount;
 
 document.getElementById("resultBox").innerText =
-"🎉 恭喜获得 / ยินดีด้วย: " +
-data.prize_value;
+"🎉 " + data.prize_value;
+
+showWinModal(
+data.prize_value
+);
+
 loadSpinHistory();
 },4200);
 

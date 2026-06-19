@@ -2113,7 +2113,34 @@ res.json([]);
 }
 
 });
+// ===== 管理员：Lucky Bonus 数据 =====
+app.get("/admin/spin-bonus", checkAdmin, async (req, res) => {
 
+try{
+
+const { data } =
+await supabase
+.from("lucky_bonus_wallet")
+.select("*")
+.order("id",{
+ascending:false
+})
+.limit(100);
+
+res.json(data || []);
+
+}catch(err){
+
+console.error(
+"admin spin bonus error:",
+err
+);
+
+res.json([]);
+
+}
+
+});
 // ===== 管理员：操作日志列表 =====
 app.get("/admin/logs", checkAdmin, async (req, res) => {
 try{

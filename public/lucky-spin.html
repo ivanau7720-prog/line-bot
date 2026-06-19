@@ -384,39 +384,6 @@ document.getElementById("spinCount").innerText =
 }
 
 }
-async function loadSpinCount(){
-
-try{
-
-const res =
-await fetch(
-"/my-spin-count/" + userId
-);
-
-const data =
-await res.json();
-
-spinCount =
-Number(data.spin_count || 0);
-
-document.getElementById("spinCount").innerText =
-spinCount;
-
-}catch(err){
-
-console.log(err);
-
-spinCount = 0;
-
-document.getElementById("spinCount").innerText =
-0;
-
-}
-
-}
-
-/* 👇 新代码插在这里 */
-
 async function loadMyBonus(){
 
 try{
@@ -484,7 +451,7 @@ console.log(err);
 }
 
 }
-  
+
 async function spinNow(){
 
 if(spinning){
@@ -594,6 +561,8 @@ localStorage.getItem("spinLang") || "zh"
 );
 
 loadSpinCount();
+
+loadMyBonus();
 </script>
 
 </body>

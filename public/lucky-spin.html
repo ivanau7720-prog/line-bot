@@ -142,12 +142,18 @@ margin:26px auto 22px;
 border-radius:50%;
 padding:16px;
 background:
-repeating-conic-gradient(
-from -10deg,
-#ffdf45 0deg 20deg,
-#6b0000 20deg 40deg,
-#ff9d00 40deg 60deg,
-#151515 60deg 80deg
+conic-gradient(
+from -90deg,
+#8b0000 0deg 18deg,
+#d6a900 18deg 60deg,
+#111 60deg 100deg,
+#d6a900 100deg 140deg,
+#111 140deg 180deg,
+#d6a900 180deg 220deg,
+#111 220deg 260deg,
+#d6a900 260deg 300deg,
+#111 300deg 340deg,
+#d6a900 340deg 360deg
 );
 box-shadow:
 0 0 0 8px rgba(80,45,0,.95),
@@ -183,7 +189,34 @@ inset:20px;
 border-radius:50%;
 border:2px dashed rgba(255,255,255,.35);
 }
+.wheelPrize{
+position:absolute;
+left:50%;
+top:50%;
+width:42px;
+height:42px;
+margin-left:-21px;
+margin-top:-21px;
+border-radius:50%;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:25px;
+background:rgba(0,0,0,.42);
+border:1px solid rgba(255,215,0,.45);
+box-shadow:0 0 12px rgba(255,215,0,.35);
+z-index:1;
+}
 
+.p1{transform:rotate(0deg) translateY(-104px) rotate(0deg);}
+.p2{transform:rotate(40deg) translateY(-104px) rotate(-40deg);}
+.p3{transform:rotate(80deg) translateY(-104px) rotate(-80deg);}
+.p4{transform:rotate(120deg) translateY(-104px) rotate(-120deg);}
+.p5{transform:rotate(160deg) translateY(-104px) rotate(-160deg);}
+.p6{transform:rotate(200deg) translateY(-104px) rotate(-200deg);}
+.p7{transform:rotate(240deg) translateY(-104px) rotate(-240deg);}
+.p8{transform:rotate(280deg) translateY(-104px) rotate(-280deg);}
+.p9{transform:rotate(320deg) translateY(-104px) rotate(-320deg);}
 .wheelInner{
 width:175px;
 height:175px;
@@ -489,23 +522,30 @@ color:#ddd;
 </div>
 
 <div class="wheelBox" id="wheel">
+
+<div class="wheelPrize p1">📱</div>
+<div class="wheelPrize p2">🎁</div>
+<div class="wheelPrize p3">💎</div>
+<div class="wheelPrize p4">🎁</div>
+<div class="wheelPrize p5">🟢</div>
+<div class="wheelPrize p6">🎁</div>
+<div class="wheelPrize p7">🟢</div>
+<div class="wheelPrize p8">🎁</div>
+<div class="wheelPrize p9">🟢</div>
+
 <div class="wheelInner">
 
 <div class="vipIcon">
-
 👑
-
 </div>
 
 <div class="vipTitle">
-
 VIP CLUB
-
 </div>
 
 <div class="vipSub">
-
 TRY YOUR LUCK
+</div>
 
 </div>
 

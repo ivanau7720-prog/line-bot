@@ -3161,6 +3161,167 @@ app.get("/my-exchange-records/:userId", async (req, res) => {
     res.json([]);
   }
 });
+
+// ===== 玩家：执行 Lucky Spin 抽奖 =====
+app.post("/lucky-spin", async (req, res) => {
+
+try{
+
+const { userId } =
+req.body;
+
+if(!userId){
+
+return res.json({
+success:false,
+msg:"玩家资料错误"
+});
+
+}
+
+const { data: wallet } =
+await supabase
+.from("lucky_spin_wallet")
+.select("*")
+.eq("user_id", userId)
+.maybeSingle();
+
+if(
+!wallet ||
+Number(wallet.spin_count || 0) <= 0
+){
+
+return res.json({
+success:false,
+msg:"暂无抽奖机会"
+});
+
+}
+
+/* 先扣一次，防止重复点击 */
+await supabase
+.from("lucky_spin_wallet")
+.update({
+spin_count:
+Number(wallet.spin_count || 0) - 1
+})
+.eq("user_id", userId);
+
+/* 抽奖概率 */
+const r =
+Math.random() * 100;
+
+let prizeType = "";
+let prizeValue = "";
+let bonusPercent = 0;
+let pointAdd = 0;
+
+if(r < 38){
+prizeType = "point";
+prizeValue = "100 Point";
+pointAdd = 100;
+}else if(r < 63){
+prizeType = "point";
+prizeValue = "300 Point";
+pointAdd = 300;
+}else if(r < 78){
+prizeType = "point";
+prizeValue = "500 Point";
+pointAdd = 500;
+}else if(r < 86){
+prizeType = "point";
+prizeValue = "1000 Point";
+pointAdd = 1000;
+}else if(r < 93){
+prizeType = "bonus";
+prizeValue = "Bonus 5%";
+bonusPercent = 5;
+}else if(r < 97){
+prizeType = "bonus";
+prizeValue = "Bonus 8%";
+bonusPercent = 8;
+}else if(r < 99){
+prizeType = "bonus";
+prizeValue = "Bonus 10%";
+bonusPercent = 10;
+}else if(r < 99.9){
+prizeType = "bonus";
+prizeValue = "Bonus 12%";
+bonusPercent = 12;
+}else{
+prizeType = "iphone";
+prizeValue = "iPhone 17 Pro Max";
+}
+
+/* Point 直接加 */
+if(pointAdd > 0){
+
+const { data: player } =
+await supabase
+.from("players")
+.select("*")
+.eq("user_id", userId)
+.single();
+
+await supabase
+.from("players")
+.update({
+reward_points:
+Number(player.reward_points || 0) + pointAdd
+})
+.eq("user_id", userId);
+
+await supabase
+.from("point_records")
+.insert([{
+user_id:userId,
+point:pointAdd,
+type:"lucky_spin",
+note:"Lucky Spin " + prizeValue
+}]);
+
+}
+
+/* 记录中奖 */
+await supabase
+.from("lucky_spin_records")
+.insert([{
+user_id:userId,
+prize_type:prizeType,
+prize_value:prizeValue,
+bonus_percent:bonusPercent,
+status:
+prizeType === "iphone"
+?
+"pending"
+:
+"done"
+}]);
+
+res.json({
+success:true,
+prize_type:prizeType,
+prize_value:prizeValue,
+bonus_percent:bonusPercent,
+spin_count:
+Number(wallet.spin_count || 0) - 1
+});
+
+}catch(err){
+
+console.error(
+"lucky spin error:",
+err
+);
+
+res.json({
+success:false,
+msg:"抽奖失败"
+});
+
+}
+
+});
 // ===== 玩家：查询 Lucky Spin 剩余次数 =====
 app.get("/my-spin-count/:userId", async (req, res) => {
 

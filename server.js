@@ -5,6 +5,28 @@ const { createClient } = require("@supabase/supabase-js");
 const app = express();
 app.use(express.json());
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin888";
+
+/* ===== 维护模式开关 =====
+false = 正常营业
+true = 维护中
+*/
+const MAINTENANCE_MODE = false;
+
+app.use((req, res, next) => {
+
+  if (
+    MAINTENANCE_MODE &&
+    !req.path.startsWith("/admin") &&
+    req.path !== "/admin-login" &&
+    req.path !== "/admin-login.html"
+  ) {
+    return res.status(503).sendFile(__dirname + "/public/maintenance.html");
+  }
+
+  next();
+
+});
+
 app.get("/", (req, res) => {
   res.sendFile(__dirname + "/public/login.html");
 });
@@ -4993,6 +5015,17 @@ app.get("/chat/list", async (req, res) => {
     res.json([]);
   }
 });
+// ===== 404 错误页 =====
+app.use((req, res) => {
+  res.status(404).sendFile(__dirname + "/public/404.html");
+});
+
+// ===== 500 错误页 =====
+app.use((err, req, res, next) => {
+  console.error("SERVER ERROR:", err);
+  res.status(500).sendFile(__dirname + "/public/500.html");
+});
+
 // ===== 启动 =====
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

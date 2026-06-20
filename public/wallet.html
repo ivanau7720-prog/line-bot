@@ -82,6 +82,21 @@ padding:8px 12px;
 margin-left:6px;
 
 }
+.backBtn{
+position:fixed;
+top:18px;
+left:18px;
+z-index:20;
+height:38px;
+padding:0 16px;
+border:none;
+border-radius:18px;
+background:rgba(0,0,0,.65);
+color:gold;
+border:1px solid rgba(255,215,0,.45);
+font-size:15px;
+font-weight:bold;
+}
 .title{
 
 font-size:28px;
@@ -287,6 +302,14 @@ font-weight:bold;
 
 <body>
 
+<button class="backBtn"
+id="backBtn"
+onclick="goHome()">
+
+← 返回
+
+</button>
+
 <div class="langBox">
 
 <button onclick="switchLang('zh')">
@@ -343,6 +366,10 @@ id="withdrawBtn">
 
 <script>
 
+function goHome(){
+location.href="/home.html";
+}
+
 const depositBtn =
 document.getElementById("depositBtn");
 
@@ -380,7 +407,8 @@ recordTitle:"我的记录",
 noRecord:"暂无记录",
 amountText:"金额",
 statusText:"状态",
-timeText:"时间"
+timeText:"时间",
+back:"← 返回"
 },
 
 th:{
@@ -405,7 +433,8 @@ recordTitle:"ประวัติของฉัน",
 noRecord:"ยังไม่มีรายการ",
 amountText:"จำนวนเงิน",
 statusText:"สถานะ",
-timeText:"เวลา"
+timeText:"เวลา",
+back:"← กลับ"
 }
 
 };
@@ -418,7 +447,7 @@ document.querySelector(".title").innerText = t.title;
 depositBtn.innerText = t.deposit;
 withdrawBtn.innerText = t.withdraw;
 document.getElementById("recordTitle").innerText = t.recordTitle;
-
+document.getElementById("backBtn").innerText = t.back;
 }
 
 function showDeposit(){

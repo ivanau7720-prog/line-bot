@@ -42,6 +42,53 @@ button:hover{
   transform:scale(1.1);
   box-shadow:0 0 15px gold;
 }
+ .fundInput{
+
+width:100%;
+
+box-sizing:border-box;
+
+padding:14px;
+
+margin:8px 0;
+
+border-radius:14px;
+
+border:1px solid gold;
+
+background:#111;
+
+color:gold;
+
+font-size:16px;
+
+}
+
+.fundButtons{
+
+display:grid;
+
+grid-template-columns:
+repeat(
+4,
+1fr
+);
+
+gap:10px;
+
+margin-top:12px;
+
+}
+
+.fundButtons button{
+
+height:54px;
+
+font-size:15px;
+
+border-radius:16px;
+
+} 
 .blinkAlert{
   animation: blinkAlert 1s infinite;
 }
@@ -423,36 +470,39 @@ onclick="showAdminLogs()">
 📜 操作日志
 
 </button>
-<div class="card">
-  <h3 id="profitTitle">
-📊 盈利统计
-</h3>
-  <div id="profitToday">今日盈利：--</div>
-  <div id="profitTotal">总盈利：--</div>
-</div>
 
 <div class="card">
 
-<h3 id="todayRechargeTitle">
-💳 今日充值记录
+<h3 id="financeOverviewTitle">
+📊 今日财务总览
 </h3>
 
-<div id="todayRechargeContent">
-加载中...
+<div style="
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+gap:10px;
+">
+
+<div style="padding:12px;border-radius:14px;background:rgba(0,255,150,.08);border:1px solid rgba(0,255,150,.35);">
+<div id="profitToday">今日盈利：--</div>
+<div id="profitTotal">总盈利：--</div>
+</div>
+
+<div style="padding:12px;border-radius:14px;background:rgba(255,215,0,.08);border:1px solid rgba(255,215,0,.35);">
+<div id="todayRechargeTitle">💳 今日充值</div>
+<div id="todayRechargeContent">加载中...</div>
+</div>
+
+<div style="padding:12px;border-radius:14px;background:rgba(255,80,80,.08);border:1px solid rgba(255,80,80,.35);">
+<div id="todayWithdrawTitle">💸 今日出账</div>
+<div id="todayWithdrawContent">加载中...</div>
 </div>
 
 </div>
-<div class="card">
-
-<h3 id="todayWithdrawTitle">
-💸 今日出账记录
-</h3>
-
-<div id="todayWithdrawContent">
-加载中...
-</div>
 
 </div>
+
+
 <div class="card">
 
 <h3 id="announcementTitle">
@@ -633,13 +683,27 @@ vertical-align:middle;
 
 <input
 id="uid"
-placeholder="玩家ID"
+placeholder="ID / USERNAME / PHONE"
+class="fundInput"
 >
 
 <input
 id="amt"
 placeholder="金额"
+class="fundInput"
 >
+
+<div class="fundButtons">
+
+<button
+id="checkPlayerBtn"
+onclick="checkPlayerFromFund()">
+
+<span id="checkPlayerText">
+🔍 查询玩家
+</span>
+
+</button>
 
 <button
 id="addBtn"
@@ -651,16 +715,12 @@ onclick="add()">
 
 <button
 id="bonusBtn"
-onclick="bonusAdd()"
-style="
-background:linear-gradient(90deg,#ffd700,#ff6a00);
-color:black;
-">
+onclick="bonusAdd()">
 
 🎁 BONUS加分
 
 </button>
-  
+
 <button
 id="minusBtn"
 onclick="minus()">
@@ -668,18 +728,8 @@ onclick="minus()">
 ➖ 扣钱
 
 </button>
-  
-<button
-id="checkPlayerBtn"
-onclick="checkPlayerFromFund()"
-style="
-background:linear-gradient(90deg,#2196f3,#00ccff);
-color:white;
-">
 
-<span id="checkPlayerText">🔍 查询玩家</span>
-
-</button>
+</div>
 </div>
 
 <div class="card">
@@ -1416,8 +1466,14 @@ document.getElementById("logoutBtn").innerText =
 LANG[lang].logout;
 document.getElementById("adminLogsBtn").innerText =
 LANG[lang].adminLogs;
-document.getElementById("profitTitle").innerText =
-LANG[lang].profit;
+  
+document.getElementById("financeOverviewTitle").innerText =
+lang==="th"
+?
+"📊 สรุปการเงินวันนี้"
+:
+"📊 今日财务总览";
+  
 document.getElementById(
 "todayRechargeTitle"
 ).innerText=
@@ -1426,7 +1482,7 @@ lang==="th"
 ?
 "💳 เติมเงินวันนี้"
 :
-"💳 今日充值记录";
+"💳 今日充值";
 
 document.getElementById(
 "todayWithdrawTitle"
@@ -1436,7 +1492,7 @@ lang==="th"
 ?
 "💸 ถอนเงินวันนี้"
 :
-"💸 今日出账记录";
+"💸 今日出账";
 document.getElementById("gameTitle").innerText =
 LANG[lang].game;
 
@@ -1968,7 +2024,7 @@ let html=`
 
 <div style="
 display:grid;
-grid-template-columns:repeat(3,1fr);
+grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
 gap:10px;
 margin-bottom:14px;
 ">

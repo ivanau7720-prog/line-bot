@@ -28,7 +28,25 @@ height:100vh;
 color:white;
 overflow:hidden;
 }
+.langBox{
+position:fixed;
+top:18px;
+right:18px;
+z-index:20;
+}
 
+.langBox button{
+width:auto;
+padding:8px 12px;
+margin-left:6px;
+border-radius:18px;
+background:rgba(0,0,0,.55);
+color:gold;
+border:1px solid rgba(255,215,0,.45);
+font-size:14px;
+}
+
+  
 .box{
 
 width:88%;
@@ -258,6 +276,11 @@ filter:brightness(1.28);
 
 <body>
 
+<div class="langBox">
+<button onclick="switchLang('zh')">中文</button>
+<button onclick="switchLang('th')">ไทย</button>
+</div>
+
 <div class="box">
 
 <h1>👑 SIAMBET88</h1>
@@ -269,7 +292,7 @@ margin-top:-15px;
 margin-bottom:20px;
 letter-spacing:2px;
 ">
-VIP MEMBER LOGIN
+<span id="loginSubTitle">VIP MEMBER LOGIN</span>
 </div>
 
 <input id="username" placeholder="Player ID">
@@ -299,26 +322,18 @@ user-select:none;
 
 </div>
 
-<button class="loginBtn" onclick="login()">
+<button class="loginBtn" onclick="login()" id="loginBtn">
 LOGIN
 </button>
 
-<button class="regBtn" onclick="openRegisterBox()">
+<button class="regBtn" onclick="openRegisterBox()" id="openRegBtn">
 CREATE ACCOUNT
 </button>
 
 <div class="small">
 
-<div>
+<div id="forgotText">
 Forgot password? Contact Customer Service
-</div>
-
-<div style="
-margin-top:6px;
-font-size:12px;
-color:rgba(255,255,255,.72);
-">
-ลืมรหัสผ่าน? กรุณาติดต่อฝ่ายบริการลูกค้า
 </div>
 
 </div>
@@ -350,7 +365,7 @@ box-shadow:0 0 30px gold;
 text-align:center;
 ">
 
-<h1 style="color:gold;font-size:24px;">
+<h1 style="color:gold;font-size:24px;" id="regTitle">
 CREATE ACCOUNT
 </h1>
 
@@ -409,11 +424,12 @@ font-size:20px;
 <input id="regBankAccount" placeholder="เลขบัญชี / Bank Account">
 
 <input id="regAgentCode" placeholder="รหัสเชิญ / Agent Code (ถ้ามี)">
-<button class="regBtn" onclick="register()">
+  
+<button class="regBtn" onclick="register()" id="createNowBtn">
 CREATE NOW
 </button>
 
-<button onclick="closeRegisterBox()" style="
+<button onclick="closeRegisterBox()" id="cancelBtn" style="
 background:#333;
 color:white;
 ">
@@ -431,7 +447,81 @@ font-size:14px;
 </div>
 
 <script>
+
+let currentLang =
+localStorage.getItem("homeLang") || "zh";
+
+const LANG={
+zh:{
+loginSubTitle:"VIP 会员登入",
+username:"玩家账号",
+password:"密码",
+login:"登入",
+createAccount:"创建账户",
+forgot:"忘记密码？请联系客服",
+regTitle:"创建账户",
+regUsername:"玩家账号 4–15 位",
+regPassword:"密码 4–15 位",
+regConfirmPassword:"确认密码",
+realName:"真实姓名",
+phone:"电话号码",
+bankName:"银行名称",
+bankAccount:"银行账号",
+agentCode:"邀请码（如有）",
+createNow:"立即创建",
+cancel:"取消"
+},
+th:{
+loginSubTitle:"เข้าสู่ระบบสมาชิก VIP",
+username:"รหัสผู้เล่น",
+password:"รหัสผ่าน",
+login:"เข้าสู่ระบบ",
+createAccount:"สมัครสมาชิก",
+forgot:"ลืมรหัสผ่าน? กรุณาติดต่อฝ่ายบริการลูกค้า",
+regTitle:"สมัครสมาชิก",
+regUsername:"รหัสผู้เล่น 4–15 ตัว",
+regPassword:"รหัสผ่าน 4–15 ตัว",
+regConfirmPassword:"ยืนยันรหัสผ่าน",
+realName:"ชื่อจริง",
+phone:"เบอร์โทร",
+bankName:"ธนาคาร",
+bankAccount:"เลขบัญชี",
+agentCode:"รหัสเชิญ (ถ้ามี)",
+createNow:"สมัครตอนนี้",
+cancel:"ยกเลิก"
+}
+};
+
+function switchLang(lang){
+
+currentLang = lang;
+localStorage.setItem("homeLang",lang);
+
+const t = LANG[lang];
+
+document.getElementById("loginSubTitle").innerText = t.loginSubTitle;
+document.getElementById("username").placeholder = t.username;
+document.getElementById("password").placeholder = t.password;
+document.getElementById("loginBtn").innerText = t.login;
+document.getElementById("openRegBtn").innerText = t.createAccount;
+document.getElementById("forgotText").innerText = t.forgot;
+
+document.getElementById("regTitle").innerText = t.regTitle;
+document.getElementById("regUsername").placeholder = t.regUsername;
+document.getElementById("regPassword").placeholder = t.regPassword;
+document.getElementById("regConfirmPassword").placeholder = t.regConfirmPassword;
+document.getElementById("regRealName").placeholder = t.realName;
+document.getElementById("regPhone").placeholder = t.phone;
+document.getElementById("regBankName").placeholder = t.bankName;
+document.getElementById("regBankAccount").placeholder = t.bankAccount;
+document.getElementById("regAgentCode").placeholder = t.agentCode;
+document.getElementById("createNowBtn").innerText = t.createNow;
+document.getElementById("cancelBtn").innerText = t.cancel;
+
+}
+
 const urlParams =
+  
 new URLSearchParams(window.location.search);
 
 const inviteAgent =
@@ -524,6 +614,14 @@ document.getElementById("msg").innerText =
   
 async function register(){
 
+if(window.registerSubmitting){
+return;
+}
+
+window.registerSubmitting = true;
+
+try{
+
 const username =
 document.getElementById("regUsername").value.trim();
 
@@ -544,57 +642,45 @@ document.getElementById("regBankName").value.trim();
 
 const bankAccount =
 document.getElementById("regBankAccount").value.trim();
-  
+
 const agentCode =
 document.getElementById("regAgentCode").value.trim();
 
 if(!username){
-
 document.getElementById("regMsg").innerText =
 "请输入玩家账号 / กรุณากรอกรหัสผู้เล่น";
-
 return;
-
 }
 
 if(username.length < 4 || username.length > 15){
-
 document.getElementById("regMsg").innerText =
 "玩家账号需 4–15 位 / รหัสผู้เล่นต้องมี 4–15 ตัว";
-
 return;
-
 }
 
-
 if(!password){
-
 document.getElementById("regMsg").innerText =
 "请输入密码 / กรุณากรอกรหัสผ่าน";
-
 return;
-
 }
 
 if(password.length < 4){
-
 document.getElementById("regMsg").innerText =
 "密码至少 4 位 / รหัสผ่านต้องมีอย่างน้อย 4 ตัว";
-
 return;
-
 }
 
 if(password.length > 15){
-
 document.getElementById("regMsg").innerText =
 "密码需 4–15 位 / รหัสผ่านต้องมี 4–15 ตัว";
-
 return;
-
 }
 
-
+if(password !== confirm){
+document.getElementById("regMsg").innerText =
+"密码不一致 / รหัสผ่านทั้งสองช่องไม่ตรงกัน";
+return;
+}
 
 if(
 !realName ||
@@ -602,35 +688,18 @@ if(
 !bankName ||
 !bankAccount
 ){
-
 document.getElementById("regMsg").innerText =
 "请填写姓名、电话、银行、账号 / กรุณากรอกชื่อ เบอร์โทร ธนาคาร และเลขบัญชี";
-
 return;
-
-}
-
-  
-if(password!==confirm){
-
-document.getElementById("regMsg").innerText=
-"密码不一致 / รหัสผ่านทั้งสองช่องไม่ตรงกัน";
-
-return;
-
 }
 
 const res =
 await fetch("/register",{
-
 method:"POST",
-
 headers:{
 "Content-Type":"application/json"
 },
-
 body:JSON.stringify({
-
 username,
 password,
 realName,
@@ -638,15 +707,13 @@ phone,
 bankName,
 bankAccount,
 agentCode
-
 })
-
 });
 
 const data =
 await res.json();
 
-document.getElementById("regMsg").innerText=
+document.getElementById("regMsg").innerText =
 data.msg || "Account Created";
 
 if(data.success){
@@ -659,17 +726,24 @@ setTimeout(()=>{
 document.getElementById("username").value =
 username;
 
-document.getElementById("password").value =
-password;
-
 closeRegisterBox();
 
 },1200);
 
 }
 
+}catch(err){
+
+document.getElementById("regMsg").innerText =
+"注册失败，请再试一次 / สมัครไม่สำเร็จ กรุณาลองใหม่";
+
+}finally{
+
+window.registerSubmitting = false;
+
 }
 
+}
 function openRegisterBox(){
 
 document.getElementById(
@@ -720,7 +794,7 @@ el.innerHTML="👁️";
 }
 
 }
-
+switchLang(currentLang);
 </script>
 
 </body>

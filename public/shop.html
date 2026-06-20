@@ -263,16 +263,21 @@ margin-top:10px;
 
 
 <button class="backBtn"
-onclick="location.href='/account.html'"
+onclick="goHome()"
 id="backText">
 
-返回账户
+返回
 
 </button>
 
 </div>
 
 <script>
+
+function goHome(){
+location.href="/home.html";
+}
+
 const LANG={
 
 zh:{
@@ -288,7 +293,7 @@ turnover:"流水要求",
 bonus:"娱乐城下注分数",
 qualification:"兑换资格",
 physical:"实体礼品",
-back:"返回账户",
+back:"← 返回",
 notEnough:"积分不足",
 comingSoon:"兑换系统即将开放",
 vipNeed:"需要 VIP",
@@ -308,7 +313,7 @@ turnover:"เงื่อนไขเทิร์นโอเวอร์",
 bonus:"เครดิตเดิมพัน",
 qualification:"สิทธิ์แลกของรางวัล",
 physical:"ของรางวัลจริง",
-back:"กลับบัญชี",
+back:"← กลับ",
 notEnough:"พอยท์ไม่เพียงพอ",
 comingSoon:"ระบบแลกของรางวัลกำลังจะเปิดใช้งาน",
 vipNeed:"ต้องใช้ VIP",

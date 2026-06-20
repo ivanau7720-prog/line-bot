@@ -153,6 +153,9 @@ ALTER TABLE players
 ADD COLUMN IF NOT EXISTS password TEXT;
 
 ALTER TABLE players
+ADD COLUMN IF NOT EXISTS last_login TIMESTAMP;
+
+ALTER TABLE players
 ADD COLUMN IF NOT EXISTS agent_code TEXT;
 
 ALTER TABLE agents
@@ -2174,7 +2177,10 @@ win:
 p.total_win || 0,
 
 lose:
-p.total_lose || 0
+p.total_lose || 0,
+
+last_login:
+p.last_login || ""
 
 }));
     res.json(list);
@@ -3069,7 +3075,14 @@ msg:"账号或密码错误"
 });
 
 }
+await supabase
+.from("players")
+.update({
+last_login:new Date().toISOString()
+})
+.eq("user_id", data.user_id);
 
+  
 res.json({
 success:true,
 userId:data.user_id,

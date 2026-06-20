@@ -523,7 +523,7 @@ onclick="loadLuckySpinAdmin()">
 id="spinBonusBtn"
 onclick="loadLuckyBonusAdmin()">
 
-🎁 查看 Bonus
+🎁 Lucky Bonus 管理
 
 </button>
 
@@ -1698,11 +1698,12 @@ document.getElementById(
 lang==="th"
 ?
 
-"🎁 โบนัสผู้เล่น"
+"🎁 จัดการ Lucky Bonus"
 
 :
 
-"🎁 查看 Bonus";
+"🎁 Lucky Bonus 管理";
+  
 localStorage.setItem(
 "adminLang",
 lang
@@ -1848,115 +1849,232 @@ html;
 async function loadLuckyBonusAdmin(){
 
 const lang =
-localStorage.getItem("adminLang") || "zh";
+localStorage.getItem(
+"adminLang"
+)
+||
+"zh";
 
-document.getElementById("spinAdminBox").innerHTML =
+document.getElementById(
+"spinAdminBox"
+).innerHTML=
+
 lang==="th"
+
 ?
-"🎁 กำลังโหลด Bonus..."
+
+"🎁 กำลังโหลด Lucky Bonus..."
+
 :
-"🎁 正在读取 Bonus...";
+
+"🎁 正在读取 Lucky Bonus...";
 
 const res =
-await fetch("/admin/spin-bonus",{
-headers:adminGetHeaders()
-});
+await fetch(
+"/admin/spin-bonus",
+{
+headers:
+adminGetHeaders()
+}
+);
 
 const data =
 await res.json();
 
-if(!data || data.length===0){
+if(
+!data
+||
+data.length===0
+){
 
-document.getElementById("spinAdminBox").innerHTML =
+document.getElementById(
+"spinAdminBox"
+).innerHTML=
+
 lang==="th"
+
 ?
-"🎁 ยังไม่มี Bonus"
+
+"🎁 ยังไม่มี Lucky Bonus"
+
 :
-"🎁 暂无 Bonus 数据";
+
+"🎁 暂无 Lucky Bonus";
 
 return;
+
 }
 
-let html="";
+let pending=0;
+
+let used=0;
+
+let completed=0;
 
 data.forEach(r=>{
 
-const required =
-Number(r.turnover_required || 0);
+if(r.status==="unused"){
+pending++;
+}
 
-const done =
-Number(r.turnover_done || 0);
+if(r.status==="used"){
+used++;
+}
 
-const remain =
-Math.max(required - done,0);
+if(r.status==="completed"){
+completed++;
+}
 
-const percent =
-required > 0
+});
+
+let html=`
+
+<div style="
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:10px;
+margin-bottom:14px;
+">
+
+<div style="
+padding:10px;
+border-radius:12px;
+background:rgba(255,180,0,.12);
+border:1px solid orange;
+text-align:center;
+">
+
+🎁
+
+<br>
+
+${
+lang==="th"
 ?
-Math.min(Math.floor(done / required * 100),100)
+"ยังไม่รับ"
 :
-0;
+"未领取"
+}
 
-html += `
+<br>
+
+<b>${pending}</b>
+
+</div>
+
+<div style="
+padding:10px;
+border-radius:12px;
+background:rgba(0,150,255,.12);
+border:1px solid #2196f3;
+text-align:center;
+">
+
+📥
+
+<br>
+
+${
+lang==="th"
+?
+"รับแล้ว"
+:
+"已领取"
+}
+
+<br>
+
+<b>${used}</b>
+
+</div>
+
+<div style="
+padding:10px;
+border-radius:12px;
+background:rgba(0,255,150,.12);
+border:1px solid #00ff99;
+text-align:center;
+">
+
+✅
+
+<br>
+
+${
+lang==="th"
+?
+"เสร็จสิ้น"
+:
+"已完成流水"
+}
+
+<br>
+
+<b>${completed}</b>
+
+</div>
+
+</div>
+`;
+
+data.forEach(r=>{
+
+html+=`
 
 <div style="
 padding:12px;
 margin-bottom:10px;
-border-radius:16px;
-background:rgba(255,215,0,.08);
-border:1px solid rgba(255,215,0,.35);
+border-radius:14px;
+
+background:
+rgba(255,215,0,.08);
+
+border:
+1px solid rgba(255,215,0,.35);
+
 ">
 
 👤 ${r.user_id}
 
 <br>
 
-🎁 Bonus：${r.bonus_percent || 0}%
+🎁 ${r.bonus_percent||0}%
 
 <br>
 
 📌 ${
-lang==="th" ? "สถานะ" : "状态"
-}：${r.status || "-"}
-
-<br><br>
-
-${lang==="th" ? "📊 เทิร์นโอเวอร์ที่ต้องทำ" : "📊 需要流水"}：
-${required}
+r.status==="unused"
+?
+(lang==="th"
+?
+"ยังไม่รับ"
+:
+"未领取")
+:
+r.status==="used"
+?
+(lang==="th"
+?
+"รับแล้ว"
+:
+"已领取")
+:
+(lang==="th"
+?
+"เสร็จสิ้น"
+:
+"已完成流水")
+}
 
 <br>
 
-${lang==="th" ? "✅ ทำแล้ว" : "✅ 已完成"}：
-${done}
+📊
 
-<br>
+${r.turnover_done||0}
 
-${lang==="th" ? "⏳ คงเหลือ" : "⏳ 剩余流水"}：
-${remain}
+/
 
-<div style="
-height:12px;
-background:rgba(255,255,255,.15);
-border-radius:99px;
-overflow:hidden;
-margin-top:8px;
-">
-
-<div style="
-height:100%;
-width:${percent}%;
-background:linear-gradient(90deg,#00ff99,#ffd700);
-"></div>
-
-</div>
-
-<div style="
-margin-top:5px;
-color:gold;
-font-weight:bold;
-">
-${percent}%
-</div>
+${r.turnover_required||0}
 
 </div>
 
@@ -1964,7 +2082,9 @@ ${percent}%
 
 });
 
-document.getElementById("spinAdminBox").innerHTML =
+document.getElementById(
+"spinAdminBox"
+).innerHTML=
 html;
 
 }

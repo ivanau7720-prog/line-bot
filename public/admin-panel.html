@@ -656,7 +656,17 @@ onclick="minus()">
 ➖ 扣钱
 
 </button>
+<button
+id="checkPlayerBtn"
+onclick="checkPlayerFromFund()"
+style="
+background:linear-gradient(90deg,#2196f3,#00ccff);
+color:white;
+">
 
+🔍 查询玩家
+
+</button>
 </div>
 
 <div class="card">
@@ -5908,7 +5918,23 @@ ${p.last_login || "-"}
 `;
 
 }
+function checkPlayerFromFund(){
 
+const userId =
+document.getElementById("uid").value.trim();
+
+if(!userId){
+
+alert("请输入玩家ID / USERNAME");
+
+return;
+
+}
+
+openPlayerDetail(userId);
+
+}
+  
 function closePlayerDetail(){
 
 const modal =

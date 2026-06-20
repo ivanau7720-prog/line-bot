@@ -4264,9 +4264,32 @@ msg:"积分不足或请勿重复兑换"
 });
 
 }
+/* Bonus 必须余额清空才可兑换 */
 
-   const isBonus =
-itemName.toLowerCase().includes("bonus");
+const balance =
+Number(player.balance || 0);
+
+const isBonus =
+itemName
+.toLowerCase()
+.includes("bonus");
+
+if(
+isBonus
+&&
+balance > 0
+){
+
+return res.json({
+success:false,
+
+msg:
+"请先使用完余额后再兑换 Bonus"
+
+});
+
+}
+
 
 const {
 error: exchangeError

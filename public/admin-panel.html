@@ -89,6 +89,40 @@ font-size:15px;
 border-radius:16px;
 
 } 
+.reviewTabs{
+
+display:grid;
+
+grid-template-columns:repeat(3,1fr);
+
+gap:10px;
+
+margin-bottom:12px;
+
+}
+
+.reviewTabs button{
+
+height:54px;
+
+border-radius:16px;
+
+font-size:15px;
+
+}
+
+.reviewPanel{
+
+padding:12px;
+
+border-radius:16px;
+
+background:rgba(255,255,255,.04);
+
+border:1px solid rgba(255,215,0,.25);
+
+}
+  
 .blinkAlert{
   animation: blinkAlert 1s infinite;
 }
@@ -734,6 +768,127 @@ onclick="minus()">
 
 <div class="card">
 
+<h3 id="reviewCenterTitle">
+🔔 审核中心
+</h3>
+
+<div class="reviewTabs">
+
+<button onclick="loadRechargeRequests()">
+<span id="rechargeBtnText2">💳 充值申请</span>
+</button>
+
+<button onclick="loadWithdrawRequests()">
+<span id="withdrawBtnText2">🏧 提款申请</span>
+</button>
+
+<button onclick="loadExchangeRequests()">
+<span id="exchangeBtnText2">🎁 兑换申请</span>
+</button>
+
+</div>
+
+<div class="reviewPanel">
+
+<div id="rechargeRequests">
+暂无充值申请
+</div>
+
+<div id="withdrawRequests">
+暂无提款申请
+</div>
+
+<div id="exchangeSummaryBox" style="
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+gap:10px;
+margin:10px 0;
+">
+加载中...
+</div>
+
+<input
+id="exchangeSearchInput"
+placeholder="搜索玩家ID / 用户名 / 商品名称"
+oninput="loadExchangeRequests()"
+class="fundInput"
+>
+
+<div id="exchangeRequests">
+暂无兑换申请
+</div>
+
+</div>
+
+</div>
+
+<div class="card">
+
+<h3 id="txTitle">
+📜 玩家流水记录
+</h3>
+
+<input
+id="filterUserId"
+placeholder="玩家ID"
+>
+
+<input
+id="filterAgentCode"
+placeholder="代理编号，例如 AG001"
+>
+
+<input
+id="filterDate"
+type="date"
+>
+
+<button
+id="searchBtn"
+onclick="loadTx()">
+
+🔍 搜索
+
+</button>
+
+<button
+id="clearBtn"
+onclick="clearTxFilter()">
+
+❌ 清除
+
+</button>
+<button
+id="txColorHelpBtn"
+onclick="toggleTxColorHelp()"
+style="
+background:linear-gradient(90deg,#673ab7,#9c27b0);
+color:white;
+">
+
+🎨 颜色说明
+
+</button>
+
+<div
+id="txColorHelpBox"
+style="
+display:none;
+margin:10px 0;
+padding:12px;
+border-radius:14px;
+background:rgba(0,0,0,.45);
+border:1px solid rgba(255,255,255,.25);
+line-height:1.8;
+"
+></div>
+  <br><br>
+
+<div id="tx"></div>
+</div>
+  
+<div class="card">
+
 <h3 id="agentTitle">
 🤝 代理管理
 </h3>
@@ -861,131 +1016,6 @@ box-sizing:border-box;
 
 </div>
 
-<div class="card">
-<h3 id="rechargeTitle">
-💳 充值申请
-</h3>
-
-<div id="rechargeRequests">
-暂无充值申请
-</div>
-
-</div>
-
-<div class="card">
-
-<h3 id="withdrawTitle">
-🏧 提款申请
-</h3>
-
-<div id="withdrawRequests">
-暂无提款申请
-</div>
-
-</div>
- <div class="card">
-
-<h3 id="exchangeTitle">
-
-🎁 商品兑换申请
-
-</h3>
-<div id="exchangeSummaryBox" style="
-display:grid;
-grid-template-columns:repeat(2,1fr);
-gap:10px;
-margin:10px 0;
-">
-
-加载中...
-
-</div>
-<input
-id="exchangeSearchInput"
-placeholder="搜索玩家ID / 用户名 / 商品名称"
-oninput="loadExchangeRequests()"
-style="
-width:100%;
-padding:12px;
-margin:10px 0;
-border-radius:12px;
-border:1px solid gold;
-background:#111;
-color:gold;
-box-sizing:border-box;
-"
->
-<div id="exchangeRequests">
-
-暂无兑换申请
-
-</div>
-
-</div> 
-<div class="card">
-
-<h3 id="txTitle">
-📜 玩家流水记录
-</h3>
-
-<input
-id="filterUserId"
-placeholder="玩家ID"
->
-
-<input
-id="filterAgentCode"
-placeholder="代理编号，例如 AG001"
->
-
-<input
-id="filterDate"
-type="date"
->
-
-<button
-id="searchBtn"
-onclick="loadTx()">
-
-🔍 搜索
-
-</button>
-
-<button
-id="clearBtn"
-onclick="clearTxFilter()">
-
-❌ 清除
-
-</button>
-<button
-id="txColorHelpBtn"
-onclick="toggleTxColorHelp()"
-style="
-background:linear-gradient(90deg,#673ab7,#9c27b0);
-color:white;
-">
-
-🎨 颜色说明
-
-</button>
-
-<div
-id="txColorHelpBox"
-style="
-display:none;
-margin:10px 0;
-padding:12px;
-border-radius:14px;
-background:rgba(0,0,0,.45);
-border:1px solid rgba(255,255,255,.25);
-line-height:1.8;
-"
-></div>
-  <br><br>
-
-  <div id="tx"></div>
-</div>
 <div id="playerModal" style="
 display:none;
 position:fixed;
@@ -1452,8 +1482,14 @@ LANG[lang].review;
 document.getElementById("rechargeBtnText").innerText =
 LANG[lang].rechargeBtn;
 
+document.getElementById("rechargeBtnText2").innerText =
+LANG[lang].rechargeBtn;
+  
 document.getElementById("withdrawBtnText").innerText =
 LANG[lang].withdrawBtn;
+
+document.getElementById("withdrawBtnText2").innerText =
+LANG[lang].withdrawBtn;  
 
 document.getElementById(
 "exchangeBtnText"
@@ -1461,6 +1497,16 @@ document.getElementById(
 
 LANG[lang]
 .exchangeBtn;
+
+document.getElementById("exchangeBtnText2").innerText =
+LANG[lang].exchangeBtn;
+
+document.getElementById("reviewCenterTitle").innerText =
+lang==="th"
+?
+"🔔 ศูนย์ตรวจสอบ"
+:
+"🔔 审核中心";
   
 document.getElementById("logoutBtn").innerText =
 LANG[lang].logout;
@@ -1575,8 +1621,6 @@ document.getElementById("playersTitle").innerText =
 LANG[lang].players;
 document.getElementById("roundsTitle").innerText =
 LANG[lang].rounds;
-document.getElementById("rechargeTitle").innerText =
-LANG[lang].rechargeTitle;
 
 if(
 document.getElementById("rechargeRequests").innerText==="暂无充值申请"
@@ -1585,15 +1629,6 @@ document.getElementById("rechargeRequests").innerText==="暂无充值申请"
 document.getElementById("rechargeRequests").innerText =
 LANG[lang].noRecharge;
 }
-document.getElementById("withdrawTitle").innerText =
-LANG[lang].withdrawTitle;
-
-document.getElementById(
-"exchangeTitle"
-).innerText=
-
-LANG[lang]
-.exchangeTitle;
   
 if(
 document.getElementById("withdrawRequests").innerText==="暂无提款申请"

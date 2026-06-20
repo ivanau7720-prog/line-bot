@@ -908,6 +908,30 @@ onclick="clearTxFilter()">
 ❌ 清除
 
 </button>
+<button
+id="txColorHelpBtn"
+onclick="toggleTxColorHelp()"
+style="
+background:linear-gradient(90deg,#673ab7,#9c27b0);
+color:white;
+">
+
+🎨 颜色说明
+
+</button>
+
+<div
+id="txColorHelpBox"
+style="
+display:none;
+margin:10px 0;
+padding:12px;
+border-radius:14px;
+background:rgba(0,0,0,.45);
+border:1px solid rgba(255,255,255,.25);
+line-height:1.8;
+"
+></div>
   <br><br>
 
   <div id="tx"></div>
@@ -1537,6 +1561,13 @@ LANG[lang].search;
 document.getElementById("clearBtn").innerText =
 LANG[lang].clear;
 
+document.getElementById("txColorHelpBtn").innerText =
+lang==="th"
+?
+"🎨 คำอธิบายสี"
+:
+"🎨 颜色说明";
+  
 document.getElementById(
 "announcementTitle"
 ).innerText=
@@ -4033,103 +4064,6 @@ alert(
 return;
 
 }
-
-async function bonusAdd(){
-
-const lang =
-localStorage.getItem(
-"adminLang"
-)
-||
-"zh";
-
-const userId =
-document.getElementById(
-"uid"
-).value
-.trim();
-
-const amount =
-Number(
-document.getElementById(
-"amt"
-).value
-);
-
-if(
-!userId
-||
-!amount
-||
-amount<=0
-){
-
-alert(
-
-lang==="th"
-
-?
-
-"กรอกรหัสผู้เล่นและจำนวนโบนัส"
-
-:
-
-"请输入玩家和Bonus金额"
-
-);
-
-return;
-
-}
-
-const res =
-await fetch(
-
-"/admin/bonus",
-
-{
-
-method:"POST",
-
-headers:
-adminHeaders(),
-
-body:
-JSON.stringify({
-
-userId,
-
-amount
-
-})
-
-}
-
-);
-
-const d =
-await res.json();
-
-alert(
-d.msg
-);
-
-if(
-d.success
-){
-
-document.getElementById(
-"amt"
-).value=
-"";
-
-loadPlayers();
-
-loadTx();
-
-}
-
-}
   
 const res =
 await fetch("/admin/add",{
@@ -4749,84 +4683,246 @@ ${data.content || ""}
 `;
 
 }
+function toggleTxColorHelp(){
+
+const box =
+document.getElementById("txColorHelpBox");
+
+const lang =
+localStorage.getItem("adminLang") || "zh";
+
+if(
+box.style.display === "block"
+){
+
+box.style.display =
+"none";
+
+return;
+
+}
+
+box.style.display =
+"block";
+
+box.innerHTML =
+lang==="th"
+?
+`
+🟢 เติมเงินปกติ<br>
+🟡 โบนัสจากแอดมิน<br>
+🔵 โบนัสแลกจากพอยท์<br>
+🟣 Lucky Spin Bonus<br>
+🔴 หักเงิน<br>
+⚪ เดิมพัน / รายการทั่วไป
+`
+:
+`
+🟢 普通充值<br>
+🟡 后台 BONUS 加分<br>
+🔵 积分商城兑换 BONUS<br>
+🟣 Lucky Spin Bonus<br>
+🔴 后台扣钱<br>
+⚪ 下注 / 普通流水
+`;
+
+}
+  
 async function loadTx(){
-  const lang =
-localStorage.getItem("adminLang")
-|| "zh";
 
-const t =
-LANG[lang];
-  const userId = document.getElementById("filterUserId").value.trim();
-  const agentCode = document.getElementById("filterAgentCode").value.trim();
-  const date = document.getElementById("filterDate").value;
+const lang =
+localStorage.getItem("adminLang") || "zh";
 
-  let url = "/admin/transactions?";
-  if(userId) url += "userId=" + encodeURIComponent(userId) + "&";
-  if(agentCode) url += "agentCode=" + encodeURIComponent(agentCode) + "&";
-  if(date) url += "date=" + encodeURIComponent(date) + "&";
+const userId =
+document.getElementById("filterUserId").value;
 
-  const res = await fetch(url,{
-  headers: adminGetHeaders()
+const agentCode =
+document.getElementById("filterAgentCode").value;
+
+const date =
+document.getElementById("filterDate").value;
+
+let url =
+"/admin/transactions?";
+
+if(userId){
+url += "userId=" + encodeURIComponent(userId) + "&";
+}
+
+if(agentCode){
+url += "agentCode=" + encodeURIComponent(agentCode) + "&";
+}
+
+if(date){
+url += "date=" + encodeURIComponent(date);
+}
+
+const res =
+await fetch(url,{
+headers:adminGetHeaders()
 });
-  const data = await res.json();
 
-  let html = "";
+const data =
+await res.json();
 
-  if(data.length === 0){
-   html = t.txEmpty;
-  }
+if(!data || data.length===0){
 
- data.forEach(tx=>{
+document.getElementById("tx").innerHTML =
+lang==="th"
+?
+"ไม่พบข้อมูลรายการ"
+:
+"没有找到流水记录";
 
-let side = tx.bet_side;
+return;
 
-if(side === "B") side = t.banker;
-if(side === "P") side = t.player;
-if(side === "T") side = t.tie;
+}
+
+function txStyle(type){
+
+if(type==="recharge_approved"){
+return {
+icon:"🟢",
+label: lang==="th" ? "เติมเงินปกติ" : "普通充值",
+bg:"rgba(0,255,150,.10)",
+border:"rgba(0,255,150,.45)",
+color:"#00ff99"
+};
+}
+
+if(type==="admin_bonus"){
+return {
+icon:"🟡",
+label: lang==="th" ? "โบนัสจากแอดมิน" : "后台 BONUS 加分",
+bg:"rgba(255,215,0,.12)",
+border:"rgba(255,215,0,.55)",
+color:"#ffd700"
+};
+}
+
+if(type==="mall_bonus_exchange"){
+return {
+icon:"🔵",
+label: lang==="th" ? "โบนัสแลกจากพอยท์" : "积分商城兑换 BONUS",
+bg:"rgba(0,150,255,.12)",
+border:"rgba(0,150,255,.55)",
+color:"#00ccff"
+};
+}
+
+if(type==="lucky_bonus_used"){
+return {
+icon:"🟣",
+label: lang==="th" ? "Lucky Spin Bonus" : "Lucky Spin BONUS",
+bg:"rgba(180,80,255,.12)",
+border:"rgba(180,80,255,.55)",
+color:"#c77dff"
+};
+}
+
+if(type==="admin_minus"){
+return {
+icon:"🔴",
+label: lang==="th" ? "หักเงินโดยแอดมิน" : "后台扣钱",
+bg:"rgba(255,60,60,.12)",
+border:"rgba(255,60,60,.55)",
+color:"#ff6666"
+};
+}
+
+if(type==="bet" || type==="settled"){
+return {
+icon:"⚪",
+label: lang==="th" ? "เดิมพัน / คำนวณแล้ว" : "下注 / 已结算",
+bg:"rgba(255,255,255,.06)",
+border:"rgba(255,255,255,.18)",
+color:"#ffffff"
+};
+}
+
+return {
+icon:"⚪",
+label:type || "-",
+bg:"rgba(255,255,255,.06)",
+border:"rgba(255,255,255,.18)",
+color:"#ffffff"
+};
+
+}
+
+let html="";
+
+data.forEach(t=>{
+
+const s =
+txStyle(t.type);
 
 html += `
-<div style="padding:8px;border-bottom:1px solid rgba(255,255,255,0.15)">
 
-👤 ${tx.username}
+<div style="
+margin-bottom:10px;
+padding:12px;
+border-radius:14px;
+background:${s.bg};
+border:1px solid ${s.border};
+line-height:1.8;
+box-shadow:0 0 12px ${s.border};
+">
 
-<br>
+<div style="
+font-weight:bold;
+color:${s.color};
+font-size:15px;
+">
+${s.icon} ${s.label}
+</div>
 
-🆔 ${tx.user_id}
-
-<br>
-
-${t.agentTx}${tx.agent_code}
-
-<br>
-
-${t.betTx}${side}
-
-<br>
-
-${t.amountTx}${tx.amount}
-
-<br>
-
-${t.typeTx}${tx.type}
+👤 ${t.user_id}
+｜${t.username || "-"}
 
 <br>
 
-${t.resultTx}${tx.result}
+🤝 ${
+lang==="th" ? "เอเย่นต์" : "代理"
+}：${t.agent_code || "-"}
 
 <br>
 
-${t.winTx}${tx.win_amount}
+🎯 ${
+lang==="th" ? "เดิมพัน" : "下注"
+}：${t.bet_side || "-"}
 
 <br>
 
-🕒 ${tx.created_at}
+💰 ${
+lang==="th" ? "จำนวน" : "金额"
+}：${Number(t.amount || 0).toLocaleString()}
+
+<br>
+
+📈 ${
+lang==="th" ? "ประเภท" : "类型"
+}：${t.type || "-"}
+
+<br>
+
+🏁 ${
+lang==="th" ? "ผล" : "结果"
+}：${t.result || "-"}
+
+<br>
+
+🕒 ${t.created_at || "-"}
 
 </div>
+
 `;
 
 });
 
-  document.getElementById("tx").innerHTML = html;
+document.getElementById("tx").innerHTML =
+html;
+
 }
 async function loadReviewBadges(){
   const rechargeRes = await fetch("/admin/recharge-requests",{

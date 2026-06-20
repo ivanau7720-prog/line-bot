@@ -650,12 +650,25 @@ onclick="add()">
 </button>
 
 <button
+id="bonusBtn"
+onclick="bonusAdd()"
+style="
+background:linear-gradient(90deg,#ffd700,#ff6a00);
+color:black;
+">
+
+🎁 BONUS加分
+
+</button>
+  
+<button
 id="minusBtn"
 onclick="minus()">
 
 ➖ 扣钱
 
 </button>
+  
 <button
 id="checkPlayerBtn"
 onclick="checkPlayerFromFund()"
@@ -1133,6 +1146,7 @@ fund:"💰 玩家资金",
 uid:"玩家ID",
 amount:"金额",
 add:"➕ 加钱",
+bonusAdd:"🎁 BONUS加分", 
 minus:"➖ 扣钱",
 agent:"🤝 代理管理",
 agentCode:"代理编号，例如 AG001",
@@ -1259,6 +1273,7 @@ fund:"💰 เงินผู้เล่น",
 uid:"รหัสผู้เล่น",
 amount:"จำนวนเงิน",
 add:"➕ เพิ่มเงิน",
+bonusAdd:"🎁 เพิ่มโบนัส",
 minus:"➖ หักเงิน",
 agent:"🤝 จัดการเอเย่นต์",
 agentCode:"รหัสเอเย่นต์ เช่น AG001",
@@ -1448,8 +1463,12 @@ LANG[lang].amount;
 document.getElementById("addBtn").innerText =
 LANG[lang].add;
 
+document.getElementById("bonusBtn").innerText =
+LANG[lang].bonusAdd;
+
 document.getElementById("minusBtn").innerText =
 LANG[lang].minus;
+  
 document.getElementById("checkPlayerText").innerText =
 lang==="th"
 ?
@@ -3895,6 +3914,103 @@ return;
 
 }
 
+async function bonusAdd(){
+
+const lang =
+localStorage.getItem(
+"adminLang"
+)
+||
+"zh";
+
+const userId =
+document.getElementById(
+"uid"
+).value
+.trim();
+
+const amount =
+Number(
+document.getElementById(
+"amt"
+).value
+);
+
+if(
+!userId
+||
+!amount
+||
+amount<=0
+){
+
+alert(
+
+lang==="th"
+
+?
+
+"กรอกรหัสผู้เล่นและจำนวนโบนัส"
+
+:
+
+"请输入玩家和Bonus金额"
+
+);
+
+return;
+
+}
+
+const res =
+await fetch(
+
+"/admin/bonus",
+
+{
+
+method:"POST",
+
+headers:
+adminHeaders(),
+
+body:
+JSON.stringify({
+
+userId,
+
+amount
+
+})
+
+}
+
+);
+
+const d =
+await res.json();
+
+alert(
+d.msg
+);
+
+if(
+d.success
+){
+
+document.getElementById(
+"amt"
+).value=
+"";
+
+loadPlayers();
+
+loadTx();
+
+}
+
+}
+  
 const res =
 await fetch("/admin/add",{
 method:"POST",
@@ -3914,6 +4030,107 @@ adminSubmitting =
 false;
 }
 
+async function bonusAdd(){
+
+const lang =
+localStorage.getItem(
+"adminLang"
+)
+||
+"zh";
+
+const userId =
+document
+.getElementById(
+"uid"
+)
+.value
+.trim();
+
+const amount =
+Number(
+document
+.getElementById(
+"amt"
+)
+.value
+);
+
+if(
+!userId
+||
+amount<=0
+){
+
+alert(
+
+lang==="th"
+
+?
+
+"กรอกรหัสผู้เล่นและจำนวนโบนัส"
+
+:
+
+"请输入玩家ID与Bonus金额"
+
+);
+
+return;
+
+}
+
+const res =
+await fetch(
+
+"/admin/bonus",
+
+{
+
+method:"POST",
+
+headers:
+adminHeaders(),
+
+body:
+JSON.stringify({
+
+userId,
+
+amount
+
+})
+
+}
+
+);
+
+const d =
+await res.json();
+
+alert(
+d.msg
+);
+
+if(
+d.success
+){
+
+document
+.getElementById(
+"amt"
+)
+.value=
+"";
+
+loadPlayers();
+
+loadTx();
+
+}
+
+}
+  
 async function minus(){
 if(adminSubmitting){
 return;

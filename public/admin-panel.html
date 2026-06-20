@@ -1568,6 +1568,12 @@ lang==="th"
 :
 "🎨 颜色说明";
   
+if(
+document.getElementById("txColorHelpBox").style.display==="block"
+){
+renderTxColorHelp();
+} 
+  
 document.getElementById(
 "announcementTitle"
 ).innerText=
@@ -4683,27 +4689,13 @@ ${data.content || ""}
 `;
 
 }
-function toggleTxColorHelp(){
+function renderTxColorHelp(){
 
 const box =
 document.getElementById("txColorHelpBox");
 
 const lang =
 localStorage.getItem("adminLang") || "zh";
-
-if(
-box.style.display === "block"
-){
-
-box.style.display =
-"none";
-
-return;
-
-}
-
-box.style.display =
-"block";
 
 box.innerHTML =
 lang==="th"
@@ -4713,7 +4705,7 @@ lang==="th"
 🟡 โบนัสจากแอดมิน<br>
 🔵 โบนัสแลกจากพอยท์<br>
 🟣 Lucky Spin Bonus<br>
-🔴 หักเงิน<br>
+🔴 หักเงินโดยแอดมิน<br>
 ⚪ เดิมพัน / รายการทั่วไป
 `
 :
@@ -4725,6 +4717,22 @@ lang==="th"
 🔴 后台扣钱<br>
 ⚪ 下注 / 普通流水
 `;
+
+}
+
+function toggleTxColorHelp(){
+
+const box =
+document.getElementById("txColorHelpBox");
+
+if(box.style.display === "block"){
+box.style.display = "none";
+return;
+}
+
+box.style.display = "block";
+
+renderTxColorHelp();
 
 }
 function toggleTxDetail(id){

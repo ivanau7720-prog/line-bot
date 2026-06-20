@@ -28,6 +28,54 @@
   font-size:12px;
 }
 
+.backBtn{
+
+position:fixed;
+
+top:12px;
+
+left:12px;
+
+z-index:9999;
+
+height:38px;
+
+padding:0 16px;
+
+border:none;
+
+border-radius:14px;
+
+background:
+
+linear-gradient(
+145deg,
+#111,
+#000
+);
+
+border:
+1px solid gold;
+
+color:gold;
+
+font-size:14px;
+
+font-weight:bold;
+
+cursor:pointer;
+
+box-shadow:
+0 0 14px rgba(255,215,0,.35);
+
+}
+
+.backBtn:hover{
+
+transform:translateY(-2px);
+
+}
+  
 html, body{
   height:100%;
   margin:0;  
@@ -485,6 +533,15 @@ filter:brightness(1.35);
 </head>
 
 <body>
+<button
+class="backBtn"
+onclick="goHome()"
+id="backBtn"
+>
+
+← 大厅
+
+</button>
 <div class="langBox">
   <button onclick="setLang('zh')">中文</button>
   <button onclick="setLang('th')">ไทย</button>
@@ -1387,6 +1444,13 @@ chatSend:"ส่ง"
   }
 };
 
+function goHome(){
+
+location.href =
+"/home.html";
+
+}
+  
 function T(key){
   return LANG[currentLang][key] || key;
 }
@@ -1396,6 +1460,16 @@ function setLang(lang){
   applyLang();
 }
 function applyLang(){
+
+document.getElementById(
+"backBtn"
+).innerText=
+
+currentLang==="th"
+?
+"← กลับ"
+:
+"← 返回";
 
   document.getElementById("beadTitle").innerText = T("beadTitle");
   document.getElementById("bigRoadTitle").innerText = T("bigRoadTitle");

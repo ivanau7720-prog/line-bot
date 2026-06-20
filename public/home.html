@@ -699,7 +699,7 @@ justify-content:space-between;
 ">
 
 <h3 id="announcementTitle">
-📢 ประกาศ
+📢 公告
 </h3>
 
 <button
@@ -809,7 +809,8 @@ const LANG = {
    noticeSmall:"积分商城即将开放",
 welcome:"欢迎回来",
 vipNext:"距离下一级 VIP：",
-spinSub:"幸运转盘"
+spinSub:"幸运转盘",
+announcement:"📢 公告"
   },
  th:{
     game:"บาคาร่า",
@@ -826,7 +827,8 @@ spinSub:"幸运转盘"
    noticeSmall:"ร้านแลกของรางวัลกำลังจะเปิด",
 welcome:"ยินดีต้อนรับกลับ",
 vipNext:"ยอดเติมที่เหลือถึง VIP ถัดไป：",
-spinSub:"วงล้อนำโชค"
+spinSub:"วงล้อนำโชค",
+announcement:"📢 ประกาศ"
   }
 };
 
@@ -846,6 +848,10 @@ document.getElementById("memberLabel").innerText = t.member;
   document.getElementById("noticeTitle").innerText = t.noticeTitle;
 document.getElementById("noticeText").innerText = t.noticeText;
 document.getElementById("noticeSmall").innerText = t.noticeSmall;
+document.getElementById(
+"announcementTitle"
+).innerText =
+t.announcement;
   
  const username =
 localStorage.getItem("name") || localStorage.getItem("userId") || "";

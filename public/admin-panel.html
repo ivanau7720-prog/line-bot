@@ -3848,7 +3848,21 @@ const t = LANG[lang];
 
   let html = "";
 
-  data.forEach(p=>{
+data.forEach(p=>{
+
+const lastLogin =
+p.last_login
+?
+new Date(p.last_login).toLocaleString()
+:
+(
+lang==="th"
+?
+"ยังไม่มีข้อมูล"
+:
+"暂无记录"
+);
+
  html += `
   <div style="
   margin:8px 0;
@@ -3871,6 +3885,8 @@ const t = LANG[lang];
     🏦 ${lang==="th" ? "ธนาคาร" : "银行"}：${p.bank_name || "-"}
     <br>
     💳 ${lang==="th" ? "เลขบัญชี" : "银行账号"}：${p.bank_account || "-"}
+    <br>
+    🕒 ${lang==="th" ? "เข้าสู่ระบบล่าสุด" : "最后登入"}：${lastLogin}
     <br>
     💰 ${p.balance}
     | 👑 VIP${p.vip || 10}

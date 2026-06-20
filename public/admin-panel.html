@@ -1660,10 +1660,42 @@ lang==="th"
 "🎨 颜色说明";
   
 if(
-document.getElementById("txColorHelpBox").style.display==="block"
+document.getElementById(
+"txColorHelpBox"
+)
+&&
+document.getElementById(
+"txColorHelpBox"
+).style.display==="block"
 ){
+
 renderTxColorHelp();
-} 
+
+}
+
+/* 审核中心搜索框语言 */
+
+if(
+document.getElementById(
+"exchangeSearchInput"
+)
+){
+
+document.getElementById(
+"exchangeSearchInput"
+).placeholder=
+
+lang==="th"
+
+?
+
+"ค้นหา ID / ชื่อผู้เล่น / ชื่อสินค้า"
+
+:
+
+"搜索玩家ID / 用户名 / 商品名称";
+
+}
   
 document.getElementById(
 "announcementTitle"
@@ -1836,7 +1868,23 @@ localStorage.setItem(
 "adminLang",
 lang
 );
-loadAgents(); 
+
+/* 重新刷新动态区 */
+
+loadTodayRecharge();
+
+loadTodayWithdraw();
+
+loadExchangeRequests();
+
+loadLuckyBonusAdmin();
+
+loadTx();
+
+loadPlayers();
+
+loadAgents();
+
 }
 
 window.onload=()=>{

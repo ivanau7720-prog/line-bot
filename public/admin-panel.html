@@ -4727,6 +4727,24 @@ lang==="th"
 `;
 
 }
+function toggleTxDetail(id){
+
+const box =
+document.getElementById(id);
+
+if(!box){
+return;
+}
+
+box.style.display =
+box.style.display==="block"
+?
+"none"
+:
+"block";
+
+}
+
   
 async function loadTx(){
 
@@ -4852,7 +4870,7 @@ color:"#ffffff"
 
 let html="";
 
-data.forEach(t=>{
+data.forEach((t,i)=>{
 
 const s =
 txStyle(t.type);
@@ -4914,10 +4932,79 @@ lang==="th" ? "ผล" : "结果"
 
 🕒 ${t.created_at || "-"}
 
+<br><br>
+
+<button
+onclick="toggleTxDetail('detail_${i}')"
+style="
+padding:7px 12px;
+border-radius:999px;
+background:linear-gradient(90deg,#444,#111);
+color:white;
+">
+
+${
+lang==="th"
+?
+"📂 ดูรายละเอียด"
+:
+"📂 查看详情"
+}
+
+</button>
+
+<div
+id="detail_${i}"
+style="
+display:none;
+margin-top:10px;
+padding:10px;
+border-radius:12px;
+background:rgba(255,255,255,.05);
+border:1px solid rgba(255,255,255,.15);
+">
+
+🎁 ${
+lang==="th"
+?
+"แหล่งโบนัส"
+:
+"Bonus来源"
+}：
+
+${
+t.type==="admin_bonus"
+?
+(lang==="th" ? "โบนัสจากแอดมิน" : "后台BONUS")
+:
+t.type==="mall_bonus_exchange"
+?
+(lang==="th" ? "โบนัสแลกจากพอยท์" : "积分兑换BONUS")
+:
+t.type==="lucky_bonus_used"
+?
+(lang==="th" ? "Lucky Spin Bonus" : "Lucky Spin BONUS")
+:
+(lang==="th" ? "ไม่มี" : "无")
+}
+
+<br><br>
+
+📌 ${
+lang==="th"
+?
+"สถานะ"
+:
+"流水状态"
+}：
+
+${t.result || "-"}
+
+</div>
+
 </div>
 
 `;
-
 });
 
 document.getElementById("tx").innerHTML =

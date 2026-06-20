@@ -50,6 +50,15 @@ __dirname+
 
 });
 
+app.get("/secret-panel",(req,res)=>{
+
+res.sendFile(
+__dirname+
+"/public/admin-panel.html"
+);
+
+});
+
 app.get("/shop.html", (req, res) => {
   res.sendFile(__dirname + "/public/shop.html");
 });
@@ -57,8 +66,8 @@ app.get("/shop.html", (req, res) => {
 app.use((req,res,next)=>{
 
 if(
-req.path ===
-"/admin-login.html"
+req.path === "/admin-login.html" ||
+req.path === "/admin-panel.html"
 ){
 
 return res
@@ -75,6 +84,7 @@ express
 (req,res,next);
 
 });
+
 // ===== 管理员登录检查 =====
 function checkAdmin(req, res, next){
 

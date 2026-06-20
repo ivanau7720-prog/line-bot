@@ -662,6 +662,53 @@ status:newStatus
 .eq("id", bonus.id);
 
 }
+/* Mall Bonus 流水累计 */
+
+const { data: mallBonus } =
+await supabase
+.from("mall_bonus_wallet")
+.select("*")
+.eq("user_id", userId)
+.eq("status","active")
+.gt("turnover_required",0)
+.order("id",{
+ascending:true
+})
+.limit(1);
+
+if(
+mallBonus &&
+mallBonus.length > 0
+){
+
+const bonus =
+mallBonus[0];
+
+const newMallDone =
+Math.min(
+Number(bonus.turnover_done || 0)
++
+betAmount,
+Number(bonus.turnover_required || 0)
+);
+
+const newMallStatus =
+newMallDone >= Number(bonus.turnover_required || 0)
+?
+"completed"
+:
+"active";
+
+await supabase
+.from("mall_bonus_wallet")
+.update({
+turnover_done:newMallDone,
+status:newMallStatus
+})
+.eq("id", bonus.id);
+
+}
+    
 await supabase.from("turnover_records").insert([
   {
     user_id: userId,
@@ -4147,7 +4194,8 @@ now - exchangeCooldown[userId] < 5000
 
 return res.json({
 success:false,
-msg:"请勿重复兑换"
+msg:
+"请勿重复兑换 / กรุณาอย่าแลกซ้ำ"
 });
 
 }
@@ -4177,7 +4225,8 @@ const vipMap={
     if (!userId || !itemName || !cost) {
       return res.json({
         success:false,
-        msg:"资料不完整"
+        msg:
+"资料不完整 / ข้อมูลไม่ครบ"
       });
     }
 
@@ -4415,7 +4464,10 @@ type:"mall_bonus_exchange",
 change:bonusAmount,
 
 note:
-"Point Mall Bonus"
+"积分兑换BONUS / แลกพอยท์เป็นโบนัส",
+
+result:
+"bonus"
 
 }]);
 

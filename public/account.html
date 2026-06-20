@@ -48,6 +48,21 @@ border-radius:18px;
 padding:8px 12px;
 margin-left:6px;
 }
+.backBtn{
+position:fixed;
+top:18px;
+left:18px;
+z-index:20;
+height:38px;
+padding:0 16px;
+border:none;
+border-radius:18px;
+background:rgba(0,0,0,.65);
+color:gold;
+border:1px solid rgba(255,215,0,.45);
+font-size:15px;
+font-weight:bold;
+}
 
 .page{
 margin-top:165px;
@@ -212,7 +227,16 @@ font-size:28px;
 
 <body>
 
+<button class="backBtn"
+id="backBtn"
+onclick="goHome()">
+
+← 返回
+
+</button>
+
 <div class="langBox">
+  
 <button onclick="switchLang('zh')">中文</button>
 <button onclick="switchLang('th')">ไทย</button>
 </div>
@@ -382,6 +406,11 @@ font-size:28px;
 </div>
 
 <script>
+
+function goHome(){
+location.href="/home.html";
+}
+
 let selectedAvatar="👤";
 const LANG={
 
@@ -420,7 +449,8 @@ editTitle:"编辑资料",
 saveProfile:"保存资料",
 cancel:"取消",
 saveSuccess:"保存成功",
-saveFail:"保存失败"
+saveFail:"保存失败",
+back:"← 返回"
 },
 
 th:{
@@ -458,7 +488,8 @@ editTitle:"แก้ไขข้อมูล",
 saveProfile:"บันทึกข้อมูล",
 cancel:"ยกเลิก",
 saveSuccess:"บันทึกสำเร็จ",
-saveFail:"บันทึกไม่สำเร็จ"
+saveFail:"บันทึกไม่สำเร็จ",
+back:"← กลับ"
 }
 
 };
@@ -498,6 +529,7 @@ document.getElementById("editProfileText").innerText=t.editProfile;
 document.getElementById("editTitle").innerText=t.editTitle;
 document.getElementById("saveProfileText").innerText=t.saveProfile;
 document.getElementById("cancelText").innerText=t.cancel;
+document.getElementById("backBtn").innerText=t.back;
 localStorage.setItem("homeLang",lang);
 
 loadAccount();

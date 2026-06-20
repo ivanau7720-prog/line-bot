@@ -1829,92 +1829,115 @@ html;
 async function loadLuckyBonusAdmin(){
 
 const lang =
-localStorage.getItem(
-"adminLang"
-)
-||
-"zh";
+localStorage.getItem("adminLang") || "zh";
 
-document.getElementById(
-"spinAdminBox"
-).innerHTML=
-
+document.getElementById("spinAdminBox").innerHTML =
 lang==="th"
-
 ?
-
 "🎁 กำลังโหลด Bonus..."
-
 :
-
 "🎁 正在读取 Bonus...";
 
 const res =
-await fetch(
-"/admin/spin-bonus",
-{
-headers:
-adminGetHeaders()
-}
-);
+await fetch("/admin/spin-bonus",{
+headers:adminGetHeaders()
+});
 
 const data =
 await res.json();
 
-if(
-!data
-||
-data.length===0
-){
+if(!data || data.length===0){
 
-document.getElementById(
-"spinAdminBox"
-).innerHTML=
-
+document.getElementById("spinAdminBox").innerHTML =
 lang==="th"
-
 ?
-
 "🎁 ยังไม่มี Bonus"
-
 :
-
 "🎁 暂无 Bonus 数据";
 
 return;
-
 }
 
 let html="";
 
 data.forEach(r=>{
 
-html+=`
+const required =
+Number(r.turnover_required || 0);
+
+const done =
+Number(r.turnover_done || 0);
+
+const remain =
+Math.max(required - done,0);
+
+const percent =
+required > 0
+?
+Math.min(Math.floor(done / required * 100),100)
+:
+0;
+
+html += `
 
 <div style="
-padding:10px;
-
-margin-bottom:8px;
-
-border-radius:12px;
-
-background:
-rgba(255,215,0,.08);
-
-border:
-1px solid rgba(255,215,0,.25);
-
+padding:12px;
+margin-bottom:10px;
+border-radius:16px;
+background:rgba(255,215,0,.08);
+border:1px solid rgba(255,215,0,.35);
 ">
 
 👤 ${r.user_id}
 
 <br>
 
-🎁 ${r.bonus_percent}%
+🎁 Bonus：${r.bonus_percent || 0}%
 
 <br>
 
-📌 ${r.status}
+📌 ${
+lang==="th" ? "สถานะ" : "状态"
+}：${r.status || "-"}
+
+<br><br>
+
+${lang==="th" ? "📊 เทิร์นโอเวอร์ที่ต้องทำ" : "📊 需要流水"}：
+${required}
+
+<br>
+
+${lang==="th" ? "✅ ทำแล้ว" : "✅ 已完成"}：
+${done}
+
+<br>
+
+${lang==="th" ? "⏳ คงเหลือ" : "⏳ 剩余流水"}：
+${remain}
+
+<div style="
+height:12px;
+background:rgba(255,255,255,.15);
+border-radius:99px;
+overflow:hidden;
+margin-top:8px;
+">
+
+<div style="
+height:100%;
+width:${percent}%;
+background:linear-gradient(90deg,#00ff99,#ffd700);
+"></div>
+
+</div>
+
+<div style="
+margin-top:5px;
+color:gold;
+font-weight:bold;
+">
+${percent}%
+</div>
 
 </div>
 
@@ -1922,12 +1945,11 @@ border:
 
 });
 
-document.getElementById(
-"spinAdminBox"
-).innerHTML=
+document.getElementById("spinAdminBox").innerHTML =
 html;
 
 }
+  
 async function createAgent(){
   const agentCode = document.getElementById("agentCode").value;
   const agentName = document.getElementById("agentName").value;

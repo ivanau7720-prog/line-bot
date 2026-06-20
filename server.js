@@ -31,15 +31,50 @@ app.get("/", (req, res) => {
   res.sendFile(__dirname + "/public/login.html");
 });
 
-app.get("/admin.html", (req, res) => {
-  res.redirect("/admin-login.html");
+app.get("/admin.html",(req,res)=>{
+
+return res
+.status(404)
+.sendFile(
+__dirname +
+"/public/404.html"
+);
+
+});
+app.get("/secret-admin",(req,res)=>{
+
+res.sendFile(
+__dirname+
+"/public/admin-login.html"
+);
+
 });
 
 app.get("/shop.html", (req, res) => {
   res.sendFile(__dirname + "/public/shop.html");
 });
 
-app.use(express.static("public"));
+app.use((req,res,next)=>{
+
+if(
+req.path ===
+"/admin-login.html"
+){
+
+return res
+.status(404)
+.sendFile(
+__dirname+
+"/public/404.html"
+);
+
+}
+
+express
+.static("public")
+(req,res,next);
+
+});
 // ===== 管理员登录检查 =====
 function checkAdmin(req, res, next){
 

@@ -889,8 +889,12 @@ START SPIN
 </div>
 <div class="ruleBox">
 
-<div class="ruleTitle">
+<div
+class="ruleTitle"
+id="bonusTitle">
+
 🎁 我的 Bonus
+
 </div>
 
 <div id="bonusList" class="ruleText">
@@ -932,8 +936,12 @@ START SPIN
 </div>
 <div class="ruleBox">
 
-<div class="ruleTitle">
+<div
+class="ruleTitle"
+id="historyTitle">
+
 📜 Lucky Spin History
+
 </div>
 
 <div id="spinHistory" class="ruleText">
@@ -999,6 +1007,9 @@ const PRIZE_DEG = {
 };
 const LANG = {
 zh:{
+bonusTitle:"🎁 我的 Bonus",
+bonusDone:"已完成",
+historyTitle:"📜 Lucky Spin 记录",
 sub:"每日充值满 1,000 THB，可获得 1 次 Lucky Spin，每位玩家每天限 1 次",
 count:"剩余机会：",
 wait:"等待抽奖",
@@ -1046,6 +1057,9 @@ networkError:
 "网络错误"
 },
 th:{
+bonusTitle:"🎁 โบนัสของฉัน",
+bonusDone:"เสร็จสิ้น",
+historyTitle:"📜 ประวัติ Lucky Spin",  
 sub:"เติมเงินครบ 1,000 THB ต่อวัน รับสิทธิ์ Lucky Spin 1 ครั้ง จำกัดผู้เล่นละ 1 ครั้งต่อวัน",
 count:"สิทธิ์คงเหลือ：",
 wait:"รอการหมุน",
@@ -1114,6 +1128,12 @@ t.start;
 document.getElementById("ruleTitle").innerText =
 t.ruleTitle;
 
+document.getElementById("bonusTitle").innerText =
+t.bonusTitle;
+
+document.getElementById("historyTitle").innerText =
+t.historyTitle;
+  
 document.getElementById("ruleText").innerHTML =
 t.ruleText;
 
@@ -1237,16 +1257,6 @@ localStorage.getItem(
 )
 || "zh";
 
-let statusText =
-LANG[lang]
-.bonusUnused;
-
-if(b.status === "used"){
-statusText =
-LANG[lang]
-.bonusUsed;
-}
-
 const percent =
 required > 0
 ? Math.min(
@@ -1256,6 +1266,26 @@ Math.floor(
 100
 )
 : 0;
+
+let statusText =
+LANG[lang]
+.bonusUnused;
+
+if(
+b.status==="used"
+){
+statusText =
+LANG[lang]
+.bonusUsed;
+}
+
+if(
+percent>=100
+){
+statusText =
+LANG[lang]
+.bonusDone;
+}
 
 return `
 <div class="bonusCard">
@@ -1273,7 +1303,54 @@ ${statusText}
 </div>
 
 <div class="bonusPercent">
-${percent}%
+
+🎁 Bonus
+${b.bonus_percent}%
+
+</div>
+
+<div style="
+margin-top:10px;
+font-size:13px;
+color:#ddd;
+">
+
+${lang==="th"
+
+?
+
+"📊 เทิร์นโอเวอร์ที่ต้องทำ"
+
+:
+
+"📊 需要流水"}
+
+：
+
+${required.toLocaleString()}
+
+</div>
+
+<div style="
+margin-top:6px;
+font-size:13px;
+color:#7CFF9B;
+">
+
+${lang==="th"
+
+?
+
+"✅ ทำแล้ว"
+
+:
+
+"✅ 已完成"}
+
+：
+
+${done.toLocaleString()}
+
 </div>
 
 <div class="bonusBar">
@@ -1292,9 +1369,31 @@ width:${percent}%;
 
 <div class="bonusLeft">
 
-${LANG[lang].turnoverLeft}
+${lang==="th"
+
+?
+
+"⏳ คงเหลือ"
+
+:
+
+"⏳ 剩余流水"}
+
+：
 
 ${left.toLocaleString()}
+
+</div>
+
+<div style="
+margin-top:8px;
+text-align:center;
+font-size:16px;
+font-weight:bold;
+color:gold;
+">
+
+${percent}%
 
 </div>
 

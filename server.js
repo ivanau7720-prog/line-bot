@@ -4,6 +4,10 @@ const { createClient } = require("@supabase/supabase-js");
 
 const app = express();
 app.disable("x-powered-by");
+app.use((req,res,next)=>{
+  res.setHeader("X-Frame-Options","DENY");
+  next();
+});
 app.use(express.json());
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin888";
 
@@ -133,20 +137,6 @@ express
 
 });
 
-return res
-.status(404)
-.sendFile(
-__dirname+
-"/public/404.html"
-);
-
-}
-
-express
-.static("public")
-(req,res,next);
-
-});
 
 // ===== 管理员登录检查 =====
 function checkAdmin(req, res, next){

@@ -4231,7 +4231,7 @@ msg:"积分数量错误"
 if (currentPoint < pointCost) {
       return res.json({
         success:false,
-        msg:"积分不足"
+        msg:"积分不足 / พอยท์ไม่เพียงพอ"
       });
     }
 
@@ -4253,11 +4253,35 @@ balance > 0
 
 return res.json({
 success:false,
-msg:"请先使用完余额后再兑换 Bonus"
+msg:
+"请先清空余额后兑换 Bonus / กรุณาใช้ยอดเงินให้หมดก่อนแลกโบนัส"
 });
 
 }
-    
+
+let bonusAmount = 0;
+
+if(isBonus){
+
+bonusAmount =
+Number(
+String(itemName).replace(/\D/g,"")
+);
+
+if(
+!bonusAmount ||
+bonusAmount <= 0
+){
+
+return res.json({
+success:false,
+msg:"Bonus 金额错误 / จำนวนโบนัสผิดพลาด"
+});
+
+}
+
+}
+  
 const newPoint =
 currentPoint - pointCost;
 
@@ -4267,7 +4291,13 @@ error: pointError
 } = await supabase
 .from("players")
 .update({
-reward_points:newPoint
+reward_points:newPoint,
+balance:
+isBonus
+?
+Number(player.balance || 0) + bonusAmount
+:
+Number(player.balance || 0)
 })
 .eq("user_id", userId)
 .gte("reward_points", pointCost)
@@ -4294,15 +4324,20 @@ error: exchangeError
 await supabase
 .from("exchange_records")
 .insert([{
+
 user_id:userId,
+
 item_name:itemName,
+
 point_cost:pointCost,
+
 status:
 isBonus
 ?
 "approved"
 :
 "pending"
+
 }]);
 
 if(
@@ -4312,8 +4347,13 @@ exchangeError
 await supabase
 .from("players")
 .update({
+
 reward_points:
-currentPoint
+currentPoint,
+
+balance:
+Number(player.balance || 0)
+
 })
 .eq(
 "user_id",
@@ -4321,9 +4361,63 @@ userId
 );
 
 return res.json({
+
 success:false,
-msg:"兑换失败，积分已退回"
+
+msg:
+"兑换失败，积分已退回 / แลกไม่สำเร็จ คืนพอยท์แล้ว"
+
 });
+
+}
+
+/* Bonus 自动写钱包 */
+
+if(isBonus){
+
+const { error: bonusWalletError } =
+await supabase
+.from("mall_bonus_wallet")
+.insert([{
+
+user_id:userId,
+
+bonus_amount:bonusAmount,
+
+status:"active",
+
+turnover_required:
+bonusAmount * 3,
+
+turnover_done:0
+
+}]);
+
+if(bonusWalletError){
+
+console.log(
+"mall bonus error",
+bonusWalletError
+);
+
+}
+
+await supabase
+.from("transactions")
+.insert([{
+
+user_id:userId,
+
+amount:bonusAmount,
+
+type:"mall_bonus_exchange",
+
+change:bonusAmount,
+
+note:
+"Point Mall Bonus"
+
+}]);
 
 }
 
@@ -4338,7 +4432,12 @@ msg:"兑换失败，积分已退回"
 
     res.json({
       success:true,
-      msg:"兑换申请已提交"
+      msg:
+isBonus
+?
+"Bonus 兑换成功 / แลกโบนัสสำเร็จ"
+:
+"兑换申请已提交 / ส่งคำขอแลกของเรียบร้อยแล้ว"
     });
 
   } catch (err) {

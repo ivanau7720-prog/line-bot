@@ -3,6 +3,7 @@ const { createClient } = require("@supabase/supabase-js");
 
 
 const app = express();
+app.disable("x-powered-by");
 app.use(express.json());
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin888";
 

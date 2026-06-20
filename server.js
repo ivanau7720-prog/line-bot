@@ -78,14 +78,23 @@ __dirname+
 );
 
 });
+app.get("/fortune-wheel",(req,res)=>{
+
+res.sendFile(
+__dirname+
+"/public/lucky-spin.html"
+);
+
+});
+
 
 app.use((req,res,next)=>{
 
 if(
 req.path === "/admin-login.html" ||
-req.path === "/admin-panel.html"
+req.path === "/admin-panel.html" ||
+req.path === "/lucky-spin.html"
 ){
-
 return res
 .status(404)
 .sendFile(

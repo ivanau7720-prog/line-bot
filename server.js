@@ -90,11 +90,48 @@ __dirname+
 
 app.use((req,res,next)=>{
 
+const blocked = [
+
+"/admin-login.html",
+"/admin-panel.html",
+
+"/lucky-spin.html",
+
+"/shop.html",
+
+"/public",
+
+"/public/",
+
+"/js",
+
+"/css",
+
+"/images"
+
+];
+
 if(
-req.path === "/admin-login.html" ||
-req.path === "/admin-panel.html" ||
-req.path === "/lucky-spin.html"
+blocked.includes(
+req.path
+)
 ){
+
+return res
+.status(404)
+.sendFile(
+__dirname+
+"/public/404.html"
+);
+
+}
+
+express
+.static("public")
+(req,res,next);
+
+});
+
 return res
 .status(404)
 .sendFile(

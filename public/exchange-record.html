@@ -24,7 +24,22 @@ url("/shop-bg.jpg");
 background-size:cover;
 background-position:center;
 }
+.langBox{
+position:fixed;
+top:18px;
+right:18px;
+z-index:10;
+}
 
+.langBox button{
+background:rgba(0,0,0,.55);
+color:gold;
+border:1px solid rgba(255,215,0,.45);
+border-radius:18px;
+padding:8px 12px;
+margin-left:6px;
+}
+  
 .title{
 margin-top:80px;
 text-align:center;
@@ -102,20 +117,56 @@ font-weight:bold;
 
 <body>
 
-<div class="title">兑换记录</div>
-<div class="sub">Exchange Records</div>
+<div class="langBox">
+<button onclick="switchLang('zh')">中文</button>
+<button onclick="switchLang('th')">ไทย</button>
+</div>
+
+<div class="title" id="pageTitle">兑换记录</div>
+<div class="sub" id="pageSub">Exchange Records</div>
 
 <div class="list" id="list"></div>
 
-<button class="backBtn" onclick="location.href='/account.html'">
-返回账户
+<button class="backBtn" onclick="location.href='/account.html'" id="backText">
+← 返回账户
 </button>
 
 <script>
+
+const LANG={
+zh:{
+pageTitle:"兑换记录",
+pageSub:"Exchange Records",
+back:"← 返回账户",
+empty:"暂无兑换记录"
+},
+th:{
+pageTitle:"ประวัติแลกของรางวัล",
+pageSub:"Exchange Records",
+back:"← กลับบัญชี",
+empty:"ยังไม่มีประวัติแลกของรางวัล"
+}
+};
+
+function switchLang(lang){
+localStorage.setItem("homeLang",lang);
+
+const t=LANG[lang];
+
+document.getElementById("pageTitle").innerText=t.pageTitle;
+document.getElementById("pageSub").innerText=t.pageSub;
+document.getElementById("backText").innerText=t.back;
+
+loadRecords();
+}
+
 async function loadRecords(){
 const lang =
-localStorage.getItem("lang")
+localStorage.getItem("homeLang")
 || "zh";
+
+const t =
+LANG[lang];
 const uid=localStorage.getItem("userId");
 
 if(!uid){
@@ -131,7 +182,7 @@ const list=document.getElementById("list");
 if(!data || data.length===0){
 list.innerHTML=`
 <div class="empty">
-暂无兑换记录
+${t.empty}
 </div>
 `;
 return;
@@ -247,7 +298,7 @@ list.appendChild(card);
 
 }
 
-loadRecords();
+switchLang(localStorage.getItem("homeLang") || "zh");
 </script>
 
 </body>

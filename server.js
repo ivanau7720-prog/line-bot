@@ -1679,7 +1679,7 @@ playerTurnover
 app.get("/admin/player-detail/:userId", checkAdmin, async (req, res) => {
   try {
 
-    const { userId } = req.params;
+   const { userId:key } = req.params;
 
 const { data: players } =
 await supabase

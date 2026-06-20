@@ -627,7 +627,7 @@ border:
 
 ">
 
-等待读取…
+Loading...
 
 </div>
 
@@ -830,12 +830,12 @@ class="fundInput"
 
 <input
 id="filterUserId"
-placeholder="玩家ID"
+placeholder="ID"
 >
 
 <input
 id="filterAgentCode"
-placeholder="代理编号，例如 AG001"
+placeholder="AG001"
 >
 
 <input
@@ -1195,7 +1195,7 @@ justify-content:space-between;
 align-items:center;
 ">
 
-<h3>
+<h3 id="announcementPreviewTitle">
 📢 公告预览
 </h3>
 
@@ -1660,42 +1660,10 @@ lang==="th"
 "🎨 颜色说明";
   
 if(
-document.getElementById(
-"txColorHelpBox"
-)
-&&
-document.getElementById(
-"txColorHelpBox"
-).style.display==="block"
+document.getElementById("txColorHelpBox").style.display==="block"
 ){
-
 renderTxColorHelp();
-
-}
-
-/* 审核中心搜索框语言 */
-
-if(
-document.getElementById(
-"exchangeSearchInput"
-)
-){
-
-document.getElementById(
-"exchangeSearchInput"
-).placeholder=
-
-lang==="th"
-
-?
-
-"ค้นหา ID / ชื่อผู้เล่น / ชื่อสินค้า"
-
-:
-
-"搜索玩家ID / 用户名 / 商品名称";
-
-}
+} 
   
 document.getElementById(
 "announcementTitle"
@@ -1869,20 +1837,30 @@ localStorage.setItem(
 lang
 );
 
-/* 重新刷新动态区 */
+if(
+document.getElementById(
+"exchangeSearchInput"
+)
+){
+
+document.getElementById(
+"exchangeSearchInput"
+).placeholder=
+
+lang==="th"
+?
+"ค้นหา ID / ชื่อผู้เล่น / ชื่อสินค้า"
+:
+"搜索玩家ID / 用户名 / 商品名称";
+
+}
 
 loadTodayRecharge();
-
 loadTodayWithdraw();
-
 loadExchangeRequests();
-
-loadLuckyBonusAdmin();
-
+loadLuckySpinAdmin();
 loadTx();
-
 loadPlayers();
-
 loadAgents();
 
 }
@@ -1893,10 +1871,6 @@ switchLang(
 localStorage.getItem("adminLang")
 ||"zh"
 );
-
-loadTodayRecharge();
-
-loadTodayWithdraw();
 
 loadAnnouncementForm();
 
@@ -5553,67 +5527,55 @@ e.status;
 let statusColor =
 "white";
 
-if(
-e.status==="pending"
-){
+if(e.status==="pending"){
 
 statusText=
 lang==="th"
 ?
-"审核中"
+"📦 รอจัดส่ง"
 :
-"审核中";
+"📦 待发货";
 
-statusColor=
-"#ffcc00";
+statusColor="#ffcc00";
 
 }
 
-if(
-e.status==="approved"
-){
+if(e.status==="approved"){
 
 statusText=
 lang==="th"
 ?
-"待发货"
+"✅ อนุมัติแล้ว"
 :
-"待发货";
+"✅ 已批准";
 
-statusColor=
-"#00ff99";
+statusColor="#00ff99";
 
 }
 
-if(
-e.status==="done"
-){
+if(e.status==="done"){
 
 statusText=
 lang==="th"
 ?
-"已发货"
+"🚚 จัดส่งแล้ว"
 :
-"已发货";
+"🚚 已发货";
 
-statusColor=
-"gold";
+statusColor="gold";
 
 }
 
-if(
-e.status==="rejected"
-){
+if(e.status==="rejected"){
 
 statusText=
 lang==="th"
 ?
-"已拒绝"
+"❌ ปฏิเสธแล้ว"
 :
-"已拒绝";
+"❌ 已拒绝";
 
-statusColor=
-"red";
+statusColor="red";
 
 }
 

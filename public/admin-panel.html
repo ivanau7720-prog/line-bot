@@ -664,7 +664,7 @@ background:linear-gradient(90deg,#2196f3,#00ccff);
 color:white;
 ">
 
-🔍 查询玩家
+<span id="checkPlayerText">🔍 查询玩家</span>
 
 </button>
 </div>
@@ -1450,7 +1450,13 @@ LANG[lang].add;
 
 document.getElementById("minusBtn").innerText =
 LANG[lang].minus;
-
+document.getElementById("checkPlayerText").innerText =
+lang==="th"
+?
+"🔍 ค้นหาผู้เล่น"
+:
+"🔍 查询玩家";
+  
 document.getElementById("agentTitle").innerText =
 LANG[lang].agent;
 
@@ -5925,7 +5931,13 @@ document.getElementById("uid").value.trim();
 
 if(!userId){
 
-alert("请输入玩家ID / USERNAME");
+alert(
+localStorage.getItem("adminLang")==="th"
+?
+"กรุณากรอก ID ผู้เล่น / USERNAME"
+:
+"请输入玩家ID / USERNAME"
+);
 
 return;
 

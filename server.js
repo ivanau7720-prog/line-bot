@@ -59,8 +59,24 @@ __dirname+
 
 });
 
-app.get("/shop.html", (req, res) => {
-  res.sendFile(__dirname + "/public/shop.html");
+app.get("/shop.html",(req,res)=>{
+
+return res
+.status(404)
+.sendFile(
+__dirname+
+"/public/404.html"
+);
+
+});
+
+app.get("/gift-center",(req,res)=>{
+
+res.sendFile(
+__dirname+
+"/public/shop.html"
+);
+
 });
 
 app.use((req,res,next)=>{

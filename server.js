@@ -2687,6 +2687,128 @@ msg:"加钱失败"
 
 }
 });
+
+// ===== 管理员：BONUS加分（支持 user_id / username）=====
+app.post("/admin/bonus", checkAdmin, async (req, res) => {
+try{
+
+const { userId, amount } = req.body;
+
+const bonusMoney =
+Number(amount);
+
+if(
+!userId ||
+!bonusMoney ||
+bonusMoney <= 0
+){
+
+return res.json({
+success:false,
+msg:"玩家ID/USERNAME 或 Bonus 金额错误 / ข้อมูลผู้เล่นหรือจำนวนโบนัสไม่ถูกต้อง"
+});
+
+}
+
+const key =
+String(userId).trim();
+
+const { data: players } =
+await supabase
+.from("players")
+.select("*")
+.or(
+`user_id.eq.${key},username.eq.${key}`
+);
+
+if(
+!players ||
+players.length === 0
+){
+
+return res.json({
+success:false,
+msg:"找不到玩家 / ไม่พบผู้เล่น"
+});
+
+}
+
+if(
+players.length > 1
+){
+
+return res.json({
+success:false,
+msg:"发现重复账号 / พบไอดีซ้ำ"
+});
+
+}
+
+const player =
+players[0];
+
+const realUserId =
+player.user_id;
+
+const newBalance =
+Number(player.balance || 0)
++
+bonusMoney;
+
+await supabase
+.from("players")
+.update({
+balance:newBalance
+})
+.eq("user_id", realUserId);
+
+/* 写入后台 BONUS 钱包流水 */
+await supabase
+.from("mall_bonus_wallet")
+.insert([{
+user_id:realUserId,
+bonus_amount:bonusMoney,
+status:"active",
+turnover_required:bonusMoney * 3,
+turnover_done:0
+}]);
+
+/* 写入交易记录，方便后台区分 */
+await supabase
+.from("transactions")
+.insert([{
+user_id:realUserId,
+amount:bonusMoney,
+type:"admin_bonus",
+change:bonusMoney,
+note:"后台BONUS加分 / เพิ่มโบนัสโดยแอดมิน",
+result:"bonus"
+}]);
+
+await logAdminAction(
+"admin",
+"后台BONUS加分",
+realUserId,
+bonusMoney,
+"Admin bonus add"
+);
+
+res.json({
+success:true,
+msg:"BONUS加分成功 / เพิ่มโบนัสสำเร็จ"
+});
+
+}catch(err){
+
+console.error("admin bonus error:", err);
+
+res.json({
+success:false,
+msg:"BONUS加分失败 / เพิ่มโบนัสไม่สำเร็จ"
+});
+
+}
+});
 // ===== 管理员：扣钱（支持 user_id / username）=====
 app.post("/admin/minus", checkAdmin, async (req, res) => {
 try{
@@ -3308,6 +3430,18 @@ bonusList &&
 bonusList.length > 0
 ){
 
+if(
+Number(player.balance || 0) > 0
+){
+
+return res.json({
+success:false,
+msg:
+"玩家余额必须为 0 才能领取 Lucky Spin Bonus / ต้องใช้ยอดเงินให้หมดก่อนรับ Lucky Spin Bonus"
+});
+
+}
+
 const bonus =
 bonusList[0];
 
@@ -3371,12 +3505,24 @@ bonusAmount > 0
 await supabase
 .from("lucky_bonus_wallet")
 .update({
+
 status:"used",
+
+bonus_amount:
+bonusAmount,
+
 turnover_required:
-Math.floor(bonusAmount * 1.5),
+Math.floor(
+bonusAmount * 1.5
+),
+
 turnover_done:0
+
 })
-.eq("id", bonusId);
+.eq(
+"id",
+bonusId
+);
 
 await supabase
 .from("transactions")

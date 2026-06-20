@@ -1,18 +1,20 @@
 <!DOCTYPE html>
+
 <html>
+
 <head>
+
 <meta charset="UTF-8">
-<meta name="viewport"
-content="width=device-width,initial-scale=1">
 
 <title>Maintenance</title>
 
 <style>
 
 body{
+
 margin:0;
 
-min-height:100vh;
+height:100vh;
 
 display:flex;
 
@@ -20,120 +22,117 @@ justify-content:center;
 
 align-items:center;
 
+background:
+
+linear-gradient(
+180deg,
+#050505,
+#141414
+);
+
 font-family:sans-serif;
 
 color:white;
 
-background:
+overflow:hidden;
 
-linear-gradient(
-rgba(0,0,0,.35),
-rgba(0,0,0,.92)
-),
-
-url("/lobby-bg.jpg");
-
-background-size:cover;
-background-position:center;
 }
 
 .box{
 
-width:88%;
-max-width:430px;
-
-padding:36px 24px;
-
-border-radius:30px;
-
-background:
-rgba(0,0,0,.72);
-
-border:
-1px solid gold;
-
-box-shadow:
-0 0 45px rgba(255,215,0,.22);
-
 text-align:center;
 
-backdrop-filter:
-blur(20px);
+padding:50px;
+
+max-width:700px;
 
 }
 
 .icon{
 
-font-size:72px;
+font-size:90px;
+
+margin-bottom:20px;
+
+animation:float 2s ease infinite;
+
+}
+
+@keyframes float{
+
+0%{
+transform:
+translateY(0);
+}
+
+50%{
+transform:
+translateY(-8px);
+}
+
+100%{
+transform:
+translateY(0);
+}
 
 }
 
 .title{
 
-margin-top:14px;
-
-font-size:28px;
-
-color:gold;
+font-size:34px;
 
 font-weight:bold;
 
+color:#ffd700;
+
+text-shadow:
+0 0 20px gold;
+
 }
 
-.text{
+.desc{
 
-margin-top:18px;
+margin-top:28px;
 
-font-size:15px;
+font-size:20px;
 
 line-height:2;
 
-color:#ddd;
+color:#cccccc;
 
 }
 
-.time{
+.note{
 
-margin-top:18px;
-
-padding:12px;
-
-border-radius:16px;
-
-background:
-rgba(255,215,0,.12);
-
-color:gold;
+margin-top:20px;
 
 font-size:16px;
 
-font-weight:bold;
+color:#888;
 
 }
 
 .btn{
 
-margin-top:22px;
+display:inline-block;
 
-width:100%;
+margin-top:40px;
 
-height:58px;
-
-border:none;
+padding:16px 34px;
 
 border-radius:18px;
 
 background:
 
 linear-gradient(
-90deg,
-gold,
-orange
+45deg,
+#ffd700,
+#ff9900
 );
 
 color:black;
 
-font-size:17px;
+text-decoration:none;
 
 font-weight:bold;
 
@@ -148,39 +147,44 @@ font-weight:bold;
 <div class="box">
 
 <div class="icon">
-🚧
+
+🛠️
+
 </div>
 
 <div class="title">
-系统维护中
-</div>
-
-<div class="text">
-
-正在升级系统功能
-
-<br><br>
 
 ระบบกำลังปรับปรุง
 
-กรุณากลับมาใหม่ภายหลัง
+</div>
+
+<div class="desc">
+
+ขออภัยในความไม่สะดวก
+
+<br><br>
+
+ขณะนี้ระบบอยู่ระหว่างการปรับปรุง
+
+เพื่อประสิทธิภาพที่ดียิ่งขึ้น
 
 </div>
 
-<div class="time">
+<div class="note">
 
-预计恢复：
-Today 23:30
+โปรดลองใหม่ภายหลัง
 
 </div>
 
-<button
+<a
+href="/"
 class="btn"
-onclick="location.href='/'">
 
-🏠 返回首页
+>
 
-</button>
+รีเฟรชอีกครั้ง
+
+</a>
 
 </div>
 

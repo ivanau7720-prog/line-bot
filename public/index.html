@@ -1851,7 +1851,7 @@ tick.play();
 if(!window.resultAnimating){
 
 renderTableChips(
-data.total || {}
+data.chips || []
 );
 
 }
@@ -2364,54 +2364,88 @@ function flyChip(targetId) {
   },450);
 
 }
-function renderTableChips(total){
+function renderTableChips(chips){
 
-  ["B","P","T"].forEach(side=>{
+["B","P","T"].forEach(side=>{
 
-    const area =
-    document.getElementById("area" + side);
+const area =
+document.getElementById("area" + side);
 
-    area
-    .querySelectorAll(".tableChip")
-    .forEach(c=>c.remove());
+area
+.querySelectorAll(".tableChip")
+.forEach(c=>c.remove());
 
-  });
+});
 
-  for(const uid in total){
+(chips || []).forEach(item=>{
 
-    const bet = total[uid];
+const side =
+item.side;
 
-    ["B","P","T"].forEach(side=>{
+const amount =
+Number(item.amount || 0);
 
-      const amount = Number(bet[side] || 0);
+if(
+!["B","P","T"].includes(side)
+||
+amount <= 0
+){
+return;
+}
 
-      if(amount <= 0) return;
+const area =
+document.getElementById("area" + side);
 
-      const area =
-      document.getElementById("area" + side);
-
-      const chip =
-      document.createElement("div");
-
-      chip.className = "tableChip chip";
-      chip.innerText = amount;
-      chip.dataset.side = side;
-
-      chip.style.position = "absolute";
-      chip.style.width = "24px";
-      chip.style.height = "24px";
-      chip.style.borderRadius = "50%";
-      chip.style.border = "2px solid rgba(255,255,255,.85)";
-      chip.style.color = "#000";
-      chip.style.fontSize = "8px";
-      chip.style.fontWeight = "bold";
-      chip.style.display = "flex";
-      chip.style.alignItems = "center";
-      chip.style.justifyContent = "center";
 const stack =
-area.querySelectorAll(
-".tableChip"
-).length;
+area.querySelectorAll(".tableChip").length;
+
+const chip =
+document.createElement("div");
+
+chip.className =
+"tableChip chip";
+
+chip.id =
+"chip" + amount;
+
+chip.innerText =
+amount;
+
+chip.dataset.side =
+side;
+
+chip.style.position =
+"absolute";
+
+chip.style.width =
+"24px";
+
+chip.style.height =
+"24px";
+
+chip.style.borderRadius =
+"50%";
+
+chip.style.border =
+"2px solid rgba(255,255,255,.85)";
+
+chip.style.color =
+"#000";
+
+chip.style.fontSize =
+"8px";
+
+chip.style.fontWeight =
+"bold";
+
+chip.style.display =
+"flex";
+
+chip.style.alignItems =
+"center";
+
+chip.style.justifyContent =
+"center";
 
 chip.style.left =
 (
@@ -2422,17 +2456,18 @@ chip.style.left =
 
 chip.style.top =
 (
-42
-+
-Math.floor(stack/4)*7
-+
-(Math.random()*2)
-)
-+
-"%";
-     chip.style.zIndex = 100 + stack;
-      chip.style.pointerEvents = "none";
-      chip.style.boxShadow =
+10 +
+Math.floor(stack / 4) * 6 +
+(Math.random() * 2)
+) + "%";
+
+chip.style.zIndex =
+100 + stack;
+
+chip.style.pointerEvents =
+"none";
+
+chip.style.boxShadow =
 "0 5px 0 rgba(0,0,0,.55), " +
 "0 0 14px rgba(255,215,0,.45), " +
 "inset 0 2px 8px rgba(255,255,255,.25), " +
@@ -2440,26 +2475,17 @@ Math.floor(stack/4)*7
 
 chip.style.transform =
 `
-rotate(
-${-4+Math.random()*8}deg
-)
-
-scale(
-${0.90-stack*0.01}
-)
-
-translateY(
-${stack*1.5}px
-)
+rotate(${-4 + Math.random() * 8}deg)
+scale(${0.90 - stack * 0.01})
+translateY(${stack * 1.5}px)
 `;
 
 area.appendChild(chip);
 
-    });
+});
 
-  }
-
-}  
+}
+ 
 function addInstantTableChip(side, amount){
 
   const area =

@@ -2044,6 +2044,45 @@ player.bank_account || "-",
 vip:
 Number(player.vip_level || 10),
 
+bonus_amount:
+Number(
+player.bonus_amount || 0
+),
+
+bonus_turnover:
+Number(
+player.bonus_turnover || 0
+),
+
+bonus_progress:
+Math.min(
+100,
+
+Math.floor(
+
+(
+Number(
+player.bonus_turnover || 0
+)
+
+/
+
+Math.max(
+1,
+Number(
+player.bonus_amount || 0
+)
+)
+
+)
+
+*
+100
+
+)
+
+),
+      
       balance:
       Number(player.balance || 0),
 

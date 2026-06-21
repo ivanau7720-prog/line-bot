@@ -6319,6 +6319,39 @@ lang==="th"
 
 <br>
 
+🏧 ${
+lang==="th"
+?
+"ยอดถอนรวม："
+:
+"累计提款："
+}
+฿${Number(p.total_withdraw || 0).toLocaleString()}
+
+<br>
+
+📊 ${
+lang==="th"
+?
+"กำไรขาดทุนวันนี้："
+:
+"今日输赢："
+}
+฿${Number(p.today_winlose || 0).toLocaleString()}
+
+<br>
+
+🎯 ${
+lang==="th"
+?
+"จำนวนเดิมพันรวม："
+:
+"总下注次数："
+}
+${Number(p.total_bets || 0).toLocaleString()}
+
+<br>
+
 💧 ${
 lang==="th"
 ?

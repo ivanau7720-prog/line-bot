@@ -4319,17 +4319,17 @@ app.post("/request-recharge", async (req, res) => {
       });
     }
 
-    const { error } = await supabase
-      .from("recharge_requests")
-      .insert([{
-        user_id:userId,
-        username,
-        amount: rechargeAmount,
-        payment_method: paymentMethod,
-        payer_name: payerName,
-        note,
-        status:"pending"
-      }]);
+ const { error } = await supabase
+  .from("recharge_requests")
+  .insert([{
+    user_id:userId,
+    username,
+    amount: rechargeAmount,
+    payment_method: paymentMethod,
+    payer_name: payerName,
+    note,
+    status:"pending"
+  }]);
 
     if(error){
       console.log(error);
@@ -4374,9 +4374,7 @@ app.post("/request-withdraw", async (req, res) => {
       return res.json({ success:false, msg:"จำนวนเงินถอนต้องมากกว่า 0" });
     }
 
-    if (!bankName || !bankAccount) {
-      return res.json({ success:false, msg:"กรุณากรอกข้อมูลบัญชีธนาคารให้ครบ" });
-    }
+    
 
     const now = Date.now();
 
@@ -4392,10 +4390,29 @@ app.post("/request-withdraw", async (req, res) => {
       .eq("user_id", userId)
       .single();
 
-    if (!player) {
-      return res.json({ success:false, msg:"ไม่พบบัญชีผู้เล่น" });
-    }
+   
+    
+     if(
+!player.bank_name ||
+!player.bank_account
+){
 
+return res.json({
+success:false,
+msg:"ยังไม่มีข้อมูลบัญชีธนาคาร กรุณาอัปเดตข้อมูลบัญชีก่อน"
+});
+
+}
+
+const finalBankName =
+player.bank_name;
+
+const finalBankAccount =
+player.bank_account;
+
+const finalNote =
+player.real_name || note || "";
+    
     if (Number(player.balance || 0) < withdrawAmount) {
       return res.json({ success:false, msg:"ยอดเงินไม่เพียงพอ" });
     }

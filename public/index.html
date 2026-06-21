@@ -2392,14 +2392,10 @@ area.querySelectorAll(
 
 chip.style.left =
 (
-34
-+
-(stack%4)*8
-+
-(Math.random()*3)
-)
-+
-"%";
+38 +
+(stack % 4) * 7 +
+(Math.random() * 2)
+) + "%";
 
 chip.style.top =
 (
@@ -2479,7 +2475,7 @@ function addInstantTableChip(side, amount){
 
 chip.style.top =
 (
-50 +
+18 +
 Math.floor(stack / 4) * 6 +
 (Math.random() * 2)
 ) + "%";

@@ -2245,6 +2245,35 @@ document.getElementById(
 html;
 
 }
+async function checkPlayerFromFund(){
+
+const userId =
+document
+.getElementById("uid")
+.value
+.trim();
+
+if(!userId){
+
+alert(
+localStorage.getItem("adminLang")
+==="th"
+?
+"กรอกข้อมูลผู้เล่น"
+:
+"请输入玩家资料"
+);
+
+return;
+
+}
+
+openPlayerDetail(
+userId
+);
+
+}
+
   
 async function createAgent(){
   const agentCode = document.getElementById("agentCode").value;

@@ -6689,8 +6689,10 @@ ${p.bank_account || "-"}
 <br>
 
 📌 ${
-  
+lang==="th" ? "สถานะ：" : "状态："
+}
 <span style="
+
 color:${p.status==="inactive" ? "#ff4444" : "#00ff99"};
 font-weight:bold;
 ">

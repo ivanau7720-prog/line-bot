@@ -500,18 +500,14 @@ formBox.innerHTML = `
 
 <input class="input" id="amount" type="number" placeholder="${t.withdrawAmount}">
 
-<input class="input" id="bankName" placeholder="${t.bankName}">
-
-<input class="input" id="bankAccount" placeholder="${t.bankAccount}">
-
-<input class="input" id="receiverName" placeholder="${t.receiverName}">
-
 <button class="submit" onclick="submitWallet()">
 ${t.submitWithdraw}
 </button>
 
 <div class="small">
-${t.withdrawSmall}
+${currentLang==="th"
+? "ระบบจะใช้ข้อมูลบัญชีที่ลงทะเบียนไว้"
+: "系统将使用玩家注册时填写的银行资料"}
 </div>
 
 `;
@@ -591,14 +587,9 @@ username:username,
 amount:
 document.getElementById("amount").value,
 
-bankName:
-document.getElementById("bankName").value,
-
-bankAccount:
-document.getElementById("bankAccount").value,
-
-note:
-document.getElementById("receiverName").value
+bankName:"",
+bankAccount:"",
+note:"Use registered bank info"
 
 };
 

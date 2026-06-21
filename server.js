@@ -407,9 +407,10 @@ let GAME = {
 
   roundDbId: null,
 
-  bets: {},
-  betUsers:{},
-  timer: null,
+bets: {},
+betChips: [],
+betUsers:{},
+timer: null,
 
   timeLeft: 60,
 
@@ -650,6 +651,7 @@ app.post("/start", checkAdmin, async (req, res) => {
     GAME.currentRound = (GAME.currentRound || 0) + 1;
     GAME.isBetting = true;
     GAME.bets = {};
+    GAME.betChips = [];
     GAME.betUsers = {};
     GAME.bettingDuration = 60;
     GAME.timeLeft = 60;
@@ -927,6 +929,13 @@ T:0
 }
 
 GAME.bets[userId][side] += betAmount;
+
+GAME.betChips.push({
+userId,
+side,
+amount: betAmount
+});
+
 GAME.betUsers[userId] = true;
     res.json({
       success:true
@@ -984,6 +993,7 @@ app.post("/admin/reset-game", checkAdmin, async (req, res) => {
     GAME.isBetting = false;
     GAME.roundActive = false;
     GAME.bets = {};
+    GAME.betChips = [];
     GAME.betUsers = {};
     GAME.timeLeft = 60;
     GAME.roundStartTime = null;
@@ -1129,6 +1139,7 @@ type: "settled"
  }
 
 GAME.bets = {};
+GAME.betChips = [];
 GAME.betUsers = {};
 GAME.timeLeft = 60;
 
@@ -1370,14 +1381,15 @@ app.get("/state", (req, res) => {
     }
   }
 
-  res.json({
-    status,
-    isBetting: GAME.isBetting,
-    roundActive: GAME.roundActive,
-    timeLeft: GAME.timeLeft,
-    total: GAME.bets,
-    round: GAME.currentRound || 0
-  });
+res.json({
+status,
+isBetting: GAME.isBetting,
+roundActive: GAME.roundActive,
+timeLeft: GAME.timeLeft,
+total: GAME.bets,
+chips: GAME.betChips || [],
+round: GAME.currentRound || 0
+});
 });
 // ===== 获取余额 =====
 app.get("/balance/:userId", async (req, res) => {

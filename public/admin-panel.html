@@ -6483,9 +6483,36 @@ ${p.agent_code || "-"}
 
 <br>
 
-📌 ${
-lang==="th" ? "สถานะ：" : "状态："
+🪪 ${
+lang==="th" ? "ชื่อจริง：" : "注册姓名："
 }
+${p.real_name || "-"}
+
+<br>
+
+📱 ${
+lang==="th" ? "เบอร์โทร：" : "电话："
+}
+${p.phone || "-"}
+
+<br>
+
+🏦 ${
+lang==="th" ? "ธนาคาร：" : "Bank："
+}
+${p.bank_name || "-"}
+
+<br>
+
+💳 ${
+lang==="th" ? "เลขบัญชี：" : "Bank号码："
+}
+${p.bank_account || "-"}
+
+<br>
+
+📌 ${
+  
 <span style="
 color:${p.status==="inactive" ? "#ff4444" : "#00ff99"};
 font-weight:bold;

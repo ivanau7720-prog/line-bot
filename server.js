@@ -4414,14 +4414,12 @@ app.post("/request-withdraw", async (req, res) => {
       userId,
       username,
       amount,
-      bankName,
-      bankAccount,
       note
     } = req.body;
 
     const withdrawAmount = Number(amount);
 
-    if (!userId || !username) {
+    if (!userId) {
       return res.json({ success:false, msg:"ข้อมูลผู้เล่นไม่ถูกต้อง" });
     }
 
@@ -4432,8 +4430,6 @@ app.post("/request-withdraw", async (req, res) => {
     if (withdrawAmount <= 0) {
       return res.json({ success:false, msg:"จำนวนเงินถอนต้องมากกว่า 0" });
     }
-
-    
 
     const now = Date.now();
 
@@ -4449,29 +4445,32 @@ app.post("/request-withdraw", async (req, res) => {
       .eq("user_id", userId)
       .single();
 
-   
-    
-     if(
-!player.bank_name ||
-!player.bank_account
-){
+    if(!player){
+      return res.json({
+        success:false,
+        msg:"ข้อมูลผู้เล่นไม่ถูกต้อง"
+      });
+    }
 
-return res.json({
-success:false,
-msg:"ยังไม่มีข้อมูลบัญชีธนาคาร กรุณาอัปเดตข้อมูลบัญชีก่อน"
-});
+    if(
+      !player.bank_name ||
+      !player.bank_account
+    ){
+      return res.json({
+        success:false,
+        msg:"ยังไม่มีข้อมูลบัญชีธนาคาร กรุณาอัปเดตข้อมูลบัญชีก่อน"
+      });
+    }
 
-}
+    const finalBankName =
+    player.bank_name;
 
-const finalBankName =
-player.bank_name;
+    const finalBankAccount =
+    player.bank_account;
 
-const finalBankAccount =
-player.bank_account;
+    const finalNote =
+    player.real_name || note || "";
 
-const finalNote =
-player.real_name || note || "";
-    
     if (Number(player.balance || 0) < withdrawAmount) {
       return res.json({ success:false, msg:"ยอดเงินไม่เพียงพอ" });
     }
@@ -4493,11 +4492,12 @@ player.real_name || note || "";
       .from("withdraw_requests")
       .insert([{
         user_id:userId,
-        username,
+        username:
+        player.username || username || "-",
         amount: withdrawAmount,
-        bank_name:bankName,
-        bank_account:bankAccount,
-        note,
+        bank_name:finalBankName,
+        bank_account:finalBankAccount,
+        note:finalNote,
         status:"pending"
       }]);
 

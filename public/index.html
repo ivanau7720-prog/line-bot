@@ -1817,9 +1817,13 @@ tick.play();
   document.getElementById("totalP").innerHTML = "";
   document.getElementById("totalT").innerHTML = "";
 
+if(!window.resultAnimating){
+
 renderTableChips(
 data.total || {}
 );
+
+}
 
 }
 
@@ -2373,12 +2377,33 @@ function renderTableChips(total){
       chip.style.display = "flex";
       chip.style.alignItems = "center";
       chip.style.justifyContent = "center";
+const stack =
+area.querySelectorAll(
+".tableChip"
+).length;
+
 chip.style.left =
-(20 + Math.random() * 50) + "%";
+(
+34
++
+(stack%4)*8
++
+(Math.random()*3)
+)
++
+"%";
 
 chip.style.top =
-(42 + Math.random() * 22) + "%";
-      chip.style.zIndex = "6";
+(
+42
++
+Math.floor(stack/4)*7
++
+(Math.random()*2)
+)
++
+"%";
+     chip.style.zIndex = 100 + stack;
       chip.style.pointerEvents = "none";
       chip.style.boxShadow =
 "0 5px 0 rgba(0,0,0,.55), " +
@@ -2386,16 +2411,18 @@ chip.style.top =
 "inset 0 2px 8px rgba(255,255,255,.25), " +
 "inset 0 -5px 10px rgba(0,0,0,.45)";
 
-      chip.style.transform =
+chip.style.transform =
 `
 rotate(
-${-8+Math.random()*16}deg
+${-4+Math.random()*8}deg
 )
 
-scale(.88)
+scale(
+${0.90-stack*0.01}
+)
 
 translateY(
-${Math.random()*6}px
+${stack*1.5}px
 )
 `;
 
@@ -2455,6 +2482,8 @@ function sendHeartbeat(){
   
 function showResult(result) {
 
+  window.resultAnimating = true;
+
   const B = document.getElementById("areaB");
   const P = document.getElementById("areaP");
   const T = document.getElementById("areaT");
@@ -2487,6 +2516,72 @@ localStorage.getItem("myLastBet")
   win.style.transform = "scale(1.2)";
   win.style.boxShadow = "0 0 80px gold, 0 0 150px gold";
 
+  document
+.querySelectorAll(
+".tableChip"
+)
+.forEach(chip=>{
+
+if(
+chip.dataset.side
+===
+result
+){
+
+const clone =
+chip.cloneNode(
+true
+);
+
+clone.style.transition =
+".5s";
+
+clone.style.transform +=
+" scale(1.18)";
+
+clone.style.boxShadow =
+`
+0 0 40px gold,
+0 0 90px gold
+`;
+
+chip
+.parentElement
+.appendChild(
+clone
+);
+
+setTimeout(()=>{
+
+clone.remove();
+
+},1800);
+
+}else{
+
+chip.style.transition =
+".7s";
+
+chip.style.transform +=
+`
+translateY(-140px)
+scale(.25)
+rotate(40deg)
+`;
+
+chip.style.opacity =
+"0";
+
+setTimeout(()=>{
+
+chip.remove();
+
+},700);
+
+}
+
+});
+
   const flash = document.getElementById("resultFlash");
 
 let text = T("result");
@@ -2498,10 +2593,11 @@ if (result === "T") text = T("tieWin");
   flash.innerText = text;
   flash.style.opacity = 1;
 
- setTimeout(() => {
+setTimeout(() => {
 flash.style.opacity = 0;
 window.myLastBet = null;
 localStorage.removeItem("myLastBet");
+window.resultAnimating = false;
 }, 1500);
 }
 

@@ -1656,18 +1656,21 @@ return;
 if (side === "B") {
 
 flyChip("areaB");
+addInstantTableChip("B", amount);
 
 }
 
 if (side === "P") {
 
 flyChip("areaP");
+addInstantTableChip("P", amount);
 
 }
 
 if (side === "T") {
 
 flyChip("areaT");
+addInstantTableChip("T", amount);
 
 }
 
@@ -1686,7 +1689,6 @@ loadBalance();
 
 loadStats();
 
-loadState();
    
 document
 .getElementById(
@@ -2433,6 +2435,79 @@ area.appendChild(chip);
   }
 
 }  
+function addInstantTableChip(side, amount){
+
+  const area =
+  document.getElementById("area" + side);
+
+  if(!area) return;
+
+  const stack =
+  area.querySelectorAll(".tableChip").length;
+
+  const chip =
+  document.createElement("div");
+
+  chip.className = "tableChip chip";
+  chip.innerText = amount;
+  chip.dataset.side = side;
+
+  chip.style.position = "absolute";
+  chip.style.width = "32px";
+  chip.style.height = "32px";
+  chip.style.borderRadius = "50%";
+  chip.style.border = "2px solid rgba(255,255,255,.85)";
+  chip.style.color = "#000";
+  chip.style.fontSize = "10px";
+  chip.style.fontWeight = "bold";
+  chip.style.display = "flex";
+  chip.style.alignItems = "center";
+  chip.style.justifyContent = "center";
+
+  chip.style.left =
+  (
+  34 +
+  (stack % 4) * 8 +
+  (Math.random() * 3)
+  ) + "%";
+
+  chip.style.top =
+  (
+  42 +
+  Math.floor(stack / 4) * 7 +
+  (Math.random() * 2)
+  ) + "%";
+
+  chip.style.zIndex =
+  100 + stack;
+
+  chip.style.pointerEvents =
+  "none";
+
+  chip.style.boxShadow =
+  "0 5px 0 rgba(0,0,0,.55), " +
+  "0 0 14px rgba(255,215,0,.45), " +
+  "inset 0 2px 8px rgba(255,255,255,.25), " +
+  "inset 0 -5px 10px rgba(0,0,0,.45)";
+
+  chip.style.transform =
+  `
+  rotate(
+  ${-4 + Math.random() * 8}deg
+  )
+
+  scale(
+  ${0.90 - stack * 0.01}
+  )
+
+  translateY(
+  ${stack * 1.5}px
+  )
+  `;
+
+  area.appendChild(chip);
+
+}
 // ===== 登录保护系统（专业版） =====
 window.onload = function(){
 

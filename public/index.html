@@ -530,10 +530,9 @@ filter:brightness(1.35);
 }
 }
 .tableChip{
-background:linear-gradient(145deg,#ffd700,#ff9900,#663300) !important;
-color:#000 !important;
 z-index:999 !important;
 }
+  
 </style>
   
 </head>
@@ -597,6 +596,30 @@ box-shadow:0 0 20px gold, 0 0 60px gold;
 ">
 🎉 你赢了 +0
 </div>
+<div id="losePopup" style="
+position:fixed;
+top:46%;
+left:50%;
+transform:translate(-50%,-50%) scale(0.8);
+background:linear-gradient(145deg,#2b003f,#000);
+padding:10px 18px;
+border-radius:18px;
+color:#ffb3b3;
+font-size:15px;
+font-weight:bold;
+z-index:9999;
+opacity:0;
+pointer-events:none;
+transition:0.25s;
+border:1px solid rgba(255,120,120,.7);
+box-shadow:
+0 0 12px rgba(255,80,80,.55),
+inset 0 0 10px rgba(255,255,255,.12);
+text-align:center;
+">
+🥺 ไม่ถูกรางวัล
+</div>
+
 <div id="walletModal" style="
 display:none;
 position:fixed;
@@ -2585,9 +2608,19 @@ localStorage.getItem("myLastBet")
 || "null"
 );
 
-  if (myBet && myBet.side === result) {
-    showWin(myBet.amount);
-  }
+if(myBet){
+
+if(myBet.side === result){
+
+showWin(myBet.amount);
+
+}else{
+
+showLose(myBet.amount);
+
+}
+
+}
 
   // 💥 发光
   win.style.opacity = 1;
@@ -2672,11 +2705,22 @@ if (result === "T") text = T("tieWin");
   flash.style.opacity = 1;
 
 setTimeout(() => {
+
 flash.style.opacity = 0;
+
 window.myLastBet = null;
+
 localStorage.removeItem("myLastBet");
+
 window.resultAnimating = false;
-}, 1500);
+
+document
+.querySelectorAll(".tableChip")
+.forEach(c=>c.remove());
+
+loadState();
+
+},1500);
 }
 
 function showWin(amount){
@@ -2697,6 +2741,36 @@ setTimeout(() => {
 }, 1500);
 }
 
+function showLose(amount){
+
+const el =
+document.getElementById("losePopup");
+
+if(!el) return;
+
+el.innerText =
+currentLang==="th"
+?
+"🥺 ไม่ถูกรางวัล -" + amount
+:
+"🥺 未中奖 -" + amount;
+
+el.style.opacity="1";
+
+el.style.transform=
+"translate(-50%,-50%) scale(1)";
+
+setTimeout(()=>{
+
+el.style.opacity="0";
+
+el.style.transform=
+"translate(-50%,-50%) scale(0.8)";
+
+},1200);
+
+}
+  
   function toggleRoad(){
 const box = document.getElementById("roadBox");
 box.style.display =

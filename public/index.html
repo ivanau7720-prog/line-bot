@@ -1865,30 +1865,47 @@ tick.play();
   document.getElementById("totalP").innerHTML = "";
   document.getElementById("totalT").innerHTML = "";
 
-  // 💥 显示所有玩家下注
+ // 💥 显示所有玩家下注
 for (const uid in data.total) {
+
   const bet = data.total[uid];
 
-  // 👇 就是在这里加（这3行）
-  if (bet.side === "B") countB++;
-  if (bet.side === "P") countP++;
-  if (bet.side === "T") countT++;
+  const amountB = Number(bet.B || 0);
+  const amountP = Number(bet.P || 0);
+  const amountT = Number(bet.T || 0);
 
-  let target = "";
+  if(amountB > 0){
+    countB++;
+    document.getElementById("totalB").innerHTML += `
+      <div style="font-size:12px;color:gold">
+        ${uid} 💰${amountB}
+      </div>
+    `;
+  }
 
-  if (bet.side === "B") target = "totalB";
-  if (bet.side === "P") target = "totalP";
-  if (bet.side === "T") target = "totalT";
+  if(amountP > 0){
+    countP++;
+    document.getElementById("totalP").innerHTML += `
+      <div style="font-size:12px;color:gold">
+        ${uid} 💰${amountP}
+      </div>
+    `;
+  }
 
-  document.getElementById(target).innerHTML += `
-    <div style="font-size:12px;color:gold">
-      ${uid} 💰${bet.amount}
-    </div>
-  `;
+  if(amountT > 0){
+    countT++;
+    document.getElementById("totalT").innerHTML += `
+      <div style="font-size:12px;color:gold">
+        ${uid} 💰${amountT}
+      </div>
+    `;
+  }
+
 }
-document.getElementById("countB").innerText = countB;
-document.getElementById("countP").innerText = countP;
-document.getElementById("countT").innerText = countT;
+  
+document.getElementById("countB").innerText = "👥" + countB;
+document.getElementById("countP").innerText = "👥" + countP;
+document.getElementById("countT").innerText = "👥" + countT;
 }
 // 历史：赌场珠盘路 6行自动换列
 async function loadHistory() {
@@ -2343,42 +2360,84 @@ function selectChip(amount) {
 }
 
 function flyChip(targetId) {
-  const chip = document.getElementById("chip" + selectedAmount);
-  const target = document.getElementById(targetId);
+
+  const chip =
+  document.getElementById("chip" + selectedAmount);
+
+  const target =
+  document.getElementById(targetId);
 
   if (!chip || !target) return;
 
-  const chipRect = chip.getBoundingClientRect();
-  const targetRect = target.getBoundingClientRect();
+  const chipRect =
+  chip.getBoundingClientRect();
 
-  const clone = chip.cloneNode(true);
-target.appendChild(clone);
+  const targetRect =
+  target.getBoundingClientRect();
+
+  const clone =
+  chip.cloneNode(true);
+
+  document.body.appendChild(clone);
 
   clone.style.position = "fixed";
   clone.style.left = chipRect.left + "px";
   clone.style.top = chipRect.top + "px";
-  clone.style.zIndex = 9999;
+  clone.style.width = chipRect.width + "px";
+  clone.style.height = chipRect.height + "px";
+  clone.style.zIndex = "99999";
+  clone.style.pointerEvents = "none";
 
-  // 动画
+  const endX =
+  targetRect.left + targetRect.width / 2 - chipRect.left - chipRect.width / 2;
+
+  const endY =
+  targetRect.top + targetRect.height / 2 - chipRect.top - chipRect.height / 2;
+
   clone.animate([
     {
-      transform: "translate(0,0) scale(1)"
+      transform:"translate(0,0) scale(1)",
+      opacity:1
     },
     {
-      transform: `translate(${targetRect.left - chipRect.left}px, ${targetRect.top - chipRect.top}px) scale(0.6)`
+      transform:`translate(${endX}px, ${endY}px) scale(.55)`,
+      opacity:1
     }
-  ], {
-    duration: 500,
-    easing: "ease-out"
+  ],{
+    duration:450,
+    easing:"ease-out"
   });
 
-  setTimeout(() => {
-  // 👉 不删除，改为堆叠到目标
-  clone.style.position = "absolute";
-  clone.style.left = (target.offsetLeft + Math.random() * 30) + "px";
-  clone.style.top = (target.offsetTop + Math.random() * 30) + "px";
-  clone.style.transform = "scale(0.6)";
-}, 500);
+  setTimeout(()=>{
+
+    clone.remove();
+
+    const small =
+    document.createElement("div");
+
+    small.className = "chip";
+
+    small.innerText =
+    selectedAmount;
+
+    small.style.position = "absolute";
+    small.style.width = "28px";
+    small.style.height = "28px";
+    small.style.fontSize = "9px";
+    small.style.left = (20 + Math.random() * 45) + "%";
+    small.style.top = (28 + Math.random() * 35) + "%";
+    small.style.zIndex = "5";
+    small.style.pointerEvents = "none";
+    small.style.transform = "scale(.8)";
+
+    target.appendChild(small);
+
+    setTimeout(()=>{
+      small.remove();
+    },3000);
+
+  },450);
+
 }
   
 // ===== 登录保护系统（专业版） =====

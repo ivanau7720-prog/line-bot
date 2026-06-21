@@ -1001,6 +1001,13 @@ box-sizing:border-box;
 👥 玩家列表
 </h3>
 
+<input
+id="playerSearchInput"
+placeholder="搜索 ID / USERNAME / PHONE / BANK"
+oninput="loadPlayers()"
+class="fundInput"
+>
+  
 <div id="players">
 </div>
 
@@ -3844,11 +3851,38 @@ const t = LANG[lang];
   const res = await fetch("/admin/players",{
   headers: adminGetHeaders()
 });
-  const data = await res.json();
+const data = await res.json();
 
-  let html = "";
+const keyword =
+(
+document.getElementById("playerSearchInput")?.value || ""
+)
+.toLowerCase()
+.trim();
 
-data.forEach(p=>{
+let html = "";
+
+data
+.filter(p=>{
+
+if(!keyword){
+return true;
+}
+
+return (
+String(p.user_id || p.id || "").toLowerCase().includes(keyword)
+||
+String(p.username || "").toLowerCase().includes(keyword)
+||
+String(p.phone || "").toLowerCase().includes(keyword)
+||
+String(p.bank_name || "").toLowerCase().includes(keyword)
+||
+String(p.bank_account || "").toLowerCase().includes(keyword)
+);
+
+})
+.forEach(p=>{
 
 const lastLogin =
 p.last_login

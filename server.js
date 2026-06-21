@@ -3794,10 +3794,18 @@ Number(player.total_withdraw || 0) + Number(request.amount);
       .eq("id", id);
 
     await supabase.from("transactions").insert([{
-      user_id: request.user_id,
-      amount: Number(request.amount),
-      type: "withdraw_approved"
-    }]);
+user_id:
+request.user_id,
+
+amount:
+Number(request.amount),
+
+change:
+-Number(request.amount),
+
+type:
+"withdraw"
+}]);
 await logAdminAction(
 "admin",
 "批准提款",

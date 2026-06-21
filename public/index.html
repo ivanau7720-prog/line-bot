@@ -2358,29 +2358,48 @@ function renderTableChips(total){
       const chip =
       document.createElement("div");
 
-      chip.className = "tableChip";
+      chip.className = "tableChip chip";
       chip.innerText = amount;
       chip.dataset.side = side;
 
       chip.style.position = "absolute";
-      chip.style.width = "34px";
-      chip.style.height = "34px";
+      chip.style.width = "32px";
+      chip.style.height = "32px";
       chip.style.borderRadius = "50%";
-      chip.style.background = "radial-gradient(circle,#ffd700,#b8860b,#2b1600)";
-      chip.style.border = "2px solid white";
+      chip.style.border = "2px solid rgba(255,255,255,.85)";
       chip.style.color = "#000";
       chip.style.fontSize = "10px";
       chip.style.fontWeight = "bold";
       chip.style.display = "flex";
       chip.style.alignItems = "center";
       chip.style.justifyContent = "center";
-      chip.style.left = (18 + Math.random() * 55) + "%";
-      chip.style.top = (42 + Math.random() * 30) + "%";
+chip.style.left =
+(20 + Math.random() * 50) + "%";
+
+chip.style.top =
+(42 + Math.random() * 22) + "%";
       chip.style.zIndex = "6";
       chip.style.pointerEvents = "none";
-      chip.style.boxShadow = "0 0 12px gold";
+      chip.style.boxShadow =
+"0 5px 0 rgba(0,0,0,.55), " +
+"0 0 14px rgba(255,215,0,.45), " +
+"inset 0 2px 8px rgba(255,255,255,.25), " +
+"inset 0 -5px 10px rgba(0,0,0,.45)";
 
-      area.appendChild(chip);
+      chip.style.transform =
+`
+rotate(
+${-8+Math.random()*16}deg
+)
+
+scale(.88)
+
+translateY(
+${Math.random()*6}px
+)
+`;
+
+area.appendChild(chip);
 
     });
 

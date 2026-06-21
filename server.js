@@ -2024,13 +2024,25 @@ return sum + Number(t.change || 0);
       player.user_id,
 
       username:
-      player.username || player.name || "-",
+player.username || player.name || "-",
 
-      agent_code:
-      player.agent_code || "-",
+agent_code:
+player.agent_code || "-",
 
-      vip:
-      Number(player.vip_level || 10),
+real_name:
+player.real_name || "-",
+
+phone:
+player.phone || "-",
+
+bank_name:
+player.bank_name || "-",
+
+bank_account:
+player.bank_account || "-",
+
+vip:
+Number(player.vip_level || 10),
 
       balance:
       Number(player.balance || 0),
